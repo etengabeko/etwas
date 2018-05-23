@@ -93,4 +93,4 @@ void MessageSerializationTest::makeTestData()
 
 QTEST_MAIN(MessageSerializationTest)
 
-#include "unit-tests.moc"
+#include "main.moc"
