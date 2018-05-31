@@ -1,96 +1,36 @@
 #include <QtTest>
-
-#include <memory>
-
-#include <QByteArray>
+#include <QList>
 #include <QSharedPointer>
 
-#include "protocol/protocol.h"
+#include "deviceidentity.h"
 
-Q_DECLARE_METATYPE(QSharedPointer<protocol::AbstractMessage>)
+using namespace test::serialization;
 
-class MessageSerializationTest : public QObject
+namespace
 {
-    Q_OBJECT
 
-private slots:
-    void serializeMessage_data();
-    void serializeMessage();
-
-    void deserializeMessage_data();
-    void deserializeMessage();
-
-private:
-    void makeTestData();
-
-};
-
-void MessageSerializationTest::deserializeMessage_data()
+const QList<QSharedPointer<BasicTest>> makeTestData()
 {
-    makeTestData();
-}
-
-void MessageSerializationTest::serializeMessage_data()
-{
-    makeTestData();
-}
-
-void MessageSerializationTest::serializeMessage()
-{
-    QFETCH(QSharedPointer<protocol::AbstractMessage>, message);
-    QFETCH(QByteArray, content);
-
-    QCOMPARE(message->serialize(), content);
-}
-
-void MessageSerializationTest::deserializeMessage()
-{
-    QFETCH(QSharedPointer<protocol::AbstractMessage>, message);
-    QFETCH(QByteArray, content);
-
-    std::unique_ptr<protocol::AbstractMessage> repaired = protocol::AbstractMessage::deserialize(message->direction(), content);
-
-    QVERIFY(repaired != nullptr);
-    if (repaired)
+    return QList<QSharedPointer<BasicTest>>
     {
-        QCOMPARE(repaired->serialize(), message->serialize());
-    }
+        QSharedPointer<BasicTest>(new DeviceIdentity())
+        // TODO
+    };
 }
 
-void MessageSerializationTest::makeTestData()
+}
+
+int main(int argc, char* argv[])
 {
-    QTest::addColumn<QSharedPointer<protocol::AbstractMessage>>("message");
-    QTest::addColumn<QByteArray>("content");
+    QCoreApplication app(argc, argv);
+    Q_UNUSED(app);
 
-    // incoming
-    QTest::newRow("DeviceIdentity")
-            << QSharedPointer<protocol::AbstractMessage>(new protocol::incoming::DeviceIdentityMessage())
-            << QByteArray(protocol::incoming::DeviceIdentityMessage::size(), '\0'); // TODO
-    QTest::newRow("ButtonsState")
-            << QSharedPointer<protocol::AbstractMessage>(new protocol::incoming::ButtonsStateMessage())
-            << QByteArray(protocol::incoming::ButtonsStateMessage::size(), '\0'); // TODO
+    int res = EXIT_SUCCESS;
+    for (const QSharedPointer<BasicTest>& each : ::makeTestData())
+    {
+        int eachRes = QTest::qExec(each.data(), argc, argv);
+        res &= eachRes;
+    }
 
-    // outcoming
-    QTest::newRow("DeviceAddress")
-            << QSharedPointer<protocol::AbstractMessage>(new protocol::outcoming::DeviceAddressMessage())
-            << QByteArray(protocol::outcoming::DeviceAddressMessage::size(), '\0'); // TODO
-    QTest::newRow("DisplayImages")
-            << QSharedPointer<protocol::AbstractMessage>(new protocol::outcoming::DisplayImagesMessage())
-            << QByteArray(protocol::outcoming::DisplayImagesMessage::size(), '\0'); // TODO
-    QTest::newRow("DisplayOptions")
-            << QSharedPointer<protocol::AbstractMessage>(new protocol::outcoming::DisplayOptionsMessage())
-            << QByteArray(protocol::outcoming::DisplayOptionsMessage::size(), '\0'); // TODO
-    QTest::newRow("BlinkOptions")
-            << QSharedPointer<protocol::AbstractMessage>(new protocol::outcoming::BlinkOptionsMessage())
-            << QByteArray(protocol::outcoming::BlinkOptionsMessage::size(), '\0'); // TODO
-    QTest::newRow("BrightOptions")
-            << QSharedPointer<protocol::AbstractMessage>(new protocol::outcoming::BrightOptionsMessage())
-            << QByteArray(protocol::outcoming::BrightOptionsMessage::size(), '\0'); // TODO
-    QTest::newRow("ImagesData")
-            << QSharedPointer<protocol::AbstractMessage>(new protocol::outcoming::ImagesDataMessage())
-            << QByteArray(protocol::outcoming::ImagesDataMessage::size(), '\0'); // TODO
+    return res;
 }
-
-QTEST_MAIN(MessageSerializationTest)
-
-#include "main.moc"

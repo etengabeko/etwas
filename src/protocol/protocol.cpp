@@ -3,20 +3,16 @@
 #include <QCoreApplication>
 #include <QDataStream>
 #include <QMap>
+#include <QRegularExpression>
 #include <QString>
+#include <QStringList>
+#include <QVector>
+
+#include "protocol_private.h"
+#include "types.h"
 
 namespace
 {
-
-quint16 kDeviceIdentitySize() { return 259;  }
-quint16 kButtonsStateSize()   { return 33;   }
-
-quint16 kDeviceAddressSize()  { return 7;    }
-quint16 kDisplayImagesSize()  { return 4;    }
-quint16 kDisplayOptionsSize() { return 4;    }
-quint16 kBlinkOptionsSize()   { return 4;    }
-quint16 kBrightOptionsSize()  { return 3;    }
-quint16 kImagesDataSize()     { return 6146; }
 
 template <typename T>
 const QString typeToHex(T type)
@@ -25,34 +21,16 @@ const QString typeToHex(T type)
            .arg(QString::number(static_cast<quint8>(type), 16).toUpper());
 }
 
-template <typename Based, typename Derived>
-bool deserializeMessage(std::unique_ptr<Based>& dst, const QByteArray& src)
-{
-    if (src.size() < Derived::size())
-    {
-        return false;
-    }
-
-    Derived* derived = new Derived();
-    dst.reset(derived);
-
-    QDataStream in(src);
-    in >> *derived;
-
-    return true;
-}
+size_t maxButtonsStatesCount() { return 32; }
+size_t addressStringSize() { return 15; }
 
 }
 
 namespace protocol
 {
-AbstractMessage::AbstractMessage(MessageDirection direction)
+
+AbstractMessage::AbstractMessage(MessageDirection direction) noexcept
     : m_direction(direction)
-{
-
-}
-
-AbstractMessage::~AbstractMessage()
 {
 
 }
@@ -75,13 +53,34 @@ std::unique_ptr<AbstractMessage> AbstractMessage::deserialize(MessageDirection d
         Q_ASSERT_X(false, "AbstractMessage::deserialize", "Unknown message direction");
         break;
     }
-
     return result;
 }
 
-MessageDirection AbstractMessage::direction() const
+MessageDirection AbstractMessage::direction() const noexcept
 {
     return m_direction;
+}
+
+QDataStream& operator <<(QDataStream& dst, const AbstractMessage& src)
+{
+    const QByteArray content = src.serialize();
+    dst << static_cast<quint16>(content.size());
+    dst.writeRawData(content.constData(), content.size());
+
+    return dst;
+}
+
+QDataStream& operator >>(QDataStream& src, AbstractMessage& dst)
+{
+    quint16 size = 0;
+    src >> size;
+    if (size > 0)
+    {
+        QByteArray content(size, '\0');
+        src.readRawData(content.data(), size);
+        dst.parse(content);
+    }
+    return src;
 }
 
 namespace incoming
@@ -102,14 +101,9 @@ const QString typeToString(MessageType type)
                                     : qApp->tr("Unknown incoming type = %1").arg(::typeToHex(type)));
 }
 
-Message::Message(MessageType type) :
+Message::Message(MessageType type) noexcept :
     AbstractMessage(MessageDirection::Incoming),
     m_type(type)
-{
-
-}
-
-Message::~Message()
 {
 
 }
@@ -123,22 +117,17 @@ std::unique_ptr<Message> Message::deserialize(const QByteArray& content)
         quint8 type = 0;
         {
             QDataStream in(content);
+            in.setByteOrder(QDataStream::BigEndian);
             in >> type;
         }
 
         switch (static_cast<MessageType>(type))
         {
         case MessageType::DeviceIdentity:
-            if (!::deserializeMessage<Message, DeviceIdentityMessage>(result, content))
-            {
-                // TODO
-            }
+            result.reset(new DeviceIdentityMessage());
             break;
         case MessageType::ButtonsState:
-            if (!::deserializeMessage<Message, ButtonsStateMessage>(result, content))
-            {
-                // TODO
-            }
+            result.reset(new ButtonsStateMessage());
             break;
         case MessageType::Unknown:
         default:
@@ -147,86 +136,197 @@ std::unique_ptr<Message> Message::deserialize(const QByteArray& content)
         }
     }
 
+    if (result != nullptr)
+    {
+        result->parse(content);
+    }
     return result;
 }
 
-MessageType Message::type() const
+MessageType Message::type() const noexcept
 {
     return m_type;
 }
 
 DeviceIdentityMessage::DeviceIdentityMessage() :
-    Message(MessageType::DeviceIdentity)
+    Message(MessageType::DeviceIdentity),
+    m_pimpl(new details::DeviceIdentityMessagePrivate())
 {
 
 }
 
-DeviceIdentityMessage::~DeviceIdentityMessage()
+DeviceIdentityMessage::~DeviceIdentityMessage() noexcept
+{
+    m_pimpl.reset();
+}
+
+DeviceIdentityMessage::DeviceIdentityMessage(const DeviceIdentityMessage& other) :
+    Message(other),
+    m_pimpl(new details::DeviceIdentityMessagePrivate(*other.m_pimpl))
 {
 
+}
+
+DeviceIdentityMessage& DeviceIdentityMessage::operator =(const DeviceIdentityMessage& other)
+{
+    *m_pimpl = *other.m_pimpl;
+    return *this;
 }
 
 const QByteArray DeviceIdentityMessage::serialize() const
 {
-    // TODO
-    return QByteArray(size(), '\0');
+    QByteArray result;
+
+    QDataStream out(&result, QIODevice::WriteOnly);
+    out.setByteOrder(QDataStream::BigEndian);
+    out << static_cast<quint8>(m_type)
+        << static_cast<quint8>(firmwareVersion())
+        << static_cast<quint16>(buttonsNumbers().size());
+    for (const auto& each : buttonsNumbers())
+    {
+        out << static_cast<quint8>(each);
+    }
+    return result;
 }
 
-quint16 DeviceIdentityMessage::size()
+bool DeviceIdentityMessage::parse(const QByteArray& src)
 {
-    return ::kDeviceIdentitySize();
+    QDataStream in(src);
+    in.setByteOrder(QDataStream::BigEndian);
+    quint8 tmp = 0;
+    in >> tmp;
+
+    bool ok = (tmp == static_cast<quint8>(type()));
+    if (ok)
+    {
+        in >> tmp;
+        setFirmwareVersion(tmp);
+        quint16 buttonsCount = 0;
+        in >> buttonsCount;
+        if (buttonsCount > 0)
+        {
+            QVector<quint8> buttons(buttonsCount, 0);
+            for (size_t i = 0; i < buttonsCount; ++i)
+            {
+                in >> buttons[i];
+            }
+            setButtonsNumbers(std::move(buttons));
+        }
+    }
+    return ok;
+}
+
+quint8 DeviceIdentityMessage::firmwareVersion() const noexcept
+{
+    return m_pimpl->firmwareVersion();
+}
+
+void DeviceIdentityMessage::setFirmwareVersion(quint8 version) noexcept
+{
+    m_pimpl->setFirmwareVersion(version);
+}
+
+const QVector<quint8> DeviceIdentityMessage::buttonsNumbers() const
+{
+    return m_pimpl->buttonsNumbers();
+}
+
+void DeviceIdentityMessage::setButtonsNumbers(const QVector<quint8>& numbers)
+{
+    m_pimpl->setButtonsNumbers(numbers);
+}
+
+void DeviceIdentityMessage::setButtonsNumbers(QVector<quint8>&& numbers)
+{
+    m_pimpl->setButtonsNumbers(std::forward<QVector<quint8>>(numbers));
 }
 
 ButtonsStateMessage::ButtonsStateMessage() :
-    Message(MessageType::ButtonsState)
+    Message(MessageType::ButtonsState),
+    m_pimpl(new details::ButtonsStateMessagePrivate())
 {
 
 }
 
-ButtonsStateMessage::~ButtonsStateMessage()
+ButtonsStateMessage::ButtonsStateMessage(const ButtonsStateMessage& other) :
+    Message(other),
+    m_pimpl(new details::ButtonsStateMessagePrivate(*other.m_pimpl))
 {
 
+}
+
+ButtonsStateMessage& ButtonsStateMessage::operator =(const ButtonsStateMessage& other)
+{
+    *m_pimpl = *other.m_pimpl;
+    return *this;
+}
+
+ButtonsStateMessage::~ButtonsStateMessage() noexcept
+{
+    m_pimpl.reset();
 }
 
 const QByteArray ButtonsStateMessage::serialize() const
 {
-    // TODO
-    return QByteArray(size(), '\0');
+    QByteArray states(::maxButtonsStatesCount(), '\0');
+    for (uint i = 0, sz = buttonsStates().size(); i < sz; ++i)
+    {
+        quint8 eachState = static_cast<quint8>(buttonsStates().at(i));
+        quint8 currentByte = states[i/8];
+        states[i/8] = currentByte | (eachState << (i%8));
+    }
+
+    QByteArray result;
+    {
+        QDataStream out(&result, QIODevice::WriteOnly);
+        out.setByteOrder(QDataStream::BigEndian);
+        out << static_cast<quint8>(m_type);
+    }
+    result += states;
+
+    return result;
 }
 
-quint16 ButtonsStateMessage::size()
+bool ButtonsStateMessage::parse(const QByteArray& src)
 {
-    return ::kButtonsStateSize();
+    QDataStream in(src);
+    in.setByteOrder(QDataStream::BigEndian);
+    quint8 tmp = 0;
+    in >> tmp;
+
+    bool ok = (   tmp == static_cast<quint8>(type())
+               && static_cast<size_t>(src.size()) >= (::maxButtonsStatesCount() + sizeof(tmp)));
+    if (ok)
+    {
+        QVector<quint8> bytes(::maxButtonsStatesCount(),'\0');
+        {
+            QByteArray ba(::maxButtonsStatesCount(), '\0');
+            in.readRawData(ba.data(), bytes.size());
+            std::copy(ba.begin(), ba.end(), bytes.begin());
+        }
+
+        QVector<ButtonState> states(8 * ::maxButtonsStatesCount(), ButtonState::Off);
+        for (size_t i = 0, sz = 8 * ::maxButtonsStatesCount(); i < sz; ++i)
+        {
+            const quint8 mask = 1 << (i%8);
+            quint8 currentByte = bytes.at(i/8);
+            states[i] = (currentByte & mask) == 0 ? ButtonState::Off
+                                                  : ButtonState::On;
+        }
+
+        setButtonsStates(std::move(states));
+    }
+    return ok;
 }
 
-QDataStream& operator <<(QDataStream& dst, const DeviceIdentityMessage& src)
+const QVector<ButtonState> ButtonsStateMessage::buttonsStates() const
 {
-    dst << DeviceIdentityMessage::size()
-        << src.serialize();
-    return dst;
+    return m_pimpl->buttonsStates();
 }
 
-QDataStream& operator <<(QDataStream& dst, const ButtonsStateMessage& src)
+void ButtonsStateMessage::setButtonsStates(QVector<ButtonState>&& states)
 {
-    dst << ButtonsStateMessage::size()
-        << src.serialize();
-    return dst;
-}
-
-QDataStream& operator >>(QDataStream& src, DeviceIdentityMessage& dst)
-{
-    // TODO
-    Q_UNUSED(dst);
-
-    return src;
-}
-
-QDataStream& operator >>(QDataStream& src, ButtonsStateMessage& dst)
-{
-    // TODO
-    Q_UNUSED(dst);
-
-    return src;
+    m_pimpl->setButtonsStates(std::forward<QVector<ButtonState>>(states));
 }
 
 } // incoming
@@ -256,14 +356,9 @@ const QString typeToString(MessageType type)
                                     : qApp->tr("Unknown outcoming type = %1").arg(::typeToHex(type)));
 }
 
-Message::Message(MessageType type) :
+Message::Message(MessageType type) noexcept :
     AbstractMessage(MessageDirection::Outcoming),
     m_type(type)
-{
-
-}
-
-Message::~Message()
 {
 
 }
@@ -277,46 +372,29 @@ std::unique_ptr<Message> Message::deserialize(const QByteArray& content)
         quint8 type = 0;
         {
             QDataStream in(content);
+            in.setByteOrder(QDataStream::BigEndian);
             in >> type;
         }
 
         switch (static_cast<MessageType>(type))
         {
         case MessageType::DeviceAddress:
-            if (!::deserializeMessage<Message, DeviceAddressMessage>(result, content))
-            {
-                // TODO
-            }
+            result.reset(new DeviceAddressMessage());
             break;
         case MessageType::DisplayImages:
-            if (!::deserializeMessage<Message, DisplayImagesMessage>(result, content))
-            {
-                // TODO
-            }
+            result.reset(new DisplayImagesMessage());
             break;
         case MessageType::DisplayOptions:
-            if (!::deserializeMessage<Message, DisplayOptionsMessage>(result, content))
-            {
-                // TODO
-            }
+            result.reset(new DisplayOptionsMessage());
             break;
         case MessageType::BlinkOptions:
-            if (!::deserializeMessage<Message, BlinkOptionsMessage>(result, content))
-            {
-                // TODO
-            }
+            result.reset(new BlinkOptionsMessage());
             break;
         case MessageType::BrightOptions:
-            if (!::deserializeMessage<Message, BrightOptionsMessage>(result, content))
-            {
-                // TODO
-            }
+            result.reset(new BrightOptionsMessage());
             break;
         case MessageType::ImagesData:
-            if (!::deserializeMessage<Message, ImagesDataMessage>(result, content))
-            {
-                // TODO
-            }
+            result.reset(new ImagesDataMessage());
             break;
         case MessageType::Unknown:
         default:
@@ -325,234 +403,557 @@ std::unique_ptr<Message> Message::deserialize(const QByteArray& content)
         }
     }
 
+    if (result != nullptr)
+    {
+        result->parse(content);
+    }
     return result;
 }
 
-MessageType Message::type() const
+MessageType Message::type() const noexcept
 {
     return m_type;
 }
 
 DeviceAddressMessage::DeviceAddressMessage() :
-    Message(MessageType::DeviceAddress)
+    Message(MessageType::DeviceAddress),
+    m_pimpl(new details::DeviceAddressMessagePrivate())
 {
 
 }
 
-DeviceAddressMessage::~DeviceAddressMessage()
+DeviceAddressMessage::~DeviceAddressMessage() noexcept
+{
+    m_pimpl.reset();
+}
+
+DeviceAddressMessage::DeviceAddressMessage(const DeviceAddressMessage& other) :
+    Message(other),
+    m_pimpl(new details::DeviceAddressMessagePrivate(*other.m_pimpl))
 {
 
+}
+
+DeviceAddressMessage& DeviceAddressMessage::operator =(const DeviceAddressMessage& other)
+{
+    *m_pimpl = *other.m_pimpl;
+    return *this;
 }
 
 const QByteArray DeviceAddressMessage::serialize() const
 {
-    // TODO
-    return QByteArray(size(), '\0');
+    static const QRegularExpression re("(?:[\\d]{1,3}\\.){3}[\\d]{1,3}");
+
+    QByteArray result;
+    {
+        QDataStream out(&result, QIODevice::WriteOnly);
+        out.setByteOrder(QDataStream::BigEndian);
+        out << static_cast<quint8>(m_type);
+        if (re.match(address()).hasMatch())
+        {
+            for (const QString& each : address().split('.'))
+            {
+                out << static_cast<quint8>(each.toUShort());
+            }
+        }
+        else
+        {
+            for (size_t i = 0; i < 4; ++i)
+            {
+                out << static_cast<quint8>(0);
+            }
+        }
+        out << static_cast<quint16>(port());
+    }
+    return result;
 }
 
-quint16 DeviceAddressMessage::size()
+bool DeviceAddressMessage::parse(const QByteArray& src)
 {
-    return ::kDeviceAddressSize();
+    QDataStream in(src);
+    in.setByteOrder(QDataStream::BigEndian);
+    quint8 tmp = 0;
+    in >> tmp;
+
+    bool ok = (   tmp == static_cast<quint8>(type())
+               && static_cast<size_t>(src.size()) >= (4 * sizeof(quint8) + sizeof(quint16)));
+    if (ok)
+    {
+        QString strAddress;
+        strAddress.reserve(::addressStringSize());
+        for (size_t i = 0; i < 4; ++i)
+        {
+            in >> tmp;
+            if (i > 0)
+            {
+                strAddress += '.';
+            }
+            strAddress += QString::number(tmp);
+        }
+        quint16 portNum = 0;
+        in >> portNum;
+
+        setAddress(strAddress);
+        setPort(portNum);
+    }
+    return ok;
+}
+
+const QString DeviceAddressMessage::address() const
+{
+    return m_pimpl->address();
+}
+
+void DeviceAddressMessage::setAddress(const QString& addr)
+{
+    m_pimpl->setAddress(addr);
+}
+
+quint16 DeviceAddressMessage::port() const noexcept
+{
+    return m_pimpl->port();
+}
+
+void DeviceAddressMessage::setPort(quint16 num) noexcept
+{
+    m_pimpl->setPort(num);
 }
 
 DisplayImagesMessage::DisplayImagesMessage() :
-    Message(MessageType::DisplayImages)
+    Message(MessageType::DisplayImages),
+    m_pimpl(new details::DisplayImagesMessagePrivate())
 {
 
 }
 
-DisplayImagesMessage::~DisplayImagesMessage()
+DisplayImagesMessage::~DisplayImagesMessage() noexcept
+{
+    m_pimpl.reset();
+}
+
+DisplayImagesMessage::DisplayImagesMessage(const DisplayImagesMessage& other) :
+    Message(other),
+    m_pimpl(new details::DisplayImagesMessagePrivate(*other.m_pimpl))
 {
 
+}
+
+DisplayImagesMessage& DisplayImagesMessage::operator =(const DisplayImagesMessage& other)
+{
+    *m_pimpl = *other.m_pimpl;
+    return *this;
 }
 
 const QByteArray DisplayImagesMessage::serialize() const
 {
-    // TODO
-    return QByteArray(size(), '\0');
+    QByteArray result;
+
+    QDataStream out(&result, QIODevice::WriteOnly);
+    out.setByteOrder(QDataStream::BigEndian);
+    out << static_cast<quint8>(m_type)
+        << static_cast<quint8>(displayNumber())
+        << static_cast<quint16>(firstImageNumber())
+        << static_cast<quint16>(secondImageNumber());
+
+    return result;
 }
 
-quint16 DisplayImagesMessage::size()
+bool DisplayImagesMessage::parse(const QByteArray& src)
 {
-    return ::kDisplayImagesSize();
+    QDataStream in(src);
+    in.setByteOrder(QDataStream::BigEndian);
+    quint8 tmp = 0;
+    in >> tmp;
+
+    bool ok = (tmp == static_cast<quint8>(type()));
+    if (ok)
+    {
+        in >> tmp;
+        setDisplayNumber(tmp);
+
+        in >> tmp;
+        setFirstImageNumber(tmp);
+
+        in >> tmp;
+        setSecondImageNumber(tmp);
+    }
+    return ok;
+}
+
+quint8 DisplayImagesMessage::displayNumber() const noexcept
+{
+    return m_pimpl->displayNumber();
+}
+
+void DisplayImagesMessage::setDisplayNumber(quint8 num) noexcept
+{
+    m_pimpl->setDisplayNumber(num);
+}
+
+quint8 DisplayImagesMessage::firstImageNumber() const noexcept
+{
+    return m_pimpl->firstImageNumber();
+}
+
+void DisplayImagesMessage::setFirstImageNumber(quint8 num) noexcept
+{
+    m_pimpl->setFirstImageNumber(num);
+}
+
+quint8 DisplayImagesMessage::secondImageNumber() const noexcept
+{
+    return m_pimpl->secondImageNumber();
+}
+
+void DisplayImagesMessage::setSecondImageNumber(quint8 num) noexcept
+{
+    m_pimpl->setSecondImageNumber(num);
 }
 
 DisplayOptionsMessage::DisplayOptionsMessage() :
-    Message(MessageType::DisplayOptions)
+    Message(MessageType::DisplayOptions),
+    m_pimpl(new details::DisplayOptionsMessagePrivate())
 {
 
 }
 
-DisplayOptionsMessage::~DisplayOptionsMessage()
+DisplayOptionsMessage::~DisplayOptionsMessage() noexcept
+{
+    m_pimpl.reset();
+}
+
+DisplayOptionsMessage::DisplayOptionsMessage(const DisplayOptionsMessage& other) :
+    Message(other),
+    m_pimpl(new details::DisplayOptionsMessagePrivate(*other.m_pimpl))
 {
 
+}
+
+DisplayOptionsMessage& DisplayOptionsMessage::operator =(const DisplayOptionsMessage& other)
+{
+    *m_pimpl = *other.m_pimpl;
+    return *this;
 }
 
 const QByteArray DisplayOptionsMessage::serialize() const
 {
-    // TODO
-    return QByteArray(size(), '\0');
+    QByteArray result;
+
+    QDataStream out(&result, QIODevice::WriteOnly);
+    out.setByteOrder(QDataStream::BigEndian);
+    out << static_cast<quint8>(m_type)
+        << static_cast<quint8>(displayNumber())
+        << static_cast<quint8>(imageSelection())
+        << static_cast<quint8>(blinkState());
+
+    return result;
 }
 
-quint16 DisplayOptionsMessage::size()
+bool DisplayOptionsMessage::parse(const QByteArray& src)
 {
-    return ::kDisplayOptionsSize();
+    QDataStream in(src);
+    in.setByteOrder(QDataStream::BigEndian);
+    quint8 tmp = 0;
+    in >> tmp;
+
+    bool ok = (tmp == static_cast<quint8>(type()));
+    if (ok)
+    {
+        in >> tmp;
+        setDisplayNumber(tmp);
+
+        in >> tmp;
+        ok = (tmp < static_cast<quint8>(ImageSelection::End)) && ok;
+        if (ok)
+        {
+            setImageSelection(static_cast<ImageSelection>(tmp));
+        }
+
+        in >> tmp;
+        ok = (tmp < static_cast<quint8>(BlinkState::End)) && ok;
+        if (ok)
+        {
+            setBlinkState(static_cast<BlinkState>(tmp));
+        }
+    }
+    return ok;
+}
+
+quint8 DisplayOptionsMessage::displayNumber() const noexcept
+{
+    return m_pimpl->displayNumber();
+}
+
+void DisplayOptionsMessage::setDisplayNumber(quint8 num) noexcept
+{
+    m_pimpl->setDisplayNumber(num);
+}
+
+ImageSelection DisplayOptionsMessage::imageSelection() const noexcept
+{
+    return m_pimpl->imageSelection();
+}
+
+void DisplayOptionsMessage::setImageSelection(ImageSelection selection) noexcept
+{
+    m_pimpl->setImageSelection(selection);
+}
+
+BlinkState DisplayOptionsMessage::blinkState() const noexcept
+{
+    return m_pimpl->blinkState();
+}
+
+void DisplayOptionsMessage::setBlinkState(BlinkState blink) noexcept
+{
+    m_pimpl->setBlinkState(blink);
 }
 
 BlinkOptionsMessage::BlinkOptionsMessage() :
-    Message(MessageType::BlinkOptions)
+    Message(MessageType::BlinkOptions),
+    m_pimpl(new details::BlinkOptionsMessagePrivate())
 {
 
 }
 
-BlinkOptionsMessage::~BlinkOptionsMessage()
+BlinkOptionsMessage::~BlinkOptionsMessage() noexcept
+{
+    m_pimpl.reset();
+}
+
+BlinkOptionsMessage::BlinkOptionsMessage(const BlinkOptionsMessage& other) :
+    Message(other),
+    m_pimpl(new details::BlinkOptionsMessagePrivate(*other.m_pimpl))
 {
 
+}
+
+BlinkOptionsMessage& BlinkOptionsMessage::operator =(const BlinkOptionsMessage& other)
+{
+    *m_pimpl = *other.m_pimpl;
+    return *this;
 }
 
 const QByteArray BlinkOptionsMessage::serialize() const
 {
-    // TODO
-    return QByteArray(size(), '\0');
+    QByteArray result;
+
+    QDataStream out(&result, QIODevice::WriteOnly);
+    out.setByteOrder(QDataStream::BigEndian);
+    out << static_cast<quint8>(m_type)
+        << static_cast<quint8>(displayNumber())
+        << static_cast<quint8>(timeOn())
+        << static_cast<quint8>(timeOff());
+
+    return result;
 }
 
-quint16 BlinkOptionsMessage::size()
+bool BlinkOptionsMessage::parse(const QByteArray& src)
 {
-    return ::kBlinkOptionsSize();
+    QDataStream in(src);
+    in.setByteOrder(QDataStream::BigEndian);
+    quint8 tmp = 0;
+    in >> tmp;
+
+    bool ok = (tmp == static_cast<quint8>(type()));
+    if (ok)
+    {
+        in >> tmp;
+        setDisplayNumber(tmp);
+
+        in >> tmp;
+        setTimeOn(tmp);
+
+        in >> tmp;
+        setTimeOff(tmp);
+    }
+    return ok;
+}
+
+quint8 BlinkOptionsMessage::displayNumber() const noexcept
+{
+    return m_pimpl->displayNumber();
+}
+
+void BlinkOptionsMessage::setDisplayNumber(quint8 num) noexcept
+{
+    m_pimpl->setDisplayNumber(num);
+}
+
+quint8 BlinkOptionsMessage::timeOn() const noexcept
+{
+    return m_pimpl->timeOn();
+}
+
+void BlinkOptionsMessage::setTimeOn(quint8 msec10) noexcept
+{
+    m_pimpl->setTimeOn(msec10);
+}
+
+quint8 BlinkOptionsMessage::timeOff() const noexcept
+{
+    return m_pimpl->timeOff();
+}
+
+void BlinkOptionsMessage::setTimeOff(quint8 msec10) noexcept
+{
+    m_pimpl->setTimeOff(msec10);
 }
 
 BrightOptionsMessage::BrightOptionsMessage() :
-    Message(MessageType::BrightOptions)
+    Message(MessageType::BrightOptions),
+    m_pimpl(new details::BrightOptionsMessagePrivate())
 {
 
 }
 
-BrightOptionsMessage::~BrightOptionsMessage()
+BrightOptionsMessage::~BrightOptionsMessage() noexcept
+{
+    m_pimpl.reset();
+}
+
+BrightOptionsMessage::BrightOptionsMessage(const BrightOptionsMessage& other) :
+    Message(other),
+    m_pimpl(new details::BrightOptionsMessagePrivate(*other.m_pimpl))
 {
 
+}
+
+BrightOptionsMessage& BrightOptionsMessage::operator =(const BrightOptionsMessage& other)
+{
+    *m_pimpl = *other.m_pimpl;
+    return *this;
 }
 
 const QByteArray BrightOptionsMessage::serialize() const
 {
-    // TODO
-    return QByteArray(size(), '\0');
+    QByteArray result;
+
+    QDataStream out(&result, QIODevice::WriteOnly);
+    out.setByteOrder(QDataStream::BigEndian);
+    out << static_cast<quint8>(m_type)
+        << static_cast<quint8>(displayNumber())
+        << static_cast<quint8>(brightLevel());
+
+    return result;
 }
 
-quint16 BrightOptionsMessage::size()
+bool BrightOptionsMessage::parse(const QByteArray& src)
 {
-    return ::kBrightOptionsSize();
+    QDataStream in(src);
+    in.setByteOrder(QDataStream::BigEndian);
+    quint8 tmp = 0;
+    in >> tmp;
+
+    bool ok = (tmp == static_cast<quint8>(type()));
+    if (ok)
+    {
+        in >> tmp;
+        setDisplayNumber(tmp);
+
+        in >> tmp;
+        ok = (tmp < static_cast<quint8>(BrightLevel::End)) && ok;
+        if (ok)
+        {
+            setBrightLevel(tmp);
+        }
+    }
+    return ok;
+}
+
+quint8 BrightOptionsMessage::displayNumber() const noexcept
+{
+    return m_pimpl->displayNumber();
+}
+
+void BrightOptionsMessage::setDisplayNumber(quint8 num) noexcept
+{
+    m_pimpl->setDisplayNumber(num);
+}
+
+quint8 BrightOptionsMessage::brightLevel() const noexcept
+{
+    return m_pimpl->brightLevel();
+}
+
+void BrightOptionsMessage::setBrightLevel(quint8 bright) noexcept
+{
+    m_pimpl->setBrightLevel(bright);
 }
 
 ImagesDataMessage::ImagesDataMessage() :
-    Message(MessageType::ImagesData)
+    Message(MessageType::ImagesData),
+    m_pimpl(new details::ImagesDataMessagePrivate())
 {
 
 }
 
-ImagesDataMessage::~ImagesDataMessage()
+ImagesDataMessage::~ImagesDataMessage() noexcept
+{
+    m_pimpl.reset();
+}
+
+ImagesDataMessage::ImagesDataMessage(const ImagesDataMessage& other) :
+    Message(other),
+    m_pimpl(new details::ImagesDataMessagePrivate(*other.m_pimpl))
 {
 
+}
+
+ImagesDataMessage& ImagesDataMessage::operator =(const ImagesDataMessage& other)
+{
+    *m_pimpl = *other.m_pimpl;
+    return *this;
 }
 
 const QByteArray ImagesDataMessage::serialize() const
 {
+    QByteArray result;
+
+    QDataStream out(&result, QIODevice::WriteOnly);
+    out.setByteOrder(QDataStream::BigEndian);
+    out << static_cast<quint8>(m_type)
+        << static_cast<quint8>(imageNumber());
     // TODO
-    return QByteArray(size(), '\0');
+
+    return result;
 }
 
-quint16 ImagesDataMessage::size()
+bool ImagesDataMessage::parse(const QByteArray& src)
 {
-    return ::kImagesDataSize();
+    QDataStream in(src);
+    in.setByteOrder(QDataStream::BigEndian);
+    quint8 tmp = 0;
+    in >> tmp;
+
+    bool ok = (tmp == static_cast<quint8>(type()));
+    if (ok)
+    {
+        in >> tmp;
+        setImageNumber(tmp);
+        // TODO
+    }
+    return ok;
 }
 
-QDataStream& operator <<(QDataStream& dst, const DeviceAddressMessage& src)
+quint8 ImagesDataMessage::imageNumber() const noexcept
 {
-    dst << DeviceAddressMessage::size()
-        << src.serialize();
-    return dst;
+    return m_pimpl->imageNumber();
 }
 
-QDataStream& operator <<(QDataStream& dst, const DisplayImagesMessage& src)
+void ImagesDataMessage::setImageNumber(quint8 num) noexcept
 {
-    dst << DisplayImagesMessage::size()
-        << src.serialize();
-    return dst;
+    m_pimpl->setImageNumber(num);
 }
 
-QDataStream& operator <<(QDataStream& dst, const DisplayOptionsMessage& src)
+const QVector<QRgb> ImagesDataMessage::imageColors() const
 {
-    dst << DisplayOptionsMessage::size()
-        << src.serialize();
-    return dst;
+    return m_pimpl->imageColors();
 }
 
-QDataStream& operator <<(QDataStream& dst, const BlinkOptionsMessage& src)
+void ImagesDataMessage::setImageColors(QVector<QRgb>&& colors)
 {
-    dst << BlinkOptionsMessage::size()
-        << src.serialize();
-    return dst;
-}
-
-QDataStream& operator <<(QDataStream& dst, const BrightOptionsMessage& src)
-{
-    dst << BrightOptionsMessage::size()
-        << src.serialize();
-    return dst;
-}
-
-QDataStream& operator <<(QDataStream& dst, const ImagesDataMessage& src)
-{
-    dst << ImagesDataMessage::size()
-        << src.serialize();
-    return dst;
-}
-
-QDataStream& operator >>(QDataStream& src, DeviceAddressMessage& dst)
-{
-    // TODO
-    Q_UNUSED(dst);
-
-    return src;
-}
-
-QDataStream& operator >>(QDataStream& src, DisplayImagesMessage& dst)
-{
-    // TODO
-    Q_UNUSED(dst);
-
-    return src;
-}
-
-QDataStream& operator >>(QDataStream& src, DisplayOptionsMessage& dst)
-{
-    // TODO
-    Q_UNUSED(dst);
-
-    return src;
-}
-
-QDataStream& operator >>(QDataStream& src, BlinkOptionsMessage& dst)
-{
-    // TODO
-    Q_UNUSED(dst);
-
-    return src;
-}
-
-QDataStream& operator >>(QDataStream& src, BrightOptionsMessage& dst)
-{
-    // TODO
-    Q_UNUSED(dst);
-
-    return src;
-}
-
-QDataStream& operator >>(QDataStream& src, ImagesDataMessage& dst)
-{
-    // TODO
-    Q_UNUSED(dst);
-
-    return src;
+    m_pimpl->setImageColors(std::forward<QVector<QRgb>>(colors));
 }
 
 } // outcoming

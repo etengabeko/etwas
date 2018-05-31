@@ -38,13 +38,15 @@ HEADERS = \
     # logger
     $$PWD/src/logger/logger.h \
     # protocol
-    $$PWD/src/protocol/protocol.h
+    $$PWD/src/protocol/protocol.h \
+    $$PWD/src/protocol/protocol_private.h
 
 SOURCES = \
     # logger
     $$PWD/src/logger/logger.cpp \
     # protocol
     $$PWD/src/protocol/protocol.cpp \
+    $$PWD/src/protocol/protocol_private.cpp \
     $$PWD/src/main.cpp
 
 FORMS =
