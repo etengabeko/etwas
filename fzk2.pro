@@ -5,6 +5,7 @@ TARGET = $$PROJECT
 QT = \
     core \
     gui \
+    network \
     widgets
 
 CONFIG += warn_on
@@ -34,12 +35,24 @@ OTHER_FILES += $$PWD/config/settings.xml
 config.path = $$PREFIX/etc/$$PROJECT
 config.files += $$OTHER_FILES
 
+INCLUDEPATH += $$PWD/src
+
 HEADERS = \
     # logger
     $$PWD/src/logger/logger.h \
     # protocol
     $$PWD/src/protocol/protocol.h \
-    $$PWD/src/protocol/protocol_private.h
+    $$PWD/src/protocol/protocol_private.h \
+    # settings
+    $$PWD/src/settings/settings.h \
+    $$PWD/src/settings/settings_private.h \
+    # ioservice
+    $$PWD/src/ioservice/transport.h \
+    $$PWD/src/ioservice/transport_private.h \
+    $$PWD/src/ioservice/inputcontroller.h \
+    $$PWD/src/ioservice/inputcontroller_private.h \
+    $$PWD/src/ioservice/outputcontroller.h \
+    $$PWD/src/ioservice/outputcontroller_private.h
 
 SOURCES = \
     # logger
@@ -47,6 +60,17 @@ SOURCES = \
     # protocol
     $$PWD/src/protocol/protocol.cpp \
     $$PWD/src/protocol/protocol_private.cpp \
+    # settings
+    $$PWD/src/settings/settings.cpp \
+    $$PWD/src/settings/settings_private.cpp \
+    # ioservice
+    $$PWD/src/ioservice/transport.cpp \
+    $$PWD/src/ioservice/transport_private.cpp \
+    $$PWD/src/ioservice/inputcontroller.cpp \
+    $$PWD/src/ioservice/inputcontroller_private.cpp \
+    $$PWD/src/ioservice/outputcontroller.cpp \
+    $$PWD/src/ioservice/outputcontroller_private.cpp \
+    # main
     $$PWD/src/main.cpp
 
 FORMS =
