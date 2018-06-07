@@ -2,4 +2,5 @@ TEMPLATE = subdirs
 
 SUBDIRS = \
     serialization \
-    send-receive
+#    send-receive
+    retranslate-srv
