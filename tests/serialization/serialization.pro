@@ -26,22 +26,21 @@ target.path = $$PREFIX/sbin
 ROOT_PROJECT_SRC_DIR = $$PWD/../../src
 INCLUDEPATH += $$ROOT_PROJECT_SRC_DIR
 
-PUBLIC_HEADERS = \
+ROOT_PROJECT_HEADERS = \
     # protocol
     $$ROOT_PROJECT_SRC_DIR/protocol/protocol.h \
+    $$ROOT_PROJECT_SRC_DIR/protocol/protocol_private.h \
     $$ROOT_PROJECT_SRC_DIR/protocol/types.h
 
 HEADERS = \
-    $$PUBLIC_HEADERS \
-    # protocol
-    $$ROOT_PROJECT_SRC_DIR/protocol/protocol_private.h \
+    $$ROOT_PROJECT_HEADERS \
     # main
     $$PWD/src/basictest.h \
     $$PWD/src/buttonsstate.h \
     $$PWD/src/deviceidentity.h
 
 SOURCES = \
-    # protocol
+    # root project
     $$ROOT_PROJECT_SRC_DIR/protocol/protocol.cpp \
     $$ROOT_PROJECT_SRC_DIR/protocol/protocol_private.cpp \
     # main
