@@ -163,7 +163,7 @@ Logger::Logger(Logger&& other) NOEXCEPT :
 
 }
 
-Logger& Logger::operator =(Logger&& other)
+Logger& Logger::operator =(Logger&& other) NOEXCEPT
 {
     m_pimpl.swap(other.m_pimpl);
     return *this;

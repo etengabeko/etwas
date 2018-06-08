@@ -190,14 +190,14 @@ DeviceIdentityMessage& DeviceIdentityMessage::operator =(const DeviceIdentityMes
     return *this;
 }
 
-DeviceIdentityMessage::DeviceIdentityMessage(DeviceIdentityMessage&& other) :
+DeviceIdentityMessage::DeviceIdentityMessage(DeviceIdentityMessage&& other) NOEXCEPT :
     Message(other),
     m_pimpl(std::move(other.m_pimpl))
 {
 
 }
 
-DeviceIdentityMessage& DeviceIdentityMessage::operator =(DeviceIdentityMessage&& other)
+DeviceIdentityMessage& DeviceIdentityMessage::operator =(DeviceIdentityMessage&& other) NOEXCEPT
 {
     m_pimpl.swap(other.m_pimpl);
     return *this;
@@ -296,14 +296,14 @@ ButtonsStateMessage& ButtonsStateMessage::operator =(const ButtonsStateMessage& 
     return *this;
 }
 
-ButtonsStateMessage::ButtonsStateMessage(ButtonsStateMessage&& other) :
+ButtonsStateMessage::ButtonsStateMessage(ButtonsStateMessage&& other) NOEXCEPT :
     Message(other),
     m_pimpl(std::move(other.m_pimpl))
 {
 
 }
 
-ButtonsStateMessage& ButtonsStateMessage::operator =(ButtonsStateMessage&& other)
+ButtonsStateMessage& ButtonsStateMessage::operator =(ButtonsStateMessage&& other) NOEXCEPT
 {
     m_pimpl.swap(other.m_pimpl);
     return *this;
@@ -338,7 +338,7 @@ bool ButtonsStateMessage::parse(const QByteArray& src)
     in >> tmp;
 
     bool ok = (   tmp == static_cast<quint8>(type())
-               && src.size() >= (::maxButtonsStatesCount() + sizeof(tmp)));
+               && src.size() >= static_cast<int>(::maxButtonsStatesCount() + sizeof(tmp)));
     if (ok)
     {
         QVector<quint8> bytes(::maxButtonsStatesCount(),'\0');
@@ -411,7 +411,7 @@ Message::~Message() NOEXCEPT
 
 }
 
-Message::Message(const Message& other) NOEXCEPT:
+Message::Message(const Message& other) NOEXCEPT :
     AbstractMessage(other),
     m_type(other.m_type)
 {
@@ -495,14 +495,14 @@ DeviceAddressMessage& DeviceAddressMessage::operator =(const DeviceAddressMessag
     return *this;
 }
 
-DeviceAddressMessage::DeviceAddressMessage(DeviceAddressMessage&& other) :
+DeviceAddressMessage::DeviceAddressMessage(DeviceAddressMessage&& other) NOEXCEPT :
     Message(other),
     m_pimpl(std::move(other.m_pimpl))
 {
 
 }
 
-DeviceAddressMessage& DeviceAddressMessage::operator =(DeviceAddressMessage&& other)
+DeviceAddressMessage& DeviceAddressMessage::operator =(DeviceAddressMessage&& other) NOEXCEPT
 {
     m_pimpl.swap(other.m_pimpl);
     return *this;
@@ -612,14 +612,14 @@ DisplayImagesMessage& DisplayImagesMessage::operator =(const DisplayImagesMessag
     return *this;
 }
 
-DisplayImagesMessage::DisplayImagesMessage(DisplayImagesMessage&& other) :
+DisplayImagesMessage::DisplayImagesMessage(DisplayImagesMessage&& other) NOEXCEPT :
     Message(other),
     m_pimpl(std::move(other.m_pimpl))
 {
 
 }
 
-DisplayImagesMessage& DisplayImagesMessage::operator =(DisplayImagesMessage&& other)
+DisplayImagesMessage& DisplayImagesMessage::operator =(DisplayImagesMessage&& other) NOEXCEPT
 {
     m_pimpl.swap(other.m_pimpl);
     return *this;
@@ -716,14 +716,14 @@ DisplayOptionsMessage& DisplayOptionsMessage::operator =(const DisplayOptionsMes
     return *this;
 }
 
-DisplayOptionsMessage::DisplayOptionsMessage(DisplayOptionsMessage&& other) :
+DisplayOptionsMessage::DisplayOptionsMessage(DisplayOptionsMessage&& other) NOEXCEPT :
     Message(other),
     m_pimpl(std::move(other.m_pimpl))
 {
 
 }
 
-DisplayOptionsMessage& DisplayOptionsMessage::operator =(DisplayOptionsMessage&& other)
+DisplayOptionsMessage& DisplayOptionsMessage::operator =(DisplayOptionsMessage&& other) NOEXCEPT
 {
     m_pimpl.swap(other.m_pimpl);
     return *this;
@@ -828,14 +828,14 @@ BlinkOptionsMessage& BlinkOptionsMessage::operator =(const BlinkOptionsMessage& 
     return *this;
 }
 
-BlinkOptionsMessage::BlinkOptionsMessage(BlinkOptionsMessage&& other) :
+BlinkOptionsMessage::BlinkOptionsMessage(BlinkOptionsMessage&& other) NOEXCEPT :
     Message(other),
     m_pimpl(std::move(other.m_pimpl))
 {
 
 }
 
-BlinkOptionsMessage& BlinkOptionsMessage::operator =(BlinkOptionsMessage&& other)
+BlinkOptionsMessage& BlinkOptionsMessage::operator =(BlinkOptionsMessage&& other) NOEXCEPT
 {
     m_pimpl.swap(other.m_pimpl);
     return *this;
@@ -932,14 +932,14 @@ BrightOptionsMessage& BrightOptionsMessage::operator =(const BrightOptionsMessag
     return *this;
 }
 
-BrightOptionsMessage::BrightOptionsMessage(BrightOptionsMessage&& other) :
+BrightOptionsMessage::BrightOptionsMessage(BrightOptionsMessage&& other) NOEXCEPT :
     Message(other),
     m_pimpl(std::move(other.m_pimpl))
 {
 
 }
 
-BrightOptionsMessage& BrightOptionsMessage::operator =(BrightOptionsMessage&& other)
+BrightOptionsMessage& BrightOptionsMessage::operator =(BrightOptionsMessage&& other) NOEXCEPT
 {
     m_pimpl.swap(other.m_pimpl);
     return *this;
@@ -1026,14 +1026,14 @@ ImagesDataMessage& ImagesDataMessage::operator =(const ImagesDataMessage& other)
     return *this;
 }
 
-ImagesDataMessage::ImagesDataMessage(ImagesDataMessage&& other) :
+ImagesDataMessage::ImagesDataMessage(ImagesDataMessage&& other) NOEXCEPT :
     Message(other),
     m_pimpl(std::move(other.m_pimpl))
 {
 
 }
 
-ImagesDataMessage& ImagesDataMessage::operator =(ImagesDataMessage&& other)
+ImagesDataMessage& ImagesDataMessage::operator =(ImagesDataMessage&& other) NOEXCEPT
 {
     m_pimpl.swap(other.m_pimpl);
     return *this;

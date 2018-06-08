@@ -54,7 +54,7 @@ void InputControllerPrivate::tryParseMessages()
     while (currentIndex < kBufferSize)
     {
         quint16 size = 0;
-        if ((kBufferSize - currentIndex) <= sizeof(size))
+        if (static_cast<size_t>(kBufferSize - currentIndex) <= sizeof(size))
         {
             break;
         }
@@ -63,7 +63,7 @@ void InputControllerPrivate::tryParseMessages()
         QDataStream in(&stub, QIODevice::ReadOnly);
         in.setByteOrder(QDataStream::BigEndian);
         in >> size;
-        if (0 < size && size <= kBufferSize)
+        if (0 < size && size <= static_cast<size_t>(kBufferSize))
         {
             std::unique_ptr<AbstractMessage> message = AbstractMessage::deserialize(m_direction, stub);
             if (message != nullptr)
