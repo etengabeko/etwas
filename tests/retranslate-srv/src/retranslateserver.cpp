@@ -15,7 +15,7 @@ RetranslateServer::RetranslateServer(QObject* parent) :
                      this, &RetranslateServer::slotOnNewConnection);
 }
 
-RetranslateServer::~RetranslateServer() noexcept
+RetranslateServer::~RetranslateServer() NOEXCEPT
 {
     m_server->close();
     delete m_server;

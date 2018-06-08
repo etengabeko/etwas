@@ -22,7 +22,7 @@ Transport::Transport(const settings::Settings& settings,
 
 }
 
-Transport::~Transport() noexcept
+Transport::~Transport() NOEXCEPT
 {
     m_pimpl.reset();
 }

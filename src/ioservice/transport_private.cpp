@@ -21,6 +21,11 @@ TransportPrivate::TransportPrivate(const QHostAddress& address,
     Q_ASSERT(m_onReceive);
 }
 
+TransportPrivate::~TransportPrivate() NOEXCEPT
+{
+
+}
+
 QPair<bool, QString> TransportPrivate::start()
 {
     if (m_socket == nullptr)

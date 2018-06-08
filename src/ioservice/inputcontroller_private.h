@@ -29,7 +29,7 @@ public:
                                     protocol::MessageDirection direction,
                                     std::function<void(const QSharedPointer<protocol::AbstractMessage>&)> onReceive,
                                     QObject* parent = nullptr);
-    ~InputControllerPrivate() noexcept = default;
+    ~InputControllerPrivate() NOEXCEPT;
 
 private slots:
     void slotReceive(const QByteArray& data);

@@ -26,7 +26,7 @@ class OutputController : public QObject
 public:
     explicit OutputController(Transport* transport,
                               QObject* parent);
-    ~OutputController() noexcept;
+    ~OutputController() NOEXCEPT;
 
 public slots:
     void slotSend(const protocol::AbstractMessage& message);

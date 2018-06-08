@@ -24,7 +24,7 @@ InputController::InputController(Transport* transport,
 
 }
 
-InputController::~InputController() noexcept
+InputController::~InputController() NOEXCEPT
 {
     m_pimpl.reset();
 }

@@ -16,15 +16,15 @@ class Settings
 {
 public:
     explicit Settings();
-    ~Settings() noexcept;
+    ~Settings() NOEXCEPT;
     // TODO
 
-    const QHostAddress& address() const noexcept;
+    const QHostAddress& address() const NOEXCEPT;
     void setAddress(const QHostAddress& addr);
-    void setAddress(QHostAddress&& addr) noexcept;
+    void setAddress(QHostAddress&& addr) NOEXCEPT;
 
-    quint16 port() const noexcept;
-    void setPort(quint16 portnum) noexcept;
+    quint16 port() const NOEXCEPT;
+    void setPort(quint16 portnum) NOEXCEPT;
 
 private:
     std::unique_ptr<details::SettingsPrivate> m_pimpl;

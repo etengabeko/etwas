@@ -18,7 +18,7 @@ RetranslateServer::RetranslateServer(quint16 port, QObject* parent) :
     m_server->listen(QHostAddress::Any, port);
 }
 
-RetranslateServer::~RetranslateServer() noexcept
+RetranslateServer::~RetranslateServer() NOEXCEPT
 {
     m_server->close();
     delete m_server;

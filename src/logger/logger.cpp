@@ -29,7 +29,7 @@ const std::tm currentTime()
 
 }
 
-QScopedPointer<Logger> Logger::m_instance(nullptr);
+std::unique_ptr<Logger> Logger::m_instance(nullptr);
 
 class LoggerPrivate
 {
@@ -152,9 +152,21 @@ Logger::Logger(Level level,
 
 }
 
-Logger::~Logger()
+Logger::~Logger() NOEXCEPT
+{
+    m_pimpl.reset();
+}
+
+Logger::Logger(Logger&& other) NOEXCEPT :
+    m_pimpl(std::move(other.m_pimpl))
 {
 
+}
+
+Logger& Logger::operator =(Logger&& other)
+{
+    m_pimpl.swap(other.m_pimpl);
+    return *this;
 }
 
 Logger& Logger::initialize(Level level,
@@ -165,7 +177,7 @@ Logger& Logger::initialize(Level level,
     return *m_instance;
 }
 
-Logger& Logger::instance()
+Logger& Logger::instance() NOEXCEPT
 {
     assert(   m_instance != nullptr
            && "Logger not initialized.");

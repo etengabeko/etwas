@@ -70,8 +70,8 @@ enum class MessageDirection
 class AbstractMessage
 {
 public:
-    explicit AbstractMessage(MessageDirection direction) noexcept;
-    virtual ~AbstractMessage() noexcept = default;
+    explicit AbstractMessage(MessageDirection direction) NOEXCEPT;
+    virtual ~AbstractMessage() NOEXCEPT;
 
     /**
      * @brief deserialize - Выделяет объект-сообщение конкретного типа из массива байт
@@ -87,7 +87,7 @@ public:
      * @brief direction - Возвращает тип сообщения по направлению передачи
      * @return Тип сообщения (входящее/исходящее)
      */
-    MessageDirection direction() const noexcept;
+    MessageDirection direction() const NOEXCEPT;
 
     /**
      * @brief serialize - Записывает сообщение в массив байт
@@ -144,10 +144,10 @@ const QString typeToString(MessageType type);
 class Message : public AbstractMessage
 {
 public:
-    explicit Message(MessageType type) noexcept;
-    ~Message() noexcept override = default;
+    explicit Message(MessageType type) NOEXCEPT;
+    ~Message() NOEXCEPT override;
 
-    Message(const Message& other) noexcept = default;
+    Message(const Message& other) NOEXCEPT;
 
     /**
      * @brief deserialize - Выделяет объект-сообщение конкретного типа из массива байт
@@ -161,7 +161,7 @@ public:
      * @brief type - Возвращает тип сообщения
      * @return Тип входящего сообщения
      */
-    MessageType type() const noexcept;
+    MessageType type() const NOEXCEPT;
 
 protected:
     const MessageType m_type = MessageType::Unknown; //!< Тип входящего сообщения
@@ -176,10 +176,10 @@ class DeviceIdentityMessage final : public Message
 {
 public:
     DeviceIdentityMessage();
-    ~DeviceIdentityMessage() noexcept override;
+    ~DeviceIdentityMessage() NOEXCEPT override;
 
-    DeviceIdentityMessage(DeviceIdentityMessage&& other) noexcept = default;
-    DeviceIdentityMessage& operator =(DeviceIdentityMessage&& other) noexcept = default;
+    DeviceIdentityMessage(DeviceIdentityMessage&& other) NOEXCEPT;
+    DeviceIdentityMessage& operator =(DeviceIdentityMessage&& other) NOEXCEPT;
 
     DeviceIdentityMessage(const DeviceIdentityMessage& other);
     DeviceIdentityMessage& operator =(const DeviceIdentityMessage& other);
@@ -198,13 +198,13 @@ public:
      * @brief firmwareVersion - Возвращает версию прошивки
      * @return Номер версии прошивки
      */
-    quint8 firmwareVersion() const noexcept;
+    quint8 firmwareVersion() const NOEXCEPT;
 
     /**
      * @brief setFirmwareVersion - Устанавливает версию прошивки
      * @param version - Номер версии прошивки
      */
-    void setFirmwareVersion(quint8 version) noexcept;
+    void setFirmwareVersion(quint8 version) NOEXCEPT;
 
     /**
      * @brief buttonsNumbers - Возвращает номера клавиш
@@ -232,10 +232,10 @@ class ButtonsStateMessage final : public Message
 {
 public:
     ButtonsStateMessage();
-    ~ButtonsStateMessage() noexcept override;
+    ~ButtonsStateMessage() NOEXCEPT override;
 
-    ButtonsStateMessage(ButtonsStateMessage&& other) noexcept = default;
-    ButtonsStateMessage& operator =(ButtonsStateMessage&& other) noexcept = default;
+    ButtonsStateMessage(ButtonsStateMessage&& other) NOEXCEPT;
+    ButtonsStateMessage& operator =(ButtonsStateMessage&& other) NOEXCEPT;
 
     ButtonsStateMessage(const ButtonsStateMessage& other);
     ButtonsStateMessage& operator =(const ButtonsStateMessage& other);
@@ -304,10 +304,10 @@ const QString typeToString(MessageType type);
 class Message : public AbstractMessage
 {
 public:
-    explicit Message(MessageType type) noexcept;
-    ~Message() noexcept override = default;
+    explicit Message(MessageType type) NOEXCEPT;
+    ~Message() NOEXCEPT override;
 
-    Message(const Message& other) noexcept = default;
+    Message(const Message& other) NOEXCEPT;
 
     /**
      * @brief deserialize - Выделяет объект-сообщение конкретного типа из массива байт
@@ -321,7 +321,7 @@ public:
      * @brief type - Возвращает тип сообщения
      * @return Тип входящего сообщения
      */
-    MessageType type() const noexcept;
+    MessageType type() const NOEXCEPT;
 
 protected:
     const MessageType m_type = MessageType::Unknown; //!< Тип исходящего сообщения
@@ -336,13 +336,13 @@ class DeviceAddressMessage final : public Message
 {
 public:
     DeviceAddressMessage();
-    ~DeviceAddressMessage() noexcept override;
+    ~DeviceAddressMessage() NOEXCEPT override;
 
     DeviceAddressMessage(const DeviceAddressMessage& other);
     DeviceAddressMessage& operator =(const DeviceAddressMessage& other);
 
-    DeviceAddressMessage(DeviceAddressMessage&& other) noexcept = default;
-    DeviceAddressMessage& operator =(DeviceAddressMessage&& other) noexcept = default;
+    DeviceAddressMessage(DeviceAddressMessage&& other) NOEXCEPT;
+    DeviceAddressMessage& operator =(DeviceAddressMessage&& other) NOEXCEPT;
 
     /**
      * @brief serialize [override]
@@ -370,13 +370,13 @@ public:
      * @brief port - Возвращает номер порта, используемый устройством
      * @return Номер порта
      */
-    quint16 port() const noexcept;
+    quint16 port() const NOEXCEPT;
 
     /**
      * @brief setPort - Устанавливает используемый устройством номер порта
      * @param num - Новое значение номера порта
      */
-    void setPort(quint16 num) noexcept;
+    void setPort(quint16 num) NOEXCEPT;
 
 private:
     std::unique_ptr<details::DeviceAddressMessagePrivate> m_pimpl;
@@ -391,13 +391,13 @@ class DisplayImagesMessage final : public Message
 {
 public:
     DisplayImagesMessage();
-    ~DisplayImagesMessage() noexcept override;
+    ~DisplayImagesMessage() NOEXCEPT override;
 
     DisplayImagesMessage(const DisplayImagesMessage& other);
     DisplayImagesMessage& operator =(const DisplayImagesMessage& other);
 
-    DisplayImagesMessage(DisplayImagesMessage&& other) noexcept = default;
-    DisplayImagesMessage& operator =(DisplayImagesMessage&& other) noexcept = default;
+    DisplayImagesMessage(DisplayImagesMessage&& other) NOEXCEPT;
+    DisplayImagesMessage& operator =(DisplayImagesMessage&& other) NOEXCEPT;
 
     /**
      * @brief serialize [override]
@@ -413,37 +413,37 @@ public:
      * @brief displayNumber - Возвращает номер дисплея
      * @return Номер дисплея
      */
-    quint8 displayNumber() const noexcept;
+    quint8 displayNumber() const NOEXCEPT;
 
     /**
      * @brief setDisplayNumber - Устанавливает номер дисплея
      * @param num - Новый номер дисплея
      */
-    void setDisplayNumber(quint8 num) noexcept;
+    void setDisplayNumber(quint8 num) NOEXCEPT;
 
     /**
      * @brief firstImageNumber - Возвращает номер изображения для первого дисплея
      * @return Номер изображения для первого дисплея
      */
-    quint8 firstImageNumber() const noexcept;
+    quint8 firstImageNumber() const NOEXCEPT;
 
     /**
      * @brief setFirstImageNumber - Устанавливает номер изображения для первого дисплея
      * @param num - Новый номер изображения
      */
-    void setFirstImageNumber(quint8 num) noexcept;
+    void setFirstImageNumber(quint8 num) NOEXCEPT;
 
     /**
      * @brief secondImageNumber- Возвращает номер изображения для второго дисплея
      * @return Номер изображения для второго дисплея
      */
-    quint8 secondImageNumber() const noexcept;
+    quint8 secondImageNumber() const NOEXCEPT;
 
     /**
      * @brief setSecondImageNumber - Устанавливает номер изображения для второго дисплея
      * @param num -Новый номер изображения
      */
-    void setSecondImageNumber(quint8 num) noexcept;
+    void setSecondImageNumber(quint8 num) NOEXCEPT;
 
 private:
     std::unique_ptr<details::DisplayImagesMessagePrivate> m_pimpl;
@@ -458,13 +458,13 @@ class DisplayOptionsMessage final : public Message
 {
 public:
     DisplayOptionsMessage();
-    ~DisplayOptionsMessage() noexcept override;
+    ~DisplayOptionsMessage() NOEXCEPT override;
 
     DisplayOptionsMessage(const DisplayOptionsMessage& other);
     DisplayOptionsMessage& operator =(const DisplayOptionsMessage& other);
 
-    DisplayOptionsMessage(DisplayOptionsMessage&& other) noexcept = default;
-    DisplayOptionsMessage& operator =(DisplayOptionsMessage&& other) noexcept = default;
+    DisplayOptionsMessage(DisplayOptionsMessage&& other) NOEXCEPT;
+    DisplayOptionsMessage& operator =(DisplayOptionsMessage&& other) NOEXCEPT;
 
     /**
      * @brief serialize [override]
@@ -480,37 +480,37 @@ public:
      * @brief displayNumber - Возвращает номер дисплея
      * @return Номер дисплея
      */
-    quint8 displayNumber() const noexcept;
+    quint8 displayNumber() const NOEXCEPT;
 
     /**
      * @brief setDisplayNumber - Устанавливает номер дисплея
      * @param num - Новый номер дисплея
      */
-    void setDisplayNumber(quint8 num) noexcept;
+    void setDisplayNumber(quint8 num) NOEXCEPT;
 
     /**
      * @brief imageSelection - Возвращает параметры назначенных для дисплея изображений
      * @return Параметры изображений дисплея
      */
-    ImageSelection imageSelection() const noexcept;
+    ImageSelection imageSelection() const NOEXCEPT;
 
     /**
      * @brief setImageSelection - Устанавливает параметры назначенных для дисплея изображений
      * @param selection - Новые параметры изображений дисплея
      */
-    void setImageSelection(ImageSelection selection) noexcept;
+    void setImageSelection(ImageSelection selection) NOEXCEPT;
 
     /**
      * @brief blinkState - Возвращает состояние мигания изображений дисплея
      * @return Состояние мигания изображений
      */
-    BlinkState blinkState() const noexcept;
+    BlinkState blinkState() const NOEXCEPT;
 
     /**
      * @brief setBlinkState - Устанавливает состояние мигания изображений дисплея
      * @param blink - Новое состояние мигания изображений дисплея
      */
-    void setBlinkState(BlinkState blink) noexcept;
+    void setBlinkState(BlinkState blink) NOEXCEPT;
 
 private:
     std::unique_ptr<details::DisplayOptionsMessagePrivate> m_pimpl;
@@ -525,13 +525,13 @@ class BlinkOptionsMessage final : public Message
 {
 public:
     BlinkOptionsMessage();
-    ~BlinkOptionsMessage() noexcept override;
+    ~BlinkOptionsMessage() NOEXCEPT override;
 
     BlinkOptionsMessage(const BlinkOptionsMessage& other);
     BlinkOptionsMessage& operator =(const BlinkOptionsMessage& other);
 
-    BlinkOptionsMessage(BlinkOptionsMessage&& other) noexcept = default;
-    BlinkOptionsMessage& operator =(BlinkOptionsMessage&& other) noexcept = default;
+    BlinkOptionsMessage(BlinkOptionsMessage&& other) NOEXCEPT;
+    BlinkOptionsMessage& operator =(BlinkOptionsMessage&& other) NOEXCEPT;
 
     /**
      * @brief serialize [override]
@@ -547,37 +547,37 @@ public:
      * @brief displayNumber - Возвращает номер дисплея
      * @return Номер дисплея
      */
-    quint8 displayNumber() const noexcept;
+    quint8 displayNumber() const NOEXCEPT;
 
     /**
      * @brief setDisplayNumber - Устанавливает номер дисплея
      * @param num - Новый номер дисплея
      */
-    void setDisplayNumber(quint8 num) noexcept;
+    void setDisplayNumber(quint8 num) NOEXCEPT;
 
     /**
      * @brief timeOn - Возвращает время включения первого изображения при мигании
      * @return Время включения в мсек*10
      */
-    quint8 timeOn() const noexcept;
+    quint8 timeOn() const NOEXCEPT;
 
     /**
      * @brief setTimeOn - Устанавливает время включения первого изображения при мигании
      * @param msec10 - Время включения в мсек*10
      */
-    void setTimeOn(quint8 msec10) noexcept;
+    void setTimeOn(quint8 msec10) NOEXCEPT;
 
     /**
      * @brief timeOff - Возвращает время выключения первого изображения (или время включения второго изображения) при мигании
      * @return Время выключения в мсек*10
      */
-    quint8 timeOff() const noexcept;
+    quint8 timeOff() const NOEXCEPT;
 
     /**
      * @brief setTimeOff - Устанавливает время выключения первого изображения (или время включения второго изображения) при мигании
      * @param msec10 - Время выключения (или время включения второго изображения) в мсек*10
      */
-    void setTimeOff(quint8 msec10) noexcept;
+    void setTimeOff(quint8 msec10) NOEXCEPT;
 
 private:
     std::unique_ptr<details::BlinkOptionsMessagePrivate> m_pimpl;
@@ -592,13 +592,13 @@ class BrightOptionsMessage final : public Message
 {
 public:
     BrightOptionsMessage();
-    ~BrightOptionsMessage() noexcept override;
+    ~BrightOptionsMessage() NOEXCEPT override;
 
     BrightOptionsMessage(const BrightOptionsMessage& other);
     BrightOptionsMessage& operator =(const BrightOptionsMessage& other);
 
-    BrightOptionsMessage(BrightOptionsMessage&& other) noexcept = default;
-    BrightOptionsMessage& operator =(BrightOptionsMessage&& other) noexcept = default;
+    BrightOptionsMessage(BrightOptionsMessage&& other) NOEXCEPT;
+    BrightOptionsMessage& operator =(BrightOptionsMessage&& other) NOEXCEPT;
 
     /**
      * @brief serialize [override]
@@ -614,25 +614,25 @@ public:
      * @brief displayNumber - Возвращает номер дисплея
      * @return Номер дисплея
      */
-    quint8 displayNumber() const noexcept;
+    quint8 displayNumber() const NOEXCEPT;
 
     /**
      * @brief setDisplayNumber - Устанавливает номер дисплея
      * @param num - Новый номер дисплея
      */
-    void setDisplayNumber(quint8 num) noexcept;
+    void setDisplayNumber(quint8 num) NOEXCEPT;
 
     /**
      * @brief brightLevel - Возвращает уровень яркости
      * @return Уровень яркости в диапазоне от 0 до 15
      */
-    quint8 brightLevel() const noexcept;
+    quint8 brightLevel() const NOEXCEPT;
 
     /**
      * @brief setBrightLevel - Устанавливает новый уровень яркости
      * @param bright - Новое значение уровня яркости в диапазоне от 0 до 15
      */
-    void setBrightLevel(quint8 bright) noexcept;
+    void setBrightLevel(quint8 bright) NOEXCEPT;
 
 private:
     std::unique_ptr<details::BrightOptionsMessagePrivate> m_pimpl;
@@ -647,13 +647,13 @@ class ImagesDataMessage final : public Message
 {
 public:
     ImagesDataMessage();
-    ~ImagesDataMessage() noexcept override;
+    ~ImagesDataMessage() NOEXCEPT override;
 
     ImagesDataMessage(const ImagesDataMessage& other);
     ImagesDataMessage& operator =(const ImagesDataMessage& other);
 
-    ImagesDataMessage(ImagesDataMessage&& other) noexcept = default;
-    ImagesDataMessage& operator =(ImagesDataMessage&& other) noexcept = default;
+    ImagesDataMessage(ImagesDataMessage&& other) NOEXCEPT;
+    ImagesDataMessage& operator =(ImagesDataMessage&& other) NOEXCEPT;
 
     /**
      * @brief serialize [override]
@@ -669,13 +669,13 @@ public:
      * @brief imageNumber - Возвращает номер изображения
      * @return Номер изображения
      */
-    quint8 imageNumber() const noexcept;
+    quint8 imageNumber() const NOEXCEPT;
 
     /**
      * @brief setImageNumber - Устанавливает номер изображения
      * @param num - Новый номер изображения
      */
-    void setImageNumber(quint8 num) noexcept;
+    void setImageNumber(quint8 num) NOEXCEPT;
 
     /**
      * @brief imageColors - Возвращает изображение в виде набора точек с соответствующими цветами

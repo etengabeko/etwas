@@ -30,6 +30,11 @@ InputControllerPrivate::InputControllerPrivate(Transport* transport,
                      this, &InputControllerPrivate::slotReceive);
 }
 
+InputControllerPrivate::~InputControllerPrivate() NOEXCEPT
+{
+
+}
+
 void InputControllerPrivate::slotReceive(const QByteArray& data)
 {
     m_buffer += data;
@@ -42,9 +47,9 @@ void InputControllerPrivate::tryParseMessages()
 
     QList<QSharedPointer<AbstractMessage>> parsedMessages;
 
-    const size_t kBufferSize = m_buffer.size();
-    size_t currentIndex = 0;
-    size_t lastSuccessIndex = 0;
+    const int kBufferSize = m_buffer.size();
+    int currentIndex = 0;
+    int lastSuccessIndex = 0;
 
     while (currentIndex < kBufferSize)
     {

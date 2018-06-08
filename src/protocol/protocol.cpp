@@ -21,16 +21,21 @@ const QString typeToHex(T type)
            .arg(QString::number(static_cast<quint8>(type), 16).toUpper());
 }
 
-size_t maxButtonsStatesCount() { return 32; }
-size_t addressStringSize() { return 15; }
+int maxButtonsStatesCount() { return 32; }
+int addressStringSize() { return 15; }
 
 }
 
 namespace protocol
 {
 
-AbstractMessage::AbstractMessage(MessageDirection direction) noexcept
+AbstractMessage::AbstractMessage(MessageDirection direction) NOEXCEPT
     : m_direction(direction)
+{
+
+}
+
+AbstractMessage::~AbstractMessage() NOEXCEPT
 {
 
 }
@@ -56,7 +61,7 @@ std::unique_ptr<AbstractMessage> AbstractMessage::deserialize(MessageDirection d
     return result;
 }
 
-MessageDirection AbstractMessage::direction() const noexcept
+MessageDirection AbstractMessage::direction() const NOEXCEPT
 {
     return m_direction;
 }
@@ -101,9 +106,21 @@ const QString typeToString(MessageType type)
                                     : qApp->tr("Unknown incoming type = %1").arg(::typeToHex(type)));
 }
 
-Message::Message(MessageType type) noexcept :
+Message::Message(MessageType type) NOEXCEPT :
     AbstractMessage(MessageDirection::Incoming),
     m_type(type)
+{
+
+}
+
+Message::~Message() NOEXCEPT
+{
+
+}
+
+Message::Message(const Message& other) NOEXCEPT :
+    AbstractMessage(other),
+    m_type(other.m_type)
 {
 
 }
@@ -143,7 +160,7 @@ std::unique_ptr<Message> Message::deserialize(const QByteArray& content)
     return result;
 }
 
-MessageType Message::type() const noexcept
+MessageType Message::type() const NOEXCEPT
 {
     return m_type;
 }
@@ -155,7 +172,7 @@ DeviceIdentityMessage::DeviceIdentityMessage() :
 
 }
 
-DeviceIdentityMessage::~DeviceIdentityMessage() noexcept
+DeviceIdentityMessage::~DeviceIdentityMessage() NOEXCEPT
 {
     m_pimpl.reset();
 }
@@ -170,6 +187,19 @@ DeviceIdentityMessage::DeviceIdentityMessage(const DeviceIdentityMessage& other)
 DeviceIdentityMessage& DeviceIdentityMessage::operator =(const DeviceIdentityMessage& other)
 {
     *m_pimpl = *other.m_pimpl;
+    return *this;
+}
+
+DeviceIdentityMessage::DeviceIdentityMessage(DeviceIdentityMessage&& other) :
+    Message(other),
+    m_pimpl(std::move(other.m_pimpl))
+{
+
+}
+
+DeviceIdentityMessage& DeviceIdentityMessage::operator =(DeviceIdentityMessage&& other)
+{
+    m_pimpl.swap(other.m_pimpl);
     return *this;
 }
 
@@ -208,7 +238,7 @@ bool DeviceIdentityMessage::parse(const QByteArray& src)
             QVector<quint8> buttons(buttonsCount, 0);
             for (size_t i = 0; i < buttonsCount; ++i)
             {
-                in >> buttons[i];
+                in >> buttons[static_cast<int>(i)];
             }
             setButtonsNumbers(std::move(buttons));
         }
@@ -216,12 +246,12 @@ bool DeviceIdentityMessage::parse(const QByteArray& src)
     return ok;
 }
 
-quint8 DeviceIdentityMessage::firmwareVersion() const noexcept
+quint8 DeviceIdentityMessage::firmwareVersion() const NOEXCEPT
 {
     return m_pimpl->firmwareVersion();
 }
 
-void DeviceIdentityMessage::setFirmwareVersion(quint8 version) noexcept
+void DeviceIdentityMessage::setFirmwareVersion(quint8 version) NOEXCEPT
 {
     m_pimpl->setFirmwareVersion(version);
 }
@@ -248,6 +278,11 @@ ButtonsStateMessage::ButtonsStateMessage() :
 
 }
 
+ButtonsStateMessage::~ButtonsStateMessage() NOEXCEPT
+{
+    m_pimpl.reset();
+}
+
 ButtonsStateMessage::ButtonsStateMessage(const ButtonsStateMessage& other) :
     Message(other),
     m_pimpl(new details::ButtonsStateMessagePrivate(*other.m_pimpl))
@@ -261,9 +296,17 @@ ButtonsStateMessage& ButtonsStateMessage::operator =(const ButtonsStateMessage& 
     return *this;
 }
 
-ButtonsStateMessage::~ButtonsStateMessage() noexcept
+ButtonsStateMessage::ButtonsStateMessage(ButtonsStateMessage&& other) :
+    Message(other),
+    m_pimpl(std::move(other.m_pimpl))
 {
-    m_pimpl.reset();
+
+}
+
+ButtonsStateMessage& ButtonsStateMessage::operator =(ButtonsStateMessage&& other)
+{
+    m_pimpl.swap(other.m_pimpl);
+    return *this;
 }
 
 const QByteArray ButtonsStateMessage::serialize() const
@@ -295,7 +338,7 @@ bool ButtonsStateMessage::parse(const QByteArray& src)
     in >> tmp;
 
     bool ok = (   tmp == static_cast<quint8>(type())
-               && static_cast<size_t>(src.size()) >= (::maxButtonsStatesCount() + sizeof(tmp)));
+               && src.size() >= (::maxButtonsStatesCount() + sizeof(tmp)));
     if (ok)
     {
         QVector<quint8> bytes(::maxButtonsStatesCount(),'\0');
@@ -306,7 +349,7 @@ bool ButtonsStateMessage::parse(const QByteArray& src)
         }
 
         QVector<ButtonState> states(8 * ::maxButtonsStatesCount(), ButtonState::Off);
-        for (size_t i = 0, sz = 8 * ::maxButtonsStatesCount(); i < sz; ++i)
+        for (int i = 0, sz = 8 * ::maxButtonsStatesCount(); i < sz; ++i)
         {
             const quint8 mask = 1 << (i%8);
             quint8 currentByte = bytes.at(i/8);
@@ -356,9 +399,21 @@ const QString typeToString(MessageType type)
                                     : qApp->tr("Unknown outcoming type = %1").arg(::typeToHex(type)));
 }
 
-Message::Message(MessageType type) noexcept :
+Message::Message(MessageType type) NOEXCEPT :
     AbstractMessage(MessageDirection::Outcoming),
     m_type(type)
+{
+
+}
+
+Message::~Message() NOEXCEPT
+{
+
+}
+
+Message::Message(const Message& other) NOEXCEPT:
+    AbstractMessage(other),
+    m_type(other.m_type)
 {
 
 }
@@ -410,7 +465,7 @@ std::unique_ptr<Message> Message::deserialize(const QByteArray& content)
     return result;
 }
 
-MessageType Message::type() const noexcept
+MessageType Message::type() const NOEXCEPT
 {
     return m_type;
 }
@@ -422,7 +477,7 @@ DeviceAddressMessage::DeviceAddressMessage() :
 
 }
 
-DeviceAddressMessage::~DeviceAddressMessage() noexcept
+DeviceAddressMessage::~DeviceAddressMessage() NOEXCEPT
 {
     m_pimpl.reset();
 }
@@ -437,6 +492,19 @@ DeviceAddressMessage::DeviceAddressMessage(const DeviceAddressMessage& other) :
 DeviceAddressMessage& DeviceAddressMessage::operator =(const DeviceAddressMessage& other)
 {
     *m_pimpl = *other.m_pimpl;
+    return *this;
+}
+
+DeviceAddressMessage::DeviceAddressMessage(DeviceAddressMessage&& other) :
+    Message(other),
+    m_pimpl(std::move(other.m_pimpl))
+{
+
+}
+
+DeviceAddressMessage& DeviceAddressMessage::operator =(DeviceAddressMessage&& other)
+{
+    m_pimpl.swap(other.m_pimpl);
     return *this;
 }
 
@@ -509,12 +577,12 @@ void DeviceAddressMessage::setAddress(const QString& addr)
     m_pimpl->setAddress(addr);
 }
 
-quint16 DeviceAddressMessage::port() const noexcept
+quint16 DeviceAddressMessage::port() const NOEXCEPT
 {
     return m_pimpl->port();
 }
 
-void DeviceAddressMessage::setPort(quint16 num) noexcept
+void DeviceAddressMessage::setPort(quint16 num) NOEXCEPT
 {
     m_pimpl->setPort(num);
 }
@@ -526,7 +594,7 @@ DisplayImagesMessage::DisplayImagesMessage() :
 
 }
 
-DisplayImagesMessage::~DisplayImagesMessage() noexcept
+DisplayImagesMessage::~DisplayImagesMessage() NOEXCEPT
 {
     m_pimpl.reset();
 }
@@ -541,6 +609,19 @@ DisplayImagesMessage::DisplayImagesMessage(const DisplayImagesMessage& other) :
 DisplayImagesMessage& DisplayImagesMessage::operator =(const DisplayImagesMessage& other)
 {
     *m_pimpl = *other.m_pimpl;
+    return *this;
+}
+
+DisplayImagesMessage::DisplayImagesMessage(DisplayImagesMessage&& other) :
+    Message(other),
+    m_pimpl(std::move(other.m_pimpl))
+{
+
+}
+
+DisplayImagesMessage& DisplayImagesMessage::operator =(DisplayImagesMessage&& other)
+{
+    m_pimpl.swap(other.m_pimpl);
     return *this;
 }
 
@@ -580,32 +661,32 @@ bool DisplayImagesMessage::parse(const QByteArray& src)
     return ok;
 }
 
-quint8 DisplayImagesMessage::displayNumber() const noexcept
+quint8 DisplayImagesMessage::displayNumber() const NOEXCEPT
 {
     return m_pimpl->displayNumber();
 }
 
-void DisplayImagesMessage::setDisplayNumber(quint8 num) noexcept
+void DisplayImagesMessage::setDisplayNumber(quint8 num) NOEXCEPT
 {
     m_pimpl->setDisplayNumber(num);
 }
 
-quint8 DisplayImagesMessage::firstImageNumber() const noexcept
+quint8 DisplayImagesMessage::firstImageNumber() const NOEXCEPT
 {
     return m_pimpl->firstImageNumber();
 }
 
-void DisplayImagesMessage::setFirstImageNumber(quint8 num) noexcept
+void DisplayImagesMessage::setFirstImageNumber(quint8 num) NOEXCEPT
 {
     m_pimpl->setFirstImageNumber(num);
 }
 
-quint8 DisplayImagesMessage::secondImageNumber() const noexcept
+quint8 DisplayImagesMessage::secondImageNumber() const NOEXCEPT
 {
     return m_pimpl->secondImageNumber();
 }
 
-void DisplayImagesMessage::setSecondImageNumber(quint8 num) noexcept
+void DisplayImagesMessage::setSecondImageNumber(quint8 num) NOEXCEPT
 {
     m_pimpl->setSecondImageNumber(num);
 }
@@ -617,7 +698,7 @@ DisplayOptionsMessage::DisplayOptionsMessage() :
 
 }
 
-DisplayOptionsMessage::~DisplayOptionsMessage() noexcept
+DisplayOptionsMessage::~DisplayOptionsMessage() NOEXCEPT
 {
     m_pimpl.reset();
 }
@@ -632,6 +713,19 @@ DisplayOptionsMessage::DisplayOptionsMessage(const DisplayOptionsMessage& other)
 DisplayOptionsMessage& DisplayOptionsMessage::operator =(const DisplayOptionsMessage& other)
 {
     *m_pimpl = *other.m_pimpl;
+    return *this;
+}
+
+DisplayOptionsMessage::DisplayOptionsMessage(DisplayOptionsMessage&& other) :
+    Message(other),
+    m_pimpl(std::move(other.m_pimpl))
+{
+
+}
+
+DisplayOptionsMessage& DisplayOptionsMessage::operator =(DisplayOptionsMessage&& other)
+{
+    m_pimpl.swap(other.m_pimpl);
     return *this;
 }
 
@@ -679,32 +773,32 @@ bool DisplayOptionsMessage::parse(const QByteArray& src)
     return ok;
 }
 
-quint8 DisplayOptionsMessage::displayNumber() const noexcept
+quint8 DisplayOptionsMessage::displayNumber() const NOEXCEPT
 {
     return m_pimpl->displayNumber();
 }
 
-void DisplayOptionsMessage::setDisplayNumber(quint8 num) noexcept
+void DisplayOptionsMessage::setDisplayNumber(quint8 num) NOEXCEPT
 {
     m_pimpl->setDisplayNumber(num);
 }
 
-ImageSelection DisplayOptionsMessage::imageSelection() const noexcept
+ImageSelection DisplayOptionsMessage::imageSelection() const NOEXCEPT
 {
     return m_pimpl->imageSelection();
 }
 
-void DisplayOptionsMessage::setImageSelection(ImageSelection selection) noexcept
+void DisplayOptionsMessage::setImageSelection(ImageSelection selection) NOEXCEPT
 {
     m_pimpl->setImageSelection(selection);
 }
 
-BlinkState DisplayOptionsMessage::blinkState() const noexcept
+BlinkState DisplayOptionsMessage::blinkState() const NOEXCEPT
 {
     return m_pimpl->blinkState();
 }
 
-void DisplayOptionsMessage::setBlinkState(BlinkState blink) noexcept
+void DisplayOptionsMessage::setBlinkState(BlinkState blink) NOEXCEPT
 {
     m_pimpl->setBlinkState(blink);
 }
@@ -716,7 +810,7 @@ BlinkOptionsMessage::BlinkOptionsMessage() :
 
 }
 
-BlinkOptionsMessage::~BlinkOptionsMessage() noexcept
+BlinkOptionsMessage::~BlinkOptionsMessage() NOEXCEPT
 {
     m_pimpl.reset();
 }
@@ -731,6 +825,19 @@ BlinkOptionsMessage::BlinkOptionsMessage(const BlinkOptionsMessage& other) :
 BlinkOptionsMessage& BlinkOptionsMessage::operator =(const BlinkOptionsMessage& other)
 {
     *m_pimpl = *other.m_pimpl;
+    return *this;
+}
+
+BlinkOptionsMessage::BlinkOptionsMessage(BlinkOptionsMessage&& other) :
+    Message(other),
+    m_pimpl(std::move(other.m_pimpl))
+{
+
+}
+
+BlinkOptionsMessage& BlinkOptionsMessage::operator =(BlinkOptionsMessage&& other)
+{
+    m_pimpl.swap(other.m_pimpl);
     return *this;
 }
 
@@ -770,32 +877,32 @@ bool BlinkOptionsMessage::parse(const QByteArray& src)
     return ok;
 }
 
-quint8 BlinkOptionsMessage::displayNumber() const noexcept
+quint8 BlinkOptionsMessage::displayNumber() const NOEXCEPT
 {
     return m_pimpl->displayNumber();
 }
 
-void BlinkOptionsMessage::setDisplayNumber(quint8 num) noexcept
+void BlinkOptionsMessage::setDisplayNumber(quint8 num) NOEXCEPT
 {
     m_pimpl->setDisplayNumber(num);
 }
 
-quint8 BlinkOptionsMessage::timeOn() const noexcept
+quint8 BlinkOptionsMessage::timeOn() const NOEXCEPT
 {
     return m_pimpl->timeOn();
 }
 
-void BlinkOptionsMessage::setTimeOn(quint8 msec10) noexcept
+void BlinkOptionsMessage::setTimeOn(quint8 msec10) NOEXCEPT
 {
     m_pimpl->setTimeOn(msec10);
 }
 
-quint8 BlinkOptionsMessage::timeOff() const noexcept
+quint8 BlinkOptionsMessage::timeOff() const NOEXCEPT
 {
     return m_pimpl->timeOff();
 }
 
-void BlinkOptionsMessage::setTimeOff(quint8 msec10) noexcept
+void BlinkOptionsMessage::setTimeOff(quint8 msec10) NOEXCEPT
 {
     m_pimpl->setTimeOff(msec10);
 }
@@ -807,7 +914,7 @@ BrightOptionsMessage::BrightOptionsMessage() :
 
 }
 
-BrightOptionsMessage::~BrightOptionsMessage() noexcept
+BrightOptionsMessage::~BrightOptionsMessage() NOEXCEPT
 {
     m_pimpl.reset();
 }
@@ -822,6 +929,19 @@ BrightOptionsMessage::BrightOptionsMessage(const BrightOptionsMessage& other) :
 BrightOptionsMessage& BrightOptionsMessage::operator =(const BrightOptionsMessage& other)
 {
     *m_pimpl = *other.m_pimpl;
+    return *this;
+}
+
+BrightOptionsMessage::BrightOptionsMessage(BrightOptionsMessage&& other) :
+    Message(other),
+    m_pimpl(std::move(other.m_pimpl))
+{
+
+}
+
+BrightOptionsMessage& BrightOptionsMessage::operator =(BrightOptionsMessage&& other)
+{
+    m_pimpl.swap(other.m_pimpl);
     return *this;
 }
 
@@ -861,22 +981,22 @@ bool BrightOptionsMessage::parse(const QByteArray& src)
     return ok;
 }
 
-quint8 BrightOptionsMessage::displayNumber() const noexcept
+quint8 BrightOptionsMessage::displayNumber() const NOEXCEPT
 {
     return m_pimpl->displayNumber();
 }
 
-void BrightOptionsMessage::setDisplayNumber(quint8 num) noexcept
+void BrightOptionsMessage::setDisplayNumber(quint8 num) NOEXCEPT
 {
     m_pimpl->setDisplayNumber(num);
 }
 
-quint8 BrightOptionsMessage::brightLevel() const noexcept
+quint8 BrightOptionsMessage::brightLevel() const NOEXCEPT
 {
     return m_pimpl->brightLevel();
 }
 
-void BrightOptionsMessage::setBrightLevel(quint8 bright) noexcept
+void BrightOptionsMessage::setBrightLevel(quint8 bright) NOEXCEPT
 {
     m_pimpl->setBrightLevel(bright);
 }
@@ -888,7 +1008,7 @@ ImagesDataMessage::ImagesDataMessage() :
 
 }
 
-ImagesDataMessage::~ImagesDataMessage() noexcept
+ImagesDataMessage::~ImagesDataMessage() NOEXCEPT
 {
     m_pimpl.reset();
 }
@@ -903,6 +1023,19 @@ ImagesDataMessage::ImagesDataMessage(const ImagesDataMessage& other) :
 ImagesDataMessage& ImagesDataMessage::operator =(const ImagesDataMessage& other)
 {
     *m_pimpl = *other.m_pimpl;
+    return *this;
+}
+
+ImagesDataMessage::ImagesDataMessage(ImagesDataMessage&& other) :
+    Message(other),
+    m_pimpl(std::move(other.m_pimpl))
+{
+
+}
+
+ImagesDataMessage& ImagesDataMessage::operator =(ImagesDataMessage&& other)
+{
+    m_pimpl.swap(other.m_pimpl);
     return *this;
 }
 
@@ -936,12 +1069,12 @@ bool ImagesDataMessage::parse(const QByteArray& src)
     return ok;
 }
 
-quint8 ImagesDataMessage::imageNumber() const noexcept
+quint8 ImagesDataMessage::imageNumber() const NOEXCEPT
 {
     return m_pimpl->imageNumber();
 }
 
-void ImagesDataMessage::setImageNumber(quint8 num) noexcept
+void ImagesDataMessage::setImageNumber(quint8 num) NOEXCEPT
 {
     m_pimpl->setImageNumber(num);
 }

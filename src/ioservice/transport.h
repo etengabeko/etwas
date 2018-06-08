@@ -28,7 +28,7 @@ class Transport : public QObject
 public:
     explicit Transport(const settings::Settings& settings,
                        QObject* parent = nullptr);
-    ~Transport() noexcept;
+    ~Transport() NOEXCEPT;
 
     QPair<bool, QString> start();
 

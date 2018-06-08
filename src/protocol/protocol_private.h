@@ -16,12 +16,12 @@ namespace details
 class DeviceIdentityMessagePrivate
 {
 public:
-    quint8 firmwareVersion() const noexcept;
-    void setFirmwareVersion(quint8 version) noexcept;
+    quint8 firmwareVersion() const NOEXCEPT;
+    void setFirmwareVersion(quint8 version) NOEXCEPT;
 
     const QVector<quint8> buttonsNumbers() const;
     void setButtonsNumbers(const QVector<quint8>& numbers);
-    void setButtonsNumbers(QVector<quint8>&& numbers) noexcept;
+    void setButtonsNumbers(QVector<quint8>&& numbers) NOEXCEPT;
 
 private:
     quint8 m_firmwareVersion = 0;
@@ -34,7 +34,7 @@ class ButtonsStateMessagePrivate
 public:
     const QVector<ButtonState> buttonsStates() const;
     void setButtonsStates(const QVector<ButtonState>& states);
-    void setButtonsStates(QVector<ButtonState>&& states) noexcept;
+    void setButtonsStates(QVector<ButtonState>&& states) NOEXCEPT;
 
 private:
     QVector<ButtonState> m_states;
@@ -47,8 +47,8 @@ public:
     const QString address() const;
     void setAddress(const QString& addr);
 
-    quint16 port() const noexcept;
-    void setPort(quint16 num) noexcept;
+    quint16 port() const NOEXCEPT;
+    void setPort(quint16 num) NOEXCEPT;
 
 private:
     QString m_address;
@@ -59,14 +59,14 @@ private:
 class DisplayImagesMessagePrivate
 {
 public:
-    quint8 displayNumber() const noexcept;
-    void setDisplayNumber(quint8 num) noexcept;
+    quint8 displayNumber() const NOEXCEPT;
+    void setDisplayNumber(quint8 num) NOEXCEPT;
 
-    quint8 firstImageNumber() const noexcept;
-    void setFirstImageNumber(quint8 num) noexcept;
+    quint8 firstImageNumber() const NOEXCEPT;
+    void setFirstImageNumber(quint8 num) NOEXCEPT;
 
-    quint8 secondImageNumber() const noexcept;
-    void setSecondImageNumber(quint8 num) noexcept;
+    quint8 secondImageNumber() const NOEXCEPT;
+    void setSecondImageNumber(quint8 num) NOEXCEPT;
 
 private:
     quint8 m_displayNum = 0;
@@ -79,14 +79,14 @@ private:
 class DisplayOptionsMessagePrivate
 {
 public:
-    quint8 displayNumber() const noexcept;
-    void setDisplayNumber(quint8 num) noexcept;
+    quint8 displayNumber() const NOEXCEPT;
+    void setDisplayNumber(quint8 num) NOEXCEPT;
 
-    ImageSelection imageSelection() const noexcept;
-    void setImageSelection(ImageSelection selection) noexcept;
+    ImageSelection imageSelection() const NOEXCEPT;
+    void setImageSelection(ImageSelection selection) NOEXCEPT;
 
-    BlinkState blinkState() const noexcept;
-    void setBlinkState(BlinkState blink) noexcept;
+    BlinkState blinkState() const NOEXCEPT;
+    void setBlinkState(BlinkState blink) NOEXCEPT;
 
 private:
     quint8 m_displayNum = 0;
@@ -99,14 +99,14 @@ private:
 class BlinkOptionsMessagePrivate
 {
 public:
-    quint8 displayNumber() const noexcept;
-    void setDisplayNumber(quint8 num) noexcept;
+    quint8 displayNumber() const NOEXCEPT;
+    void setDisplayNumber(quint8 num) NOEXCEPT;
 
-    quint8 timeOn() const noexcept;
-    void setTimeOn(quint8 msec10) noexcept;
+    quint8 timeOn() const NOEXCEPT;
+    void setTimeOn(quint8 msec10) NOEXCEPT;
 
-    quint8 timeOff() const noexcept;
-    void setTimeOff(quint8 msec10) noexcept;
+    quint8 timeOff() const NOEXCEPT;
+    void setTimeOff(quint8 msec10) NOEXCEPT;
 
 private:
     quint8 m_displayNum = 0;
@@ -118,11 +118,11 @@ private:
 class BrightOptionsMessagePrivate
 {
 public:
-    quint8 displayNumber() const noexcept;
-    void setDisplayNumber(quint8 num) noexcept;
+    quint8 displayNumber() const NOEXCEPT;
+    void setDisplayNumber(quint8 num) NOEXCEPT;
 
-    quint8 brightLevel() const noexcept;
-    void setBrightLevel(quint8 bright) noexcept;
+    quint8 brightLevel() const NOEXCEPT;
+    void setBrightLevel(quint8 bright) NOEXCEPT;
 
 private:
     quint8 m_displayNum = 0;
@@ -134,12 +134,12 @@ private:
 class ImagesDataMessagePrivate
 {
 public:
-    quint8 imageNumber() const noexcept;
-    void setImageNumber(quint8 num) noexcept;
+    quint8 imageNumber() const NOEXCEPT;
+    void setImageNumber(quint8 num) NOEXCEPT;
 
     const QVector<QRgb> imageColors() const;
     void setImageColors(const QVector<QRgb>& colors);
-    void setImageColors(QVector<QRgb>&& colors) noexcept;
+    void setImageColors(QVector<QRgb>&& colors) NOEXCEPT;
 
 private:
     quint8 m_imageNum = 0;

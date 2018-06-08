@@ -11,15 +11,15 @@ class SettingsPrivate
 {
 public:
     explicit SettingsPrivate() = default;
-    ~SettingsPrivate() noexcept = default;
+    ~SettingsPrivate() NOEXCEPT;
     // TODO
 
-    const QHostAddress& address() const noexcept;
+    const QHostAddress& address() const NOEXCEPT;
     void setAddress(const QHostAddress& addr);
-    void setAddress(QHostAddress&& addr) noexcept;
+    void setAddress(QHostAddress&& addr) NOEXCEPT;
 
-    quint16 port() const noexcept;
-    void setPort(quint16 port) noexcept;
+    quint16 port() const NOEXCEPT;
+    void setPort(quint16 port) NOEXCEPT;
 
 private:
     QHostAddress m_address;

@@ -16,7 +16,7 @@ class OutputControllerPrivate
 {
 public:
     explicit OutputControllerPrivate(Transport* transport);
-    ~OutputControllerPrivate() noexcept = default;
+    ~OutputControllerPrivate() NOEXCEPT;
 
     void send(const protocol::AbstractMessage& message);
 

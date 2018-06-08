@@ -18,7 +18,7 @@ class RetranslateServer : public QObject
 
 public:
     explicit RetranslateServer(quint16 port, QObject* parent = nullptr);
-    ~RetranslateServer() noexcept;
+    ~RetranslateServer() NOEXCEPT;
 
 private slots:
     void slotOnNewConnection();

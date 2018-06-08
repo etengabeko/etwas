@@ -17,6 +17,11 @@ OutputControllerPrivate::OutputControllerPrivate(Transport* transport) :
     Q_CHECK_PTR(transport);
 }
 
+OutputControllerPrivate::~OutputControllerPrivate() NOEXCEPT
+{
+
+}
+
 void OutputControllerPrivate::send(const protocol::AbstractMessage& message)
 {
     QByteArray ba;

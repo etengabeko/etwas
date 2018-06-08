@@ -15,7 +15,7 @@ OutputController::OutputController(Transport* transport,
 
 }
 
-OutputController::~OutputController() noexcept
+OutputController::~OutputController() NOEXCEPT
 {
     m_pimpl.reset();
 }

@@ -23,7 +23,7 @@ public:
                      quint16 port,
                      std::function<void(const QByteArray&)> onReceive,
                      QObject* parent = nullptr);
-    ~TransportPrivate() noexcept = default;
+    ~TransportPrivate() NOEXCEPT;
 
     QPair<bool, QString> start();
 

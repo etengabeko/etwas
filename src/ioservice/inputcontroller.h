@@ -31,7 +31,7 @@ public:
     explicit InputController(Transport* transport,
                              protocol::MessageDirection direction,
                              QObject* parent);
-    ~InputController() noexcept;
+    ~InputController() NOEXCEPT;
 
 signals:
     void messageReceived(const QSharedPointer<protocol::AbstractMessage>& message);

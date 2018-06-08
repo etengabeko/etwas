@@ -1,7 +1,8 @@
 #ifndef LOGGER_LOGGER_H
 #define LOGGER_LOGGER_H
 
-#include <QScopedPointer>
+#include <memory>
+
 #include <QString>
 
 class LoggerPrivate;
@@ -29,18 +30,18 @@ private:
            const QString& fileName = QString::null);
 
 public:
-    ~Logger();
+    ~Logger() NOEXCEPT;
 
     Logger(const Logger& other) = delete;
     Logger& operator= (const Logger& other) = delete;
 
-    Logger(Logger&& other) = default;
-    Logger& operator= (Logger&& other) = default;
+    Logger(Logger&& other) NOEXCEPT;
+    Logger& operator= (Logger&& other) NOEXCEPT;
 
     static Logger& initialize(Level level,
                               Device device = Device::Console,
                               const QString& fileName = QString::null);
-    static Logger& instance();
+    static Logger& instance() NOEXCEPT;
 
     void info(const QString& message);
     void warning(const QString& message);
@@ -49,9 +50,9 @@ public:
     void trace(const QString& message);
 
 private:
-    static QScopedPointer<Logger> m_instance;
+    static std::unique_ptr<Logger> m_instance;
 
-    QScopedPointer<LoggerPrivate> m_pimpl;
+    std::unique_ptr<LoggerPrivate> m_pimpl;
 
 };
 
