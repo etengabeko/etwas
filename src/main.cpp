@@ -1,14 +1,25 @@
-#include <QCoreApplication>
+#include <QApplication>
 
 #include "logger/logger.h"
-#include "protocol/protocol.h"
+#include "ui/connectionoptionsdialog.h"
 
 int main(int argc, char* argv[])
 {
-    QCoreApplication app(argc, argv);
+    QApplication app(argc, argv);
 
     Logger& logger = Logger::initialize(Logger::Level::Trace);
-    logger.trace(app.tr("Hello FZK-2 Test!"));
+
+    ConnectionOptionsDialog dlg;
+
+    int res = dlg.exec();
+    if (res == QDialog::Accepted)
+    {
+        logger.debug(app.tr("Accepted: '%1:%2'").arg(dlg.address()).arg(dlg.port()));
+    }
+    else
+    {
+        logger.debug(app.tr("Rejected"));
+    }
 
     return EXIT_SUCCESS;
 }

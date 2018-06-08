@@ -51,6 +51,7 @@ HEADERS = \
     # protocol
     $$PWD/src/protocol/protocol.h \
     $$PWD/src/protocol/protocol_private.h \
+    $$PWD/src/protocol/types.h \
     # settings
     $$PWD/src/settings/settings.h \
     $$PWD/src/settings/settings_private.h \
@@ -60,7 +61,11 @@ HEADERS = \
     $$PWD/src/ioservice/inputcontroller.h \
     $$PWD/src/ioservice/inputcontroller_private.h \
     $$PWD/src/ioservice/outputcontroller.h \
-    $$PWD/src/ioservice/outputcontroller_private.h
+    $$PWD/src/ioservice/outputcontroller_private.h \
+    # ui
+    $$PWD/src/ui/connectionoptionsdialog.h \
+    $$PWD/src/ui/controlpanelwidget.h \
+    $$PWD/src/ui/createmessageswidget.h
 
 SOURCES = \
     # logger
@@ -78,10 +83,17 @@ SOURCES = \
     $$PWD/src/ioservice/inputcontroller_private.cpp \
     $$PWD/src/ioservice/outputcontroller.cpp \
     $$PWD/src/ioservice/outputcontroller_private.cpp \
+    # ui
+    $$PWD/src/ui/connectionoptionsdialog.cpp \
+    $$PWD/src/ui/controlpanelwidget.cpp \
+    $$PWD/src/ui/createmessageswidget.cpp \
     # main
     $$PWD/src/main.cpp
 
-FORMS =
+FORMS = \
+    $$PWD/src/ui/connectionoptions.ui \
+    $$PWD/src/ui/controlpanel.ui \
+    $$PWD/src/ui/createmessages.ui
 
 INSTALLS += \
     target \
