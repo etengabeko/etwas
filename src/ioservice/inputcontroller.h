@@ -30,7 +30,7 @@ class InputController : public QObject
 public:
     explicit InputController(Transport* transport,
                              protocol::MessageDirection direction,
-                             QObject* parent);
+                             QObject* parent = nullptr);
     ~InputController() NOEXCEPT;
 
 signals:

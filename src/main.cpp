@@ -1,7 +1,9 @@
 #include <QApplication>
+#include <QHostAddress>
 
 #include "logger/logger.h"
 #include "ui/connectionoptionsdialog.h"
+#include "ui/controlpanelwidget.h"
 
 int main(int argc, char* argv[])
 {
@@ -9,17 +11,22 @@ int main(int argc, char* argv[])
 
     Logger& logger = Logger::initialize(Logger::Level::Trace);
 
-    ConnectionOptionsDialog dlg;
-
-    int res = dlg.exec();
-    if (res == QDialog::Accepted)
+    ControlPanelWidget ctrl;
+    ctrl.show();
     {
-        logger.debug(app.tr("Accepted: '%1:%2'").arg(dlg.address()).arg(dlg.port()));
+        ConnectionOptionsDialog dlg(&ctrl);
+        int res = dlg.exec();
+        if (res == QDialog::Accepted)
+        {
+            logger.debug(app.tr("Accepted: '%1:%2'").arg(dlg.address()).arg(dlg.port()));
+            ctrl.initialize(QHostAddress(dlg.address()),
+                            dlg.port());
+        }
+        else
+        {
+            logger.debug(app.tr("Rejected"));
+            return EXIT_FAILURE;
+        }
     }
-    else
-    {
-        logger.debug(app.tr("Rejected"));
-    }
-
-    return EXIT_SUCCESS;
+    return app.exec();
 }

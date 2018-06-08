@@ -25,7 +25,7 @@ class OutputController : public QObject
 
 public:
     explicit OutputController(Transport* transport,
-                              QObject* parent);
+                              QObject* parent = nullptr);
     ~OutputController() NOEXCEPT;
 
 public slots:
