@@ -31,7 +31,7 @@ ControlPanelWidget::~ControlPanelWidget()
     m_ui = nullptr;
 }
 
-void ControlPanelWidget::initialize(const QHostAddress& address, quint16 port)
+bool ControlPanelWidget::initialize(const QHostAddress& address, quint16 port)
 {
     using namespace ioservice;
     using protocol::MessageDirection;
@@ -53,15 +53,15 @@ void ControlPanelWidget::initialize(const QHostAddress& address, quint16 port)
                      this, &ControlPanelWidget::slotReceiveMessage);
 
     auto res = m_transport->start();
-    if (res.first)
+    if (!res.first)
     {
-        Logger::instance().debug(tr("Transport started successful"));
+        emit error(res.second);
     }
     else
     {
-        Logger::instance().error(tr("Failed start transport: %1")
-                      .arg(res.second));
+        Logger::instance().debug(tr("Transport started successful"));
     }
+    return res.first;
 }
 
 void ControlPanelWidget::slotReceiveBytes(const QByteArray& bytes)

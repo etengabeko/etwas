@@ -1,4 +1,5 @@
 #include <QApplication>
+#include <QCursor>
 #include <QHostAddress>
 
 #include "logger/logger.h"
@@ -13,20 +14,33 @@ int main(int argc, char* argv[])
 
     ControlPanelWidget ctrl;
     ctrl.show();
+
+    ConnectionOptionsDialog* dlg = new ConnectionOptionsDialog(&ctrl);
+    QObject::connect(&ctrl, &ControlPanelWidget::error,
+                     dlg, &ConnectionOptionsDialog::setErrorString);
+    bool ok = false;
+    do
     {
-        ConnectionOptionsDialog dlg(&ctrl);
-        int res = dlg.exec();
+        int res = dlg->exec();
         if (res == QDialog::Accepted)
         {
-            logger.debug(app.tr("Accepted: '%1:%2'").arg(dlg.address()).arg(dlg.port()));
-            ctrl.initialize(QHostAddress(dlg.address()),
-                            dlg.port());
+            logger.debug(app.tr("Accepted: '%1:%2'")
+                         .arg(dlg->address().toString())
+                         .arg(dlg->port()));
+            app.setOverrideCursor(QCursor(Qt::WaitCursor));
+            ok = ctrl.initialize(dlg->address(), dlg->port());
+            app.restoreOverrideCursor();
         }
         else
         {
             logger.debug(app.tr("Rejected"));
-            return EXIT_FAILURE;
+            break;
         }
     }
-    return app.exec();
+    while (!ok);
+
+    delete dlg;
+    dlg = nullptr;
+
+    return (ok ? app.exec() : EXIT_SUCCESS);
 }

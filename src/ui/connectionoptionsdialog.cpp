@@ -1,6 +1,9 @@
 #include "connectionoptionsdialog.h"
 #include "ui_connectionoptions.h"
 
+#include <QApplication>
+#include <QCursor>
+#include <QHostInfo>
 #include <QString>
 
 ConnectionOptionsDialog::ConnectionOptionsDialog(QWidget* parent) :
@@ -8,9 +11,10 @@ ConnectionOptionsDialog::ConnectionOptionsDialog(QWidget* parent) :
     m_ui(new Ui::ConnectionOptions())
 {
     m_ui->setupUi(this);
+    m_ui->errorLabel->setStyleSheet("QLabel { color: red }");
 
     QObject::connect(m_ui->applyButton, &QPushButton::clicked,
-                     this, &ConnectionOptionsDialog::accept);
+                     this, &ConnectionOptionsDialog::slotApply);
     QObject::connect(m_ui->cancelButton, &QPushButton::clicked,
                      this, &ConnectionOptionsDialog::reject);
 }
@@ -21,14 +25,38 @@ ConnectionOptionsDialog::~ConnectionOptionsDialog()
     m_ui = nullptr;
 }
 
-QString ConnectionOptionsDialog::address() const
+void ConnectionOptionsDialog::setErrorString(const QString& message)
 {
-    return m_ui->addressLineEdit->text();
+    m_ui->errorLabel->setText(message);
 }
 
-void ConnectionOptionsDialog::setAddress(const QString& addr)
+void ConnectionOptionsDialog::slotApply()
 {
-    m_ui->addressLineEdit->setText(addr);
+    QApplication::setOverrideCursor(QCursor(Qt::WaitCursor));
+
+    QHostInfo info = QHostInfo::fromName(m_ui->addressLineEdit->text());
+    if (!info.addresses().isEmpty())
+    {
+        m_address = info.addresses().first();
+        QApplication::restoreOverrideCursor();
+        accept();
+    }
+    else
+    {
+        setErrorString(info.errorString());
+        QApplication::restoreOverrideCursor();
+    }
+}
+
+const QHostAddress& ConnectionOptionsDialog::address() const
+{
+    return m_address;
+}
+
+void ConnectionOptionsDialog::setAddress(const QHostAddress& addr)
+{
+    m_address = addr;
+    m_ui->addressLineEdit->setText(m_address.toString());
 }
 
 quint16 ConnectionOptionsDialog::port() const

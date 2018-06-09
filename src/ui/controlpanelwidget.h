@@ -34,7 +34,10 @@ public:
     explicit ControlPanelWidget(QWidget* parent = nullptr);
     ~ControlPanelWidget();
 
-    void initialize(const QHostAddress& address, quint16 port);
+    bool initialize(const QHostAddress& address, quint16 port);
+
+signals:
+    void error(const QString& message);
 
 private slots:
     void slotReceiveBytes(const QByteArray& bytes);
