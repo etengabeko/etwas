@@ -40,19 +40,19 @@ signals:
     void error(const QString& message);
 
 private slots:
+    void slotChangeReceiveMessagesType(bool checked);
+
     void slotReceiveBytes(const QByteArray& bytes);
     void slotReceiveMessage(const QSharedPointer<protocol::AbstractMessage>& message);
 
-//    void slotSendMessage(const QSharedPointer<protocol::AbstractMessage>& message);
+    void slotSendMessage(const QSharedPointer<protocol::AbstractMessage>& message);
 
 private:
     Ui::ControlPanel* m_ui = nullptr;
 
     std::unique_ptr<ioservice::Transport> m_transport;
+    std::unique_ptr<ioservice::InputController> m_inCtrl;
     std::unique_ptr<ioservice::OutputController> m_outCtrl;
-
-    std::unique_ptr<ioservice::InputController> m_inCtrlIn;
-    std::unique_ptr<ioservice::InputController> m_inCtrlOut;
 
 };
 

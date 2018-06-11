@@ -29,48 +29,48 @@
    <item>
     <widget class="QGroupBox" name="messageTypeGroupBox">
      <property name="title">
-      <string>Message Type</string>
+      <string>Sent Message Type</string>
      </property>
      <layout class="QGridLayout" name="gridLayout_2">
       <item row="0" column="1">
        <widget class="QRadioButton" name="displayImagesRadioButton">
         <property name="text">
-         <string>Display Images</string>
+         <string>&amp;Display Images</string>
         </property>
        </widget>
       </item>
       <item row="3" column="0">
        <widget class="QRadioButton" name="deviceAddressRadioButton">
         <property name="text">
-         <string>Device Address</string>
+         <string>D&amp;evice Address</string>
         </property>
        </widget>
       </item>
       <item row="1" column="1">
        <widget class="QRadioButton" name="displayOptionsRadioButton">
         <property name="text">
-         <string>Display Options</string>
+         <string>Di&amp;splay Options</string>
         </property>
        </widget>
       </item>
       <item row="1" column="0" rowspan="2">
        <widget class="QRadioButton" name="buttonsStateRadioButton">
         <property name="text">
-         <string>Buttons State</string>
+         <string>&amp;Buttons State</string>
         </property>
        </widget>
       </item>
       <item row="2" column="1" rowspan="2">
        <widget class="QRadioButton" name="blinkOptionsRadioButton">
         <property name="text">
-         <string>Blink Options</string>
+         <string>Blink &amp;Options</string>
         </property>
        </widget>
       </item>
       <item row="0" column="0">
        <widget class="QRadioButton" name="deviceIdentityRadioButton">
         <property name="text">
-         <string>Device Identity</string>
+         <string>De&amp;vice Identity</string>
         </property>
         <property name="checked">
          <bool>true</bool>
@@ -80,14 +80,14 @@
       <item row="0" column="2">
        <widget class="QRadioButton" name="brightOptionsRadioButton">
         <property name="text">
-         <string>Bright Options</string>
+         <string>B&amp;right Options</string>
         </property>
        </widget>
       </item>
       <item row="1" column="2">
        <widget class="QRadioButton" name="imagesDataRadioButton">
         <property name="text">
-         <string>Images Data</string>
+         <string>&amp;Images Data</string>
         </property>
        </widget>
       </item>
@@ -97,7 +97,7 @@
    <item>
     <widget class="QGroupBox" name="saltGroupBox">
      <property name="title">
-      <string>Add salt</string>
+      <string>&amp;Add salt</string>
      </property>
      <property name="checkable">
       <bool>true</bool>
