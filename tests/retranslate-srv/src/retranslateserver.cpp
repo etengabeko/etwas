@@ -77,8 +77,6 @@ void RetranslateServer::slotOnClientDisconnect()
             m_clients.removeAt(index);
         }
 
-        socket->disconnectFromHost();
-        socket->waitForDisconnected();
         socket->close();
         socket->deleteLater();
     }
