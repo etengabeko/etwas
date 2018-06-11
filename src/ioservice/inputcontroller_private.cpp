@@ -65,7 +65,9 @@ void InputControllerPrivate::tryParseMessages()
         in >> size;
         if (0 < size && size <= static_cast<size_t>(kBufferSize))
         {
-            std::unique_ptr<AbstractMessage> message = AbstractMessage::deserialize(m_direction, stub);
+            QByteArray forParsing(size, '\0');
+            in.readRawData(forParsing.data(), size);
+            std::unique_ptr<AbstractMessage> message = AbstractMessage::deserialize(m_direction, forParsing);
             if (message != nullptr)
             {
                 parsedMessages.append(QSharedPointer<AbstractMessage>(message.release()));

@@ -453,7 +453,7 @@ std::unique_ptr<Message> Message::deserialize(const QByteArray& content)
             break;
         case MessageType::Unknown:
         default:
-            Q_ASSERT_X(false, "incoming::Message::deserialize", "Unknown message type");
+            Q_ASSERT_X(false, "outcoming::Message::deserialize", "Unknown message type");
             break;
         }
     }
