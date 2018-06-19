@@ -2,6 +2,7 @@
 #include "ui_controlpanel.h"
 
 #include <QByteArray>
+#include <QCloseEvent>
 #include <QHostAddress>
 #include <QScrollBar>
 #include <QSharedPointer>
@@ -47,6 +48,12 @@ ControlPanelWidget::~ControlPanelWidget()
     m_ui = nullptr;
 }
 
+void ControlPanelWidget::closeEvent(QCloseEvent* event)
+{
+    QWidget::closeEvent(event);
+    emit closed();
+}
+
 bool ControlPanelWidget::initialize(const QHostAddress& address, quint16 port)
 {
     using namespace ioservice;
@@ -65,13 +72,17 @@ bool ControlPanelWidget::initialize(const QHostAddress& address, quint16 port)
     m_ui->outcomingRadioButton->setChecked(true);
 
     auto res = m_transport->start();
-    if (!res.first)
+    if (res.first)
     {
-        emit error(res.second);
+        setWindowTitle(QString("%1 - %2:%3")
+                       .arg(windowTitle())
+                       .arg(address.toString())
+                       .arg(port));
+        Logger::instance().debug(tr("Transport started successful"));
     }
     else
     {
-        Logger::instance().debug(tr("Transport started successful"));
+        emit error(res.second);
     }
     return res.first;
 }

@@ -6,6 +6,7 @@
 #include <QWidget>
 
 class QByteArray;
+class QCloseEvent;
 class QHostAddress;
 template <typename T> class QSharedPointer;
 
@@ -37,6 +38,7 @@ public:
     bool initialize(const QHostAddress& address, quint16 port);
 
 signals:
+    void closed();
     void error(const QString& message);
 
 private slots:
@@ -46,6 +48,9 @@ private slots:
     void slotReceiveMessage(const QSharedPointer<protocol::AbstractMessage>& message);
 
     void slotSendMessage(const QSharedPointer<protocol::AbstractMessage>& message);
+
+private:
+    void closeEvent(QCloseEvent* event);
 
 private:
     Ui::ControlPanel* m_ui = nullptr;

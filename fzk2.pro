@@ -65,7 +65,8 @@ HEADERS = \
     # ui
     $$PWD/src/ui/connectionoptionsdialog.h \
     $$PWD/src/ui/controlpanelwidget.h \
-    $$PWD/src/ui/createmessageswidget.h
+    $$PWD/src/ui/createmessageswidget.h \
+    $$PWD/src/ui/mainwindow.h
 
 SOURCES = \
     # logger
@@ -87,6 +88,7 @@ SOURCES = \
     $$PWD/src/ui/connectionoptionsdialog.cpp \
     $$PWD/src/ui/controlpanelwidget.cpp \
     $$PWD/src/ui/createmessageswidget.cpp \
+    $$PWD/src/ui/mainwindow.cpp \
     # main
     $$PWD/src/main.cpp
 
