@@ -2,6 +2,7 @@
 #include <QList>
 #include <QSharedPointer>
 
+#include "buttonsstate.h"
 #include "deviceidentity.h"
 
 using namespace test::serialization;
@@ -13,7 +14,8 @@ const QList<QSharedPointer<BasicTest>> makeTestData()
 {
     return QList<QSharedPointer<BasicTest>>
     {
-        QSharedPointer<BasicTest>(new DeviceIdentity())
+        QSharedPointer<BasicTest>(new DeviceIdentity()),
+        QSharedPointer<BasicTest>(new ButtonsState())
         // TODO
     };
 }
