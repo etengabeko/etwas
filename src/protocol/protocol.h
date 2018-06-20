@@ -260,6 +260,7 @@ public:
      * @brief setButtonsStates - Устанавливает новые состояния клавиш
      * @param states - Набор новых состояний клавиш
      */
+    void setButtonsStates(const QVector<ButtonState>& states);
     void setButtonsStates(QVector<ButtonState>&& states);
 
 private:

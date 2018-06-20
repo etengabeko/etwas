@@ -367,6 +367,11 @@ const QVector<ButtonState> ButtonsStateMessage::buttonsStates() const
     return m_pimpl->buttonsStates();
 }
 
+void ButtonsStateMessage::setButtonsStates(const QVector<ButtonState>& states)
+{
+    m_pimpl->setButtonsStates(states);
+}
+
 void ButtonsStateMessage::setButtonsStates(QVector<ButtonState>&& states)
 {
     m_pimpl->setButtonsStates(std::forward<QVector<ButtonState>>(states));
