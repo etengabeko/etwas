@@ -44,8 +44,13 @@ HEADERS = \
     $$ROOT_PROJECT_HEADERS \
     # main
     $$PWD/src/basictest.h \
+    $$PWD/src/blinkoptions.h \
+    $$PWD/src/brightoptions.h \
     $$PWD/src/buttonsstate.h \
-    $$PWD/src/deviceidentity.h
+    $$PWD/src/deviceaddress.h \
+    $$PWD/src/deviceidentity.h \
+    $$PWD/src/displayimages.h \
+    $$PWD/src/displayoptions.h
 
 SOURCES = \
     # root project
@@ -53,8 +58,13 @@ SOURCES = \
     $$ROOT_PROJECT_SRC_DIR/protocol/protocol_private.cpp \
     # main
     $$PWD/src/basictest.cpp \
+    $$PWD/src/blinkoptions.cpp \
+    $$PWD/src/brightoptions.cpp \
     $$PWD/src/buttonsstate.cpp \
+    $$PWD/src/deviceaddress.cpp \
     $$PWD/src/deviceidentity.cpp \
+    $$PWD/src/displayimages.cpp \
+    $$PWD/src/displayoptions.cpp \
     $$PWD/src/main.cpp
 
 INSTALLS += \

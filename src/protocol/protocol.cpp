@@ -648,8 +648,8 @@ const QByteArray DisplayImagesMessage::serialize() const
     out.setByteOrder(QDataStream::BigEndian);
     out << static_cast<quint8>(m_type)
         << static_cast<quint8>(displayNumber())
-        << static_cast<quint16>(firstImageNumber())
-        << static_cast<quint16>(secondImageNumber());
+        << static_cast<quint8>(firstImageNumber())
+        << static_cast<quint8>(secondImageNumber());
 
     return result;
 }
