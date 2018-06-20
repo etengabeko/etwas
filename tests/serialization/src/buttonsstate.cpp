@@ -30,6 +30,11 @@ void ButtonsState::makeTestData()
 {
     BasicTest::makeTestData();
 
+    enum
+    {
+        BitsCount = 8
+    };
+
     auto makeContentFunc = [](const QByteArray& statesBytes)
     {
         QByteArray result;
@@ -52,31 +57,94 @@ void ButtonsState::makeTestData()
                 << expected;
     };
 
-    QByteArray statesBytes(::maxButtonsStatesCount()/8, '\0');
+    QByteArray statesBytes(::maxButtonsStatesCount()/BitsCount, '\0');
     QVector<ButtonState> states(::maxButtonsStatesCount(), ButtonState::Off);
     ButtonsStateMessage message;
-    message.setButtonsStates(states);
 
     addBenchmarkFunc("Empty message",
                      QSharedPointer<AbstractMessage>(new ButtonsStateMessage(message)),
                      QSharedPointer<AbstractMessage>(new ButtonsStateMessage(message)),
                      statesBytes);
-    for (int i = 0; i < 8; ++i)
-    {
-//        std::fill(statesBytes.begin(),
-//                  statesBytes.end(),
-//                  '\0');
+    quint8 byteNum = 0;
 
+    for (int i = 0; i < BitsCount; ++i)
+    {
         QVector<ButtonState> tmp(states);
-        tmp[i] = ButtonState::On;
+        tmp[i + (byteNum * BitsCount)] = ButtonState::On;
         message.setButtonsStates(std::move(tmp));
-        statesBytes[0] = static_cast<char>(0x80 >> i);
+        statesBytes[byteNum] = static_cast<char>(0x80 >> i);
 
         addBenchmarkFunc(QString("Only one %1").arg(i+1).toStdString().c_str(),
                          QSharedPointer<AbstractMessage>(new ButtonsStateMessage(message)),
                          QSharedPointer<AbstractMessage>(new ButtonsStateMessage(message)),
                          statesBytes);
     }
+    statesBytes[byteNum++] = 0x00;
+
+    for (int i = 0; i < BitsCount; ++i)
+    {
+        states[i + (byteNum * BitsCount)] = ButtonState::On;
+        message.setButtonsStates(states);
+        statesBytes[byteNum] = statesBytes.at(byteNum) + static_cast<char>(0x80 >> i);
+
+        addBenchmarkFunc(QString("From big till little %1").arg(i+1).toStdString().c_str(),
+                         QSharedPointer<AbstractMessage>(new ButtonsStateMessage(message)),
+                         QSharedPointer<AbstractMessage>(new ButtonsStateMessage(message)),
+                         statesBytes);
+    }
+    std::fill(states.begin(),
+              states.end(),
+              ButtonState::Off);
+    statesBytes[byteNum++] = 0x00;
+
+    for (int i = BitsCount-1; i >= 0; --i)
+    {
+        states[i + (byteNum * BitsCount)] = ButtonState::On;
+        message.setButtonsStates(states);
+        statesBytes[byteNum] = statesBytes.at(byteNum) + static_cast<char>(0x80 >> i);
+
+        addBenchmarkFunc(QString("From little till big %1").arg(i+1).toStdString().c_str(),
+                         QSharedPointer<AbstractMessage>(new ButtonsStateMessage(message)),
+                         QSharedPointer<AbstractMessage>(new ButtonsStateMessage(message)),
+                         statesBytes);
+    }
+    std::fill(states.begin(),
+              states.end(),
+              ButtonState::Off);
+    statesBytes[byteNum++] = 0x00;
+
+    for (int i = 0; i < BitsCount/2; ++i)
+    {
+        QVector<ButtonState> tmp(states);
+        tmp[i + (byteNum * BitsCount)] = ButtonState::On;
+        tmp[(BitsCount - i - 1) + (byteNum * BitsCount)] = ButtonState::On;
+        message.setButtonsStates(std::move(tmp));
+        statesBytes[byteNum] = static_cast<char>(0x80 >> i) + static_cast<char>(0x80 >> (BitsCount - i - 1));
+
+        addBenchmarkFunc(QString("Empty Bowl %1 and %2").arg(i+1).arg(BitsCount-i).toStdString().c_str(),
+                         QSharedPointer<AbstractMessage>(new ButtonsStateMessage(message)),
+                         QSharedPointer<AbstractMessage>(new ButtonsStateMessage(message)),
+                         statesBytes);
+    }
+    statesBytes[byteNum++] = 0x00;
+
+    for (int i = BitsCount/2; i < BitsCount; ++i)
+    {
+        states[i + (byteNum * BitsCount)] = ButtonState::On;
+        states[(BitsCount - i - 1) + (byteNum * BitsCount)] = ButtonState::On;
+        message.setButtonsStates(states);
+        statesBytes[byteNum] =   statesBytes.at(byteNum)
+                               + static_cast<char>(0x80 >> i) + static_cast<char>(0x80 >> (BitsCount - i - 1));
+
+        addBenchmarkFunc(QString("Full Bowl from %1 till %2").arg(BitsCount-i).arg(i+1).toStdString().c_str(),
+                         QSharedPointer<AbstractMessage>(new ButtonsStateMessage(message)),
+                         QSharedPointer<AbstractMessage>(new ButtonsStateMessage(message)),
+                         statesBytes);
+    }
+    std::fill(states.begin(),
+              states.end(),
+              ButtonState::Off);
+    statesBytes[byteNum++] = 0x00;
 }
 
 } // serialization

@@ -24,6 +24,16 @@ const QString typeToHex(T type)
 int maxButtonsStatesCount() { return 32; }
 int addressStringSize() { return 15; }
 
+quint8 bitByteShift(quint8 bitNumber)
+{
+    enum : quint8
+    {
+        MaxBitNumber = 7,
+        BitsCount = 8
+    };
+    return (MaxBitNumber - (bitNumber % BitsCount));
+}
+
 }
 
 namespace protocol
@@ -316,7 +326,7 @@ const QByteArray ButtonsStateMessage::serialize() const
     {
         quint8 eachState = static_cast<quint8>(buttonsStates().at(i));
         quint8 currentByte = states[i/8];
-        states[i/8] = currentByte | (eachState << (i%8));
+        states[i/8] = currentByte | (eachState << ::bitByteShift(i));
     }
 
     QByteArray result;
@@ -351,7 +361,7 @@ bool ButtonsStateMessage::parse(const QByteArray& src)
         QVector<ButtonState> states(8 * ::maxButtonsStatesCount(), ButtonState::Off);
         for (int i = 0, sz = 8 * ::maxButtonsStatesCount(); i < sz; ++i)
         {
-            const quint8 mask = 1 << (i%8);
+            const quint8 mask = 1 << ::bitByteShift(i);
             quint8 currentByte = bytes.at(i/8);
             states[i] = (currentByte & mask) == 0 ? ButtonState::Off
                                                   : ButtonState::On;
