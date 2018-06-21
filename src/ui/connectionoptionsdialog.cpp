@@ -68,3 +68,13 @@ void ConnectionOptionsDialog::setPort(quint16 portnum)
 {
     m_ui->portSpinBox->setValue(portnum);
 }
+
+bool ConnectionOptionsDialog::isDebugMode() const
+{
+    return m_isDebugMode;
+}
+
+void ConnectionOptionsDialog::setDebugMode(bool enabled)
+{
+    m_isDebugMode = enabled;
+}

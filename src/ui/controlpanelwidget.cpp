@@ -16,26 +16,38 @@
 #include "protocol/protocol.h"
 #include "settings/settings.h"
 
-ControlPanelWidget::ControlPanelWidget(QWidget* parent) :
+ControlPanelWidget::ControlPanelWidget(bool isDebugMode, QWidget* parent) :
     QWidget(parent),
-    m_ui(new Ui::ControlPanel())
+    m_ui(new Ui::ControlPanel()),
+    m_isDebugMode(isDebugMode)
 {
     m_ui->setupUi(this);
 
-    CreateMessagesWidget* wgt = new CreateMessagesWidget(this);
-    QLayout* lout = m_ui->controlGroupBox->layout();
-    QLayoutItem* item = lout->takeAt(lout->count()-1);
-    lout->addWidget(wgt);
-    lout->addItem(item);
-
-    QObject::connect(wgt, &CreateMessagesWidget::messageCreated,
-                     this, &ControlPanelWidget::slotSendMessage);
     QObject::connect(m_ui->incomingRadioButton, &QRadioButton::toggled,
                      this, &ControlPanelWidget::slotChangeReceiveMessagesType);
     QObject::connect(m_ui->outcomingRadioButton, &QRadioButton::toggled,
                      this, &ControlPanelWidget::slotChangeReceiveMessagesType);
     QObject::connect(m_ui->clearButton, &QPushButton::clicked,
                      m_ui->logTextEdit, &QPlainTextEdit::clear);
+
+    if (!m_isDebugMode)
+    {
+        m_ui->receiveGroupBox->hide();
+
+        // TODO
+    }
+    else
+    {
+        CreateMessagesWidget* debugMessageWidget = new CreateMessagesWidget(this);
+        QLayout* lout = m_ui->controlGroupBox->layout();
+        QLayoutItem* item = lout->takeAt(lout->count()-1);
+        lout->addWidget(debugMessageWidget);
+        lout->addItem(item);
+
+        QObject::connect(debugMessageWidget, &CreateMessagesWidget::messageCreated,
+                         this, &ControlPanelWidget::slotSendMessage);
+    }
+
 }
 
 ControlPanelWidget::~ControlPanelWidget()
@@ -66,10 +78,17 @@ bool ControlPanelWidget::initialize(const QHostAddress& address, quint16 port)
     m_transport.reset(new Transport(conf));
     m_outCtrl.reset(new OutputController(m_transport.get()));
 
+    if (!m_isDebugMode)
+    {
+        m_ui->incomingRadioButton->setChecked(true);
+    }
+    else
+    {
+        m_ui->outcomingRadioButton->setChecked(true);
+    }
+
     QObject::connect(m_transport.get(), &Transport::received,
                      this, &ControlPanelWidget::slotReceiveBytes);
-
-    m_ui->outcomingRadioButton->setChecked(true);
 
     auto res = m_transport->start();
     if (res.first)

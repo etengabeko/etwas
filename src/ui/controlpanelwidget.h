@@ -32,7 +32,7 @@ class ControlPanelWidget : public QWidget
     Q_OBJECT
 
 public:
-    explicit ControlPanelWidget(QWidget* parent = nullptr);
+    explicit ControlPanelWidget(bool isDebugMode = false, QWidget* parent = nullptr);
     ~ControlPanelWidget();
 
     bool initialize(const QHostAddress& address, quint16 port);
@@ -54,6 +54,7 @@ private:
 
 private:
     Ui::ControlPanel* m_ui = nullptr;
+    const bool m_isDebugMode;
 
     std::unique_ptr<ioservice::Transport> m_transport;
     std::unique_ptr<ioservice::InputController> m_inCtrl;

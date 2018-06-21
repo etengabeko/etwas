@@ -25,6 +25,9 @@ public:
     quint16 port() const;
     void setPort(quint16 portnum);
 
+    bool isDebugMode() const;
+    void setDebugMode(bool enabled);
+
 public slots:
     void setErrorString(const QString& message);
 
@@ -33,6 +36,7 @@ private:
 
 private:
     Ui::ConnectionOptions* m_ui = nullptr;
+    bool m_isDebugMode = false;
 
     QHostAddress m_address;
 
