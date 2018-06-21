@@ -137,7 +137,7 @@ QSharedPointer<protocol::AbstractMessage> CreateMessagesWidget::createImagesData
 {
     using namespace protocol;
 
-    outcoming::ImagesDataMessage* message = new outcoming::ImagesDataMessage();
+    outcoming::ImageDataMessage* message = new outcoming::ImageDataMessage();
     QSharedPointer<AbstractMessage> result(message);
 
     return result;

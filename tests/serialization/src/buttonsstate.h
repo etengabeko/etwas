@@ -10,6 +10,9 @@ namespace serialization
 
 class ButtonsState : public BasicTest
 {
+public:
+    explicit ButtonsState(QObject* parent = nullptr);
+
 private:
     void makeTestData() override;
 

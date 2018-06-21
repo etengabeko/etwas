@@ -10,6 +10,9 @@ namespace serialization
 
 class DisplayOptions : public BasicTest
 {
+public:
+    explicit DisplayOptions(QObject* parent = nullptr);
+
 private:
     void makeTestData() override;
 

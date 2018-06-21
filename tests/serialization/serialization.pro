@@ -50,7 +50,8 @@ HEADERS = \
     $$PWD/src/deviceaddress.h \
     $$PWD/src/deviceidentity.h \
     $$PWD/src/displayimages.h \
-    $$PWD/src/displayoptions.h
+    $$PWD/src/displayoptions.h \
+    $$PWD/src/imagedata.h
 
 SOURCES = \
     # root project
@@ -65,6 +66,7 @@ SOURCES = \
     $$PWD/src/deviceidentity.cpp \
     $$PWD/src/displayimages.cpp \
     $$PWD/src/displayoptions.cpp \
+    $$PWD/src/imagedata.cpp \
     $$PWD/src/main.cpp
 
 INSTALLS += \

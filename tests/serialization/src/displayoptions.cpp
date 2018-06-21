@@ -16,6 +16,13 @@ namespace test
 {
 namespace serialization
 {
+
+DisplayOptions::DisplayOptions(QObject* parent) :
+    BasicTest(parent)
+{
+    setObjectName("DisplayOptions");
+}
+
 void DisplayOptions::makeTestData()
 {
     BasicTest::makeTestData();

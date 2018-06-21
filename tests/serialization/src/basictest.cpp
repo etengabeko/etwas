@@ -12,6 +12,17 @@ namespace test
 namespace serialization
 {
 
+BasicTest::BasicTest(QObject* parent) :
+    QObject(parent)
+{
+    setObjectName("BasicTest");
+}
+
+BasicTest::~BasicTest() NOEXCEPT
+{
+
+}
+
 void BasicTest::serialize()
 {
     QFETCH(QSharedPointer<AbstractMessage>, source);

@@ -14,6 +14,13 @@ namespace test
 {
 namespace serialization
 {
+
+DeviceAddress::DeviceAddress(QObject* parent) :
+    BasicTest(parent)
+{
+    setObjectName("DeviceAddress");
+}
+
 void DeviceAddress::makeTestData()
 {
     BasicTest::makeTestData();

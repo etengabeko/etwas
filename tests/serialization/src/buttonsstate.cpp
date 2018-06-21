@@ -26,6 +26,12 @@ namespace test
 namespace serialization
 {
 
+ButtonsState::ButtonsState(QObject* parent) :
+    BasicTest(parent)
+{
+    setObjectName("ButtonsState");
+}
+
 void ButtonsState::makeTestData()
 {
     BasicTest::makeTestData();

@@ -48,7 +48,7 @@ class DisplayImagesMessagePrivate;
 class DisplayOptionsMessagePrivate;
 class BlinkOptionsMessagePrivate;
 class BrightOptionsMessagePrivate;
-class ImagesDataMessagePrivate;
+class ImageDataMessagePrivate;
 
 } // details
 
@@ -261,7 +261,7 @@ public:
      * @param states - Набор новых состояний клавиш
      */
     void setButtonsStates(const QVector<ButtonState>& states);
-    void setButtonsStates(QVector<ButtonState>&& states);
+    void setButtonsStates(QVector<ButtonState>&& states) NOEXCEPT;
 
 private:
     std::unique_ptr<details::ButtonsStateMessagePrivate> m_pimpl;
@@ -644,17 +644,17 @@ private:
  * @class ImagesDataMessage
  * @brief Реализация сообщений Загрузка изображений
  */
-class ImagesDataMessage final : public Message
+class ImageDataMessage final : public Message
 {
 public:
-    ImagesDataMessage();
-    ~ImagesDataMessage() NOEXCEPT override;
+    ImageDataMessage();
+    ~ImageDataMessage() NOEXCEPT override;
 
-    ImagesDataMessage(const ImagesDataMessage& other);
-    ImagesDataMessage& operator =(const ImagesDataMessage& other);
+    ImageDataMessage(const ImageDataMessage& other);
+    ImageDataMessage& operator =(const ImageDataMessage& other);
 
-    ImagesDataMessage(ImagesDataMessage&& other) NOEXCEPT;
-    ImagesDataMessage& operator =(ImagesDataMessage&& other) NOEXCEPT;
+    ImageDataMessage(ImageDataMessage&& other) NOEXCEPT;
+    ImageDataMessage& operator =(ImageDataMessage&& other) NOEXCEPT;
 
     /**
      * @brief serialize [override]
@@ -688,10 +688,11 @@ public:
      * @brief setImageColors - Устанавливает для изображения новый набор точек
      * @param colors - Новый набор точек для изображения
      */
-    void setImageColors(QVector<QRgb>&& colors);
+    void setImageColors(const QVector<QRgb>& colors);
+    void setImageColors(QVector<QRgb>&& colors) NOEXCEPT;
 
 private:
-    std::unique_ptr<details::ImagesDataMessagePrivate> m_pimpl;
+    std::unique_ptr<details::ImageDataMessagePrivate> m_pimpl;
 
 };
 

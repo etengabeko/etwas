@@ -1,5 +1,27 @@
 #include "protocol_private.h"
 
+namespace
+{
+namespace details
+{
+
+quint16 maskFive() { return 0x1F; }
+quint16 maskSix()  { return 0x3F; }
+quint8 shiftFive() { return 5; }
+quint8 shiftSix()  { return 6; }
+
+} // details
+
+quint16 maskRed()   { return details::maskFive(); }
+quint16 maskGreen() { return details::maskSix();  }
+quint16 maskBlue()  { return details::maskFive(); }
+
+quint8 shiftRed()   { return (details::shiftFive() + details::shiftSix()); }
+quint8 shiftGreen() { return details::shiftFive(); }
+quint8 shiftBlue()  { return 0; }
+
+}
+
 namespace protocol
 {
 namespace details
@@ -43,6 +65,21 @@ void ButtonsStateMessagePrivate::setButtonsStates(const QVector<ButtonState>& st
 void ButtonsStateMessagePrivate::setButtonsStates(QVector<ButtonState>&& states) NOEXCEPT
 {
     m_states.swap(states);
+}
+
+quint8 ButtonsStateMessagePrivate::bitByteShift(quint8 bitNumber) const NOEXCEPT
+{
+    enum : quint8
+    {
+        MaxBitNumber = 7,
+        BitsCount = 8
+    };
+    return (MaxBitNumber - (bitNumber % BitsCount));
+}
+
+int ButtonsStateMessagePrivate::maxButtonsStatesCount() const NOEXCEPT
+{
+    return 32;
 }
 
 const QString DeviceAddressMessagePrivate::address() const
@@ -175,31 +212,54 @@ void BrightOptionsMessagePrivate::setBrightLevel(quint8 bright) NOEXCEPT
     m_bright = std::min(bright, static_cast<quint8>(BrightLevel::Max));
 }
 
-quint8 ImagesDataMessagePrivate::imageNumber() const NOEXCEPT
+quint8 ImageDataMessagePrivate::imageNumber() const NOEXCEPT
 {
     return m_imageNum;
 }
 
-void ImagesDataMessagePrivate::setImageNumber(quint8 num) NOEXCEPT
+void ImageDataMessagePrivate::setImageNumber(quint8 num) NOEXCEPT
 {
     m_imageNum = num;
 }
 
-const QVector<QRgb> ImagesDataMessagePrivate::imageColors() const
+const QVector<QRgb> ImageDataMessagePrivate::imageColors() const
 {
     return m_imageColors;
 }
 
-void ImagesDataMessagePrivate::setImageColors(const QVector<QRgb>& colors)
+void ImageDataMessagePrivate::setImageColors(const QVector<QRgb>& colors)
 {
     m_imageColors = colors;
 }
 
-void ImagesDataMessagePrivate::setImageColors(QVector<QRgb>&& colors) NOEXCEPT
+void ImageDataMessagePrivate::setImageColors(QVector<QRgb>&& colors) NOEXCEPT
 {
     m_imageColors.swap(colors);
 }
 
+quint16 ImageDataMessagePrivate::rgbTo16bit(const QRgb& color) const NOEXCEPT
+{
+    quint16 red   = static_cast<quint16>(qRed(color))   & ::maskRed();
+    quint16 green = static_cast<quint16>(qGreen(color)) & ::maskGreen();
+    quint16 blue  = static_cast<quint16>(qBlue(color))  & ::maskBlue();
+    red   <<= ::shiftRed();
+    green <<= ::shiftGreen();
+    blue  <<= ::shiftBlue();
+
+    return static_cast<quint16>(red | green | blue);
+}
+
+QRgb ImageDataMessagePrivate::rgbFrom16bit(quint16 bits) const NOEXCEPT
+{
+    quint16 red   = bits & (::maskRed()   << ::shiftRed());
+    quint16 green = bits & (::maskGreen() << ::shiftGreen());
+    quint16 blue  = bits & (::maskBlue()  << ::shiftBlue());
+    red   >>= ::shiftRed();
+    green >>= ::shiftGreen();
+    blue  >>= ::shiftBlue();
+
+    return qRgb(red, green, blue);
+}
 
 } // details
 } // protocol

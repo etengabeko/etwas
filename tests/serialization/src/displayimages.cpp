@@ -13,6 +13,13 @@ namespace test
 {
 namespace serialization
 {
+
+DisplayImages::DisplayImages(QObject* parent) :
+    BasicTest(parent)
+{
+    setObjectName("DisplayImages");
+}
+
 void DisplayImages::makeTestData()
 {
     BasicTest::makeTestData();

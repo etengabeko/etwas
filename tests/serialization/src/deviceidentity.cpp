@@ -16,6 +16,13 @@ namespace test
 {
 namespace serialization
 {
+
+DeviceIdentity::DeviceIdentity(QObject* parent) :
+    BasicTest(parent)
+{
+    setObjectName("DeviceIdentity");
+}
+
 void DeviceIdentity::makeTestData()
 {
     BasicTest::makeTestData();

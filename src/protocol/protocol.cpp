@@ -21,18 +21,7 @@ const QString typeToHex(T type)
            .arg(QString::number(static_cast<quint8>(type), 16).toUpper());
 }
 
-int maxButtonsStatesCount() { return 32; }
 int addressStringSize() { return 15; }
-
-quint8 bitByteShift(quint8 bitNumber)
-{
-    enum : quint8
-    {
-        MaxBitNumber = 7,
-        BitsCount = 8
-    };
-    return (MaxBitNumber - (bitNumber % BitsCount));
-}
 
 }
 
@@ -321,12 +310,12 @@ ButtonsStateMessage& ButtonsStateMessage::operator =(ButtonsStateMessage&& other
 
 const QByteArray ButtonsStateMessage::serialize() const
 {
-    QByteArray states(::maxButtonsStatesCount(), '\0');
+    QByteArray states(m_pimpl->maxButtonsStatesCount(), '\0');
     for (uint i = 0, sz = buttonsStates().size(); i < sz; ++i)
     {
         quint8 eachState = static_cast<quint8>(buttonsStates().at(i));
         quint8 currentByte = states[i/8];
-        states[i/8] = currentByte | (eachState << ::bitByteShift(i));
+        states[i/8] = currentByte | (eachState << m_pimpl->bitByteShift(i));
     }
 
     QByteArray result;
@@ -348,20 +337,20 @@ bool ButtonsStateMessage::parse(const QByteArray& src)
     in >> tmp;
 
     bool ok = (   tmp == static_cast<quint8>(type())
-               && src.size() >= static_cast<int>(::maxButtonsStatesCount() + sizeof(tmp)));
+               && src.size() >= static_cast<int>(m_pimpl->maxButtonsStatesCount() + sizeof(tmp)));
     if (ok)
     {
-        QVector<quint8> bytes(::maxButtonsStatesCount(),'\0');
+        QVector<quint8> bytes(m_pimpl->maxButtonsStatesCount(),'\0');
         {
-            QByteArray ba(::maxButtonsStatesCount(), '\0');
+            QByteArray ba(bytes.size(), '\0');
             in.readRawData(ba.data(), bytes.size());
             std::copy(ba.begin(), ba.end(), bytes.begin());
         }
 
-        QVector<ButtonState> states(8 * ::maxButtonsStatesCount(), ButtonState::Off);
-        for (int i = 0, sz = 8 * ::maxButtonsStatesCount(); i < sz; ++i)
+        QVector<ButtonState> states(8 * m_pimpl->maxButtonsStatesCount(), ButtonState::Off);
+        for (int i = 0, sz = states.size(); i < sz; ++i)
         {
-            const quint8 mask = 1 << ::bitByteShift(i);
+            const quint8 mask = 1 << m_pimpl->bitByteShift(i);
             quint8 currentByte = bytes.at(i/8);
             states[i] = (currentByte & mask) == 0 ? ButtonState::Off
                                                   : ButtonState::On;
@@ -382,7 +371,7 @@ void ButtonsStateMessage::setButtonsStates(const QVector<ButtonState>& states)
     m_pimpl->setButtonsStates(states);
 }
 
-void ButtonsStateMessage::setButtonsStates(QVector<ButtonState>&& states)
+void ButtonsStateMessage::setButtonsStates(QVector<ButtonState>&& states) NOEXCEPT
 {
     m_pimpl->setButtonsStates(std::forward<QVector<ButtonState>>(states));
 }
@@ -464,7 +453,7 @@ std::unique_ptr<Message> Message::deserialize(const QByteArray& content)
             result.reset(new BrightOptionsMessage());
             break;
         case MessageType::ImagesData:
-            result.reset(new ImagesDataMessage());
+            result.reset(new ImageDataMessage());
             break;
         case MessageType::Unknown:
         default:
@@ -1016,45 +1005,45 @@ void BrightOptionsMessage::setBrightLevel(quint8 bright) NOEXCEPT
     m_pimpl->setBrightLevel(bright);
 }
 
-ImagesDataMessage::ImagesDataMessage() :
+ImageDataMessage::ImageDataMessage() :
     Message(MessageType::ImagesData),
-    m_pimpl(new details::ImagesDataMessagePrivate())
+    m_pimpl(new details::ImageDataMessagePrivate())
 {
 
 }
 
-ImagesDataMessage::~ImagesDataMessage() NOEXCEPT
+ImageDataMessage::~ImageDataMessage() NOEXCEPT
 {
     m_pimpl.reset();
 }
 
-ImagesDataMessage::ImagesDataMessage(const ImagesDataMessage& other) :
+ImageDataMessage::ImageDataMessage(const ImageDataMessage& other) :
     Message(other),
-    m_pimpl(new details::ImagesDataMessagePrivate(*other.m_pimpl))
+    m_pimpl(new details::ImageDataMessagePrivate(*other.m_pimpl))
 {
 
 }
 
-ImagesDataMessage& ImagesDataMessage::operator =(const ImagesDataMessage& other)
+ImageDataMessage& ImageDataMessage::operator =(const ImageDataMessage& other)
 {
     *m_pimpl = *other.m_pimpl;
     return *this;
 }
 
-ImagesDataMessage::ImagesDataMessage(ImagesDataMessage&& other) NOEXCEPT :
+ImageDataMessage::ImageDataMessage(ImageDataMessage&& other) NOEXCEPT :
     Message(other),
     m_pimpl(std::move(other.m_pimpl))
 {
 
 }
 
-ImagesDataMessage& ImagesDataMessage::operator =(ImagesDataMessage&& other) NOEXCEPT
+ImageDataMessage& ImageDataMessage::operator =(ImageDataMessage&& other) NOEXCEPT
 {
     m_pimpl.swap(other.m_pimpl);
     return *this;
 }
 
-const QByteArray ImagesDataMessage::serialize() const
+const QByteArray ImageDataMessage::serialize() const
 {
     QByteArray result;
 
@@ -1062,12 +1051,14 @@ const QByteArray ImagesDataMessage::serialize() const
     out.setByteOrder(QDataStream::BigEndian);
     out << static_cast<quint8>(m_type)
         << static_cast<quint8>(imageNumber());
-    // TODO
-
+    for (const QRgb& each : imageColors())
+    {
+        out << static_cast<quint16>(m_pimpl->rgbTo16bit(each));
+    }
     return result;
 }
 
-bool ImagesDataMessage::parse(const QByteArray& src)
+bool ImageDataMessage::parse(const QByteArray& src)
 {
     QDataStream in(src);
     in.setByteOrder(QDataStream::BigEndian);
@@ -1079,27 +1070,40 @@ bool ImagesDataMessage::parse(const QByteArray& src)
     {
         in >> tmp;
         setImageNumber(tmp);
-        // TODO
+        QVector<QRgb> colors;
+        colors.reserve(src.size()/2 - 1);
+        quint16 eachColor = 0;
+        while (!in.atEnd())
+        {
+            in >> eachColor;
+            colors.append(m_pimpl->rgbFrom16bit(eachColor));
+        }
+        setImageColors(std::move(colors));
     }
     return ok;
 }
 
-quint8 ImagesDataMessage::imageNumber() const NOEXCEPT
+quint8 ImageDataMessage::imageNumber() const NOEXCEPT
 {
     return m_pimpl->imageNumber();
 }
 
-void ImagesDataMessage::setImageNumber(quint8 num) NOEXCEPT
+void ImageDataMessage::setImageNumber(quint8 num) NOEXCEPT
 {
     m_pimpl->setImageNumber(num);
 }
 
-const QVector<QRgb> ImagesDataMessage::imageColors() const
+const QVector<QRgb> ImageDataMessage::imageColors() const
 {
     return m_pimpl->imageColors();
 }
 
-void ImagesDataMessage::setImageColors(QVector<QRgb>&& colors)
+void ImageDataMessage::setImageColors(const QVector<QRgb>& colors)
+{
+    m_pimpl->setImageColors(colors);
+}
+
+void ImageDataMessage::setImageColors(QVector<QRgb>&& colors) NOEXCEPT
 {
     m_pimpl->setImageColors(std::forward<QVector<QRgb>>(colors));
 }

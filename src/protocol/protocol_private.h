@@ -36,6 +36,9 @@ public:
     void setButtonsStates(const QVector<ButtonState>& states);
     void setButtonsStates(QVector<ButtonState>&& states) NOEXCEPT;
 
+    quint8 bitByteShift(quint8 bitNumber) const NOEXCEPT;
+    int maxButtonsStatesCount() const NOEXCEPT;
+
 private:
     QVector<ButtonState> m_states;
 
@@ -127,11 +130,11 @@ public:
 private:
     quint8 m_displayNum = 0;
 
-    quint16 m_bright = static_cast<quint8>(BrightLevel::Min);
+    quint8 m_bright = static_cast<quint8>(BrightLevel::Min);
 
 };
 
-class ImagesDataMessagePrivate
+class ImageDataMessagePrivate
 {
 public:
     quint8 imageNumber() const NOEXCEPT;
@@ -140,6 +143,9 @@ public:
     const QVector<QRgb> imageColors() const;
     void setImageColors(const QVector<QRgb>& colors);
     void setImageColors(QVector<QRgb>&& colors) NOEXCEPT;
+
+    quint16 rgbTo16bit(const QRgb& color) const NOEXCEPT;
+    QRgb rgbFrom16bit(quint16 bits) const NOEXCEPT;
 
 private:
     quint8 m_imageNum = 0;

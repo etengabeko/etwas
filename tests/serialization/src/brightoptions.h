@@ -10,6 +10,9 @@ namespace serialization
 
 class BrightOptions : public BasicTest
 {
+public:
+    explicit BrightOptions(QObject* parent = nullptr);
+
 private:
     void makeTestData() override;
 

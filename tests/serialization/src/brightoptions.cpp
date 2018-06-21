@@ -15,6 +15,13 @@ namespace test
 {
 namespace serialization
 {
+
+BrightOptions::BrightOptions(QObject* parent) :
+    BasicTest(parent)
+{
+    setObjectName("BrightOptions");
+}
+
 void BrightOptions::makeTestData()
 {
     BasicTest::makeTestData();

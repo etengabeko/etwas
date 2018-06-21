@@ -18,8 +18,8 @@ class BasicTest : public QObject
     Q_OBJECT
 
 public:
-    BasicTest() = default;
-    virtual ~BasicTest() = default;
+    explicit BasicTest(QObject* parent = nullptr);
+    virtual ~BasicTest() NOEXCEPT;
 
 private slots:
     void serialize_data();

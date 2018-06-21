@@ -10,6 +10,9 @@ namespace serialization
 
 class BlinkOptions : public BasicTest
 {
+public:
+    explicit BlinkOptions(QObject* parent = nullptr);
+
 private:
     void makeTestData() override;
 

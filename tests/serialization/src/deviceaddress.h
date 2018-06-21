@@ -10,6 +10,9 @@ namespace serialization
 
 class DeviceAddress : public BasicTest
 {
+public:
+    explicit DeviceAddress(QObject* parent = nullptr);
+
 private:
     void makeTestData() override;
 

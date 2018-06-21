@@ -10,6 +10,9 @@ namespace serialization
 
 class DeviceIdentity : public BasicTest
 {
+public:
+    explicit DeviceIdentity(QObject* parent = nullptr);
+
 private:
     void makeTestData() override;
 

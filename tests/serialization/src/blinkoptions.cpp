@@ -13,6 +13,13 @@ namespace test
 {
 namespace serialization
 {
+
+BlinkOptions::BlinkOptions(QObject* parent) :
+    BasicTest(parent)
+{
+    setObjectName("BlinkOptions");
+}
+
 void BlinkOptions::makeTestData()
 {
     BasicTest::makeTestData();

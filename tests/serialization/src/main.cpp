@@ -1,4 +1,5 @@
 #include <QtTest>
+#include <QDebug>
 #include <QList>
 #include <QSharedPointer>
 
@@ -10,6 +11,7 @@
 #include "deviceaddress.h"
 #include "displayimages.h"
 #include "displayoptions.h"
+#include "imagedata.h"
 
 using namespace test::serialization;
 
@@ -26,8 +28,8 @@ const QList<QSharedPointer<BasicTest>> makeTestData()
         QSharedPointer<BasicTest>(new DisplayImages()),
         QSharedPointer<BasicTest>(new DisplayOptions()),
         QSharedPointer<BasicTest>(new BlinkOptions()),
-        QSharedPointer<BasicTest>(new BrightOptions())
-        // TODO
+        QSharedPointer<BasicTest>(new BrightOptions()),
+        QSharedPointer<BasicTest>(new ImageData())
     };
 }
 
@@ -36,12 +38,12 @@ const QList<QSharedPointer<BasicTest>> makeTestData()
 int main(int argc, char* argv[])
 {
     QCoreApplication app(argc, argv);
-    Q_UNUSED(app);
 
     int res = EXIT_SUCCESS;
     for (const QSharedPointer<BasicTest>& each : ::makeTestData())
     {
-        int eachRes = QTest::qExec(each.data(), argc, argv);
+        qInfo().noquote() << app.tr("Start test case for %1").arg(each->objectName());
+        int eachRes = QTest::qExec(each.data(), app.arguments());
         res &= eachRes;
     }
 

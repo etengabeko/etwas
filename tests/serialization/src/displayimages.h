@@ -10,6 +10,9 @@ namespace serialization
 
 class DisplayImages : public BasicTest
 {
+public:
+    explicit DisplayImages(QObject* parent = nullptr);
+
 private:
     void makeTestData() override;
 
