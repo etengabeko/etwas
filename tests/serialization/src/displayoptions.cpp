@@ -31,7 +31,7 @@ void DisplayOptions::makeTestData()
     QByteArray content;
     {
         QDataStream stream(&content, QIODevice::WriteOnly);
-        stream.setByteOrder(QDataStream::BigEndian);
+        stream.setByteOrder(QDataStream::LittleEndian);
         stream << quint8(0x03) // type
                << quint8(0)    // display number
                << quint8(0)    // images count
@@ -46,7 +46,7 @@ void DisplayOptions::makeTestData()
     message.setDisplayNumber(15);
     {
         QDataStream stream(&content, QIODevice::WriteOnly);
-        stream.setByteOrder(QDataStream::BigEndian);
+        stream.setByteOrder(QDataStream::LittleEndian);
         stream << quint8(0x03) // type
                << quint8(15)   // display number
                << quint8(0)    // images count
@@ -62,7 +62,7 @@ void DisplayOptions::makeTestData()
     message.setImageSelection(ImageSelection::First);
     {
         QDataStream stream(&content, QIODevice::WriteOnly);
-        stream.setByteOrder(QDataStream::BigEndian);
+        stream.setByteOrder(QDataStream::LittleEndian);
         stream << quint8(0x03) // type
                << quint8(16)   // display number
                << quint8(1)    // images count
@@ -79,7 +79,7 @@ void DisplayOptions::makeTestData()
     message.setBlinkState(BlinkState::On);
     {
         QDataStream stream(&content, QIODevice::WriteOnly);
-        stream.setByteOrder(QDataStream::BigEndian);
+        stream.setByteOrder(QDataStream::LittleEndian);
         stream << quint8(0x03) // type
                << quint8(255)  // display number
                << quint8(2)    // images count

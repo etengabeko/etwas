@@ -31,7 +31,7 @@ void DeviceIdentity::makeTestData()
     QByteArray content;
     {
         QDataStream stream(&content, QIODevice::WriteOnly);
-        stream.setByteOrder(QDataStream::BigEndian);
+        stream.setByteOrder(QDataStream::LittleEndian);
         stream << quint8(0x01) // type
                << quint8(0)    // firmware version
                << quint16(0);  // buttons count
@@ -45,7 +45,7 @@ void DeviceIdentity::makeTestData()
     message.setFirmwareVersion(1);
     {
         QDataStream stream(&content, QIODevice::WriteOnly);
-        stream.setByteOrder(QDataStream::BigEndian);
+        stream.setByteOrder(QDataStream::LittleEndian);
         stream << quint8(0x01) // type
                << quint8(1)    // firmware version
                << quint16(0);  // buttons count
@@ -60,7 +60,7 @@ void DeviceIdentity::makeTestData()
     message.setButtonsNumbers({ 0 });
     {
         QDataStream stream(&content, QIODevice::WriteOnly);
-        stream.setByteOrder(QDataStream::BigEndian);
+        stream.setByteOrder(QDataStream::LittleEndian);
         stream << quint8(0x01) // type
                << quint8(255)  // firmware version
                << quint16(1)   // buttons count
@@ -81,7 +81,7 @@ void DeviceIdentity::makeTestData()
     message.setButtonsNumbers(buttons);
     {
         QDataStream stream(&content, QIODevice::WriteOnly);
-        stream.setByteOrder(QDataStream::BigEndian);
+        stream.setByteOrder(QDataStream::LittleEndian);
         stream << quint8(0x01)      // type
                << quint8(2)         // firmware version
                << quint16(10);      // buttons count
@@ -104,7 +104,7 @@ void DeviceIdentity::makeTestData()
     message.setButtonsNumbers(buttons);
     {
         QDataStream stream(&content, QIODevice::WriteOnly);
-        stream.setByteOrder(QDataStream::BigEndian);
+        stream.setByteOrder(QDataStream::LittleEndian);
         stream << quint8(0x01)      // type
                << quint8(55)        // firmware version
                << quint16(255);     // buttons count

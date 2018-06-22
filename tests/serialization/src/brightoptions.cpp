@@ -30,7 +30,7 @@ void BrightOptions::makeTestData()
     QByteArray content;
     {
         QDataStream stream(&content, QIODevice::WriteOnly);
-        stream.setByteOrder(QDataStream::BigEndian);
+        stream.setByteOrder(QDataStream::LittleEndian);
         stream << quint8(0x05) // type
                << quint8(0)    // display number
                << quint8(0);   // bright level
@@ -44,7 +44,7 @@ void BrightOptions::makeTestData()
     message.setDisplayNumber(2);
     {
         QDataStream stream(&content, QIODevice::WriteOnly);
-        stream.setByteOrder(QDataStream::BigEndian);
+        stream.setByteOrder(QDataStream::LittleEndian);
         stream << quint8(0x05) // type
                << quint8(2)    // display number
                << quint8(0);   // bright level
@@ -59,7 +59,7 @@ void BrightOptions::makeTestData()
     message.setBrightLevel(5);
     {
         QDataStream stream(&content, QIODevice::WriteOnly);
-        stream.setByteOrder(QDataStream::BigEndian);
+        stream.setByteOrder(QDataStream::LittleEndian);
         stream << quint8(0x05) // type
                << quint8(22)   // display number
                << quint8(5);   // bright level
@@ -74,7 +74,7 @@ void BrightOptions::makeTestData()
     message.setBrightLevel(16);
     {
         QDataStream stream(&content, QIODevice::WriteOnly);
-        stream.setByteOrder(QDataStream::BigEndian);
+        stream.setByteOrder(QDataStream::LittleEndian);
         stream << quint8(0x05) // type
                << quint8(222)  // display number
                << quint8(15); // bright level

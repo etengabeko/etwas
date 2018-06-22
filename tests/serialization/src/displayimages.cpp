@@ -28,7 +28,7 @@ void DisplayImages::makeTestData()
     QByteArray content;
     {
         QDataStream stream(&content, QIODevice::WriteOnly);
-        stream.setByteOrder(QDataStream::BigEndian);
+        stream.setByteOrder(QDataStream::LittleEndian);
         stream << quint8(0x02) // type
                << quint8(0)    // display number
                << quint8(0)    // first image number
@@ -43,7 +43,7 @@ void DisplayImages::makeTestData()
     message.setDisplayNumber(127);
     {
         QDataStream stream(&content, QIODevice::WriteOnly);
-        stream.setByteOrder(QDataStream::BigEndian);
+        stream.setByteOrder(QDataStream::LittleEndian);
         stream << quint8(0x02) // type
                << quint8(127)  // display number
                << quint8(0)    // first image number
@@ -60,7 +60,7 @@ void DisplayImages::makeTestData()
     message.setSecondImageNumber(200);
     {
         QDataStream stream(&content, QIODevice::WriteOnly);
-        stream.setByteOrder(QDataStream::BigEndian);
+        stream.setByteOrder(QDataStream::LittleEndian);
         stream << quint8(0x02) // type
                << quint8(0)    // display number
                << quint8(100)  // first image number
@@ -77,7 +77,7 @@ void DisplayImages::makeTestData()
     message.setSecondImageNumber(255);
     {
         QDataStream stream(&content, QIODevice::WriteOnly);
-        stream.setByteOrder(QDataStream::BigEndian);
+        stream.setByteOrder(QDataStream::LittleEndian);
         stream << quint8(0x02) // type
                << quint8(255)  // display number
                << quint8(255)  // first image number

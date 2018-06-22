@@ -28,7 +28,7 @@ void BlinkOptions::makeTestData()
     QByteArray content;
     {
         QDataStream stream(&content, QIODevice::WriteOnly);
-        stream.setByteOrder(QDataStream::BigEndian);
+        stream.setByteOrder(QDataStream::LittleEndian);
         stream << quint8(0x04) // type
                << quint8(0)    // display number
                << quint8(0)    // time on
@@ -43,7 +43,7 @@ void BlinkOptions::makeTestData()
     message.setDisplayNumber(1);
     {
         QDataStream stream(&content, QIODevice::WriteOnly);
-        stream.setByteOrder(QDataStream::BigEndian);
+        stream.setByteOrder(QDataStream::LittleEndian);
         stream << quint8(0x04) // type
                << quint8(1)    // display number
                << quint8(0)    // time on
@@ -59,7 +59,7 @@ void BlinkOptions::makeTestData()
     message.setTimeOn(10);
     {
         QDataStream stream(&content, QIODevice::WriteOnly);
-        stream.setByteOrder(QDataStream::BigEndian);
+        stream.setByteOrder(QDataStream::LittleEndian);
         stream << quint8(0x04) // type
                << quint8(11)   // display number
                << quint8(10)   // time on
@@ -76,7 +76,7 @@ void BlinkOptions::makeTestData()
     message.setTimeOff(200);
     {
         QDataStream stream(&content, QIODevice::WriteOnly);
-        stream.setByteOrder(QDataStream::BigEndian);
+        stream.setByteOrder(QDataStream::LittleEndian);
         stream << quint8(0x04) // type
                << quint8(111)  // display number
                << quint8(100)  // time on

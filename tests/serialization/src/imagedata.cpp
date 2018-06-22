@@ -29,7 +29,7 @@ void ImageData::makeTestData()
     QByteArray content;
     {
         QDataStream stream(&content, QIODevice::WriteOnly);
-        stream.setByteOrder(QDataStream::BigEndian);
+        stream.setByteOrder(QDataStream::LittleEndian);
         stream << quint8(0x06) // type
                << quint8(0);   // image number
     }
@@ -42,7 +42,7 @@ void ImageData::makeTestData()
     message.setImageNumber(5);
     {
         QDataStream stream(&content, QIODevice::WriteOnly);
-        stream.setByteOrder(QDataStream::BigEndian);
+        stream.setByteOrder(QDataStream::LittleEndian);
         stream << quint8(0x06) // type
                << quint8(5);   // image number
     }
@@ -56,7 +56,7 @@ void ImageData::makeTestData()
     message.setImageColors({ qRgb(5, 5, 5) });
     {
         QDataStream stream(&content, QIODevice::WriteOnly);
-        stream.setByteOrder(QDataStream::BigEndian);
+        stream.setByteOrder(QDataStream::LittleEndian);
         stream << quint8(0x06)     // type
                << quint8(55)       // image number
                << quint16(0x28A5); // color
@@ -80,7 +80,7 @@ void ImageData::makeTestData()
                            });
     {
         QDataStream stream(&content, QIODevice::WriteOnly);
-        stream.setByteOrder(QDataStream::BigEndian);
+        stream.setByteOrder(QDataStream::LittleEndian);
         stream << quint8(0x06)     // type
                << quint8(255);     // image number
         // colors

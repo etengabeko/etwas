@@ -46,7 +46,7 @@ void ButtonsState::makeTestData()
         QByteArray result;
 
         QDataStream stream(&result, QIODevice::WriteOnly);
-        stream.setByteOrder(QDataStream::BigEndian);
+        stream.setByteOrder(QDataStream::LittleEndian);
         stream << quint8(0x02); // type
         stream.writeRawData(statesBytes.constData(), statesBytes.size());
 

@@ -29,7 +29,7 @@ void DeviceAddress::makeTestData()
     QByteArray content;
     {
         QDataStream stream(&content, QIODevice::WriteOnly);
-        stream.setByteOrder(QDataStream::BigEndian);
+        stream.setByteOrder(QDataStream::LittleEndian);
         stream << quint8(0x01) // type
                << quint32(0)   // ip-address
                << quint16(0);  // port number
@@ -43,7 +43,7 @@ void DeviceAddress::makeTestData()
     message.setAddress("127.0.0.1");
     {
         QDataStream stream(&content, QIODevice::WriteOnly);
-        stream.setByteOrder(QDataStream::BigEndian);
+        stream.setByteOrder(QDataStream::LittleEndian);
         stream << quint8(0x01) // type
                << quint8(127) << quint8(0) << quint8(0) << quint8(1) // ip-address
                << quint16(0);  // port number
@@ -58,7 +58,7 @@ void DeviceAddress::makeTestData()
     message.setPort(33333);
     {
         QDataStream stream(&content, QIODevice::WriteOnly);
-        stream.setByteOrder(QDataStream::BigEndian);
+        stream.setByteOrder(QDataStream::LittleEndian);
         stream << quint8(0x01)     // type
                << quint32(0)       // ip-address
                << quint16(33333);  // port number
@@ -73,7 +73,7 @@ void DeviceAddress::makeTestData()
     message.setPort(65535);
     {
         QDataStream stream(&content, QIODevice::WriteOnly);
-        stream.setByteOrder(QDataStream::BigEndian);
+        stream.setByteOrder(QDataStream::LittleEndian);
         stream << quint8(0x01)    // type
                << quint8(192) << quint8(168) << quint8(1) << quint8(100) // ip-address
                << quint16(65535); // port number

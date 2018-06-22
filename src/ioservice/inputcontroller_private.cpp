@@ -61,7 +61,7 @@ void InputControllerPrivate::tryParseMessages()
 
         QByteArray stub(m_buffer.right(kBufferSize - currentIndex));
         QDataStream in(&stub, QIODevice::ReadOnly);
-        in.setByteOrder(QDataStream::BigEndian);
+        in.setByteOrder(QDataStream::LittleEndian);
         in >> size;
         if (0 < size && size <= static_cast<size_t>(kBufferSize))
         {

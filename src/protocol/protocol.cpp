@@ -133,7 +133,7 @@ std::unique_ptr<Message> Message::deserialize(const QByteArray& content)
         quint8 type = 0;
         {
             QDataStream in(content);
-            in.setByteOrder(QDataStream::BigEndian);
+            in.setByteOrder(QDataStream::LittleEndian);
             in >> type;
         }
 
@@ -207,7 +207,7 @@ const QByteArray DeviceIdentityMessage::serialize() const
     QByteArray result;
 
     QDataStream out(&result, QIODevice::WriteOnly);
-    out.setByteOrder(QDataStream::BigEndian);
+    out.setByteOrder(QDataStream::LittleEndian);
     out << static_cast<quint8>(m_type)
         << static_cast<quint8>(firmwareVersion())
         << static_cast<quint16>(buttonsNumbers().size());
@@ -221,7 +221,7 @@ const QByteArray DeviceIdentityMessage::serialize() const
 bool DeviceIdentityMessage::parse(const QByteArray& src)
 {
     QDataStream in(src);
-    in.setByteOrder(QDataStream::BigEndian);
+    in.setByteOrder(QDataStream::LittleEndian);
     quint8 tmp = 0;
     in >> tmp;
 
@@ -321,7 +321,7 @@ const QByteArray ButtonsStateMessage::serialize() const
     QByteArray result;
     {
         QDataStream out(&result, QIODevice::WriteOnly);
-        out.setByteOrder(QDataStream::BigEndian);
+        out.setByteOrder(QDataStream::LittleEndian);
         out << static_cast<quint8>(m_type);
     }
     result += states;
@@ -332,7 +332,7 @@ const QByteArray ButtonsStateMessage::serialize() const
 bool ButtonsStateMessage::parse(const QByteArray& src)
 {
     QDataStream in(src);
-    in.setByteOrder(QDataStream::BigEndian);
+    in.setByteOrder(QDataStream::LittleEndian);
     quint8 tmp = 0;
     in >> tmp;
 
@@ -431,7 +431,7 @@ std::unique_ptr<Message> Message::deserialize(const QByteArray& content)
         quint8 type = 0;
         {
             QDataStream in(content);
-            in.setByteOrder(QDataStream::BigEndian);
+            in.setByteOrder(QDataStream::LittleEndian);
             in >> type;
         }
 
@@ -519,7 +519,7 @@ const QByteArray DeviceAddressMessage::serialize() const
     QByteArray result;
     {
         QDataStream out(&result, QIODevice::WriteOnly);
-        out.setByteOrder(QDataStream::BigEndian);
+        out.setByteOrder(QDataStream::LittleEndian);
         out << static_cast<quint8>(m_type);
         if (re.match(address()).hasMatch())
         {
@@ -543,7 +543,7 @@ const QByteArray DeviceAddressMessage::serialize() const
 bool DeviceAddressMessage::parse(const QByteArray& src)
 {
     QDataStream in(src);
-    in.setByteOrder(QDataStream::BigEndian);
+    in.setByteOrder(QDataStream::LittleEndian);
     quint8 tmp = 0;
     in >> tmp;
 
@@ -634,7 +634,7 @@ const QByteArray DisplayImagesMessage::serialize() const
     QByteArray result;
 
     QDataStream out(&result, QIODevice::WriteOnly);
-    out.setByteOrder(QDataStream::BigEndian);
+    out.setByteOrder(QDataStream::LittleEndian);
     out << static_cast<quint8>(m_type)
         << static_cast<quint8>(displayNumber())
         << static_cast<quint8>(firstImageNumber())
@@ -646,7 +646,7 @@ const QByteArray DisplayImagesMessage::serialize() const
 bool DisplayImagesMessage::parse(const QByteArray& src)
 {
     QDataStream in(src);
-    in.setByteOrder(QDataStream::BigEndian);
+    in.setByteOrder(QDataStream::LittleEndian);
     quint8 tmp = 0;
     in >> tmp;
 
@@ -738,7 +738,7 @@ const QByteArray DisplayOptionsMessage::serialize() const
     QByteArray result;
 
     QDataStream out(&result, QIODevice::WriteOnly);
-    out.setByteOrder(QDataStream::BigEndian);
+    out.setByteOrder(QDataStream::LittleEndian);
     out << static_cast<quint8>(m_type)
         << static_cast<quint8>(displayNumber())
         << static_cast<quint8>(imageSelection())
@@ -750,7 +750,7 @@ const QByteArray DisplayOptionsMessage::serialize() const
 bool DisplayOptionsMessage::parse(const QByteArray& src)
 {
     QDataStream in(src);
-    in.setByteOrder(QDataStream::BigEndian);
+    in.setByteOrder(QDataStream::LittleEndian);
     quint8 tmp = 0;
     in >> tmp;
 
@@ -850,7 +850,7 @@ const QByteArray BlinkOptionsMessage::serialize() const
     QByteArray result;
 
     QDataStream out(&result, QIODevice::WriteOnly);
-    out.setByteOrder(QDataStream::BigEndian);
+    out.setByteOrder(QDataStream::LittleEndian);
     out << static_cast<quint8>(m_type)
         << static_cast<quint8>(displayNumber())
         << static_cast<quint8>(timeOn())
@@ -862,7 +862,7 @@ const QByteArray BlinkOptionsMessage::serialize() const
 bool BlinkOptionsMessage::parse(const QByteArray& src)
 {
     QDataStream in(src);
-    in.setByteOrder(QDataStream::BigEndian);
+    in.setByteOrder(QDataStream::LittleEndian);
     quint8 tmp = 0;
     in >> tmp;
 
@@ -954,7 +954,7 @@ const QByteArray BrightOptionsMessage::serialize() const
     QByteArray result;
 
     QDataStream out(&result, QIODevice::WriteOnly);
-    out.setByteOrder(QDataStream::BigEndian);
+    out.setByteOrder(QDataStream::LittleEndian);
     out << static_cast<quint8>(m_type)
         << static_cast<quint8>(displayNumber())
         << static_cast<quint8>(brightLevel());
@@ -965,7 +965,7 @@ const QByteArray BrightOptionsMessage::serialize() const
 bool BrightOptionsMessage::parse(const QByteArray& src)
 {
     QDataStream in(src);
-    in.setByteOrder(QDataStream::BigEndian);
+    in.setByteOrder(QDataStream::LittleEndian);
     quint8 tmp = 0;
     in >> tmp;
 
@@ -1048,7 +1048,7 @@ const QByteArray ImageDataMessage::serialize() const
     QByteArray result;
 
     QDataStream out(&result, QIODevice::WriteOnly);
-    out.setByteOrder(QDataStream::BigEndian);
+    out.setByteOrder(QDataStream::LittleEndian);
     out << static_cast<quint8>(m_type)
         << static_cast<quint8>(imageNumber());
     for (const QRgb& each : imageColors())
@@ -1061,7 +1061,7 @@ const QByteArray ImageDataMessage::serialize() const
 bool ImageDataMessage::parse(const QByteArray& src)
 {
     QDataStream in(src);
-    in.setByteOrder(QDataStream::BigEndian);
+    in.setByteOrder(QDataStream::LittleEndian);
     quint8 tmp = 0;
     in >> tmp;
 

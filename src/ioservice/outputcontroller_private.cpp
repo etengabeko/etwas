@@ -27,7 +27,7 @@ void OutputControllerPrivate::send(const protocol::AbstractMessage& message)
     QByteArray ba;
     {
         QDataStream stream(&ba, QIODevice::WriteOnly);
-        stream.setByteOrder(QDataStream::BigEndian);
+        stream.setByteOrder(QDataStream::LittleEndian);
         stream << message;
     }
 
