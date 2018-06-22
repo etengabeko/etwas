@@ -59,7 +59,7 @@ void ImageData::makeTestData()
         stream.setByteOrder(QDataStream::LittleEndian);
         stream << quint8(0x06)     // type
                << quint8(55)       // image number
-               << quint16(0x28A5); // color
+               << quint16(0x0020); // color
     }
     QTest::newRow("image number & one color")
             << QSharedPointer<AbstractMessage>(new ImageDataMessage(message))
@@ -85,12 +85,12 @@ void ImageData::makeTestData()
                << quint8(255);     // image number
         // colors
         stream << quint16(0x0000)
-               << quint16(0x0821)
-               << quint16(0x8210)
-               << quint16(0xFBFF)
-               << quint16(0x0400)
-               << quint16(0x07e0)
-               << quint16(0xFFFF)
+               << quint16(0x0000)
+               << quint16(0x1082)
+               << quint16(0x18E3)
+               << quint16(0x2104)
+               << quint16(0x21E4)
+               << quint16(0x39E7)
                << quint16(0xFFFF);
     }
     QTest::newRow("image number & many colors")

@@ -4,21 +4,22 @@ namespace
 {
 namespace details
 {
-
-quint16 maskFive() { return 0x1F; }
-quint16 maskSix()  { return 0x3F; }
-quint8 shiftFive() { return 5; }
-quint8 shiftSix()  { return 6; }
+quint16 maskFive() NOEXCEPT { return 0xF8; }
+quint16 maskSix()  NOEXCEPT { return 0xFC; }
 
 } // details
 
-quint16 maskRed()   { return details::maskFive(); }
-quint16 maskGreen() { return details::maskSix();  }
-quint16 maskBlue()  { return details::maskFive(); }
+quint16 maskRed()   NOEXCEPT { return details::maskFive(); }
+quint16 maskGreen() NOEXCEPT { return details::maskSix();  }
+quint16 maskBlue()  NOEXCEPT { return details::maskFive(); }
 
-quint8 shiftRed()   { return (details::shiftFive() + details::shiftSix()); }
-quint8 shiftGreen() { return details::shiftFive(); }
-quint8 shiftBlue()  { return 0; }
+quint16 shiftRed(quint16 val)   NOEXCEPT { return val >> 3; }
+quint16 shiftGreen(quint16 val) NOEXCEPT { return val << 3; }
+quint16 shiftBlue(quint16 val)  NOEXCEPT { return val << 8; }
+
+quint16 backShiftRed(quint16 val)   NOEXCEPT { return val << 3; }
+quint16 backShiftGreen(quint16 val) NOEXCEPT { return val >> 3; }
+quint16 backShiftBlue(quint16 val)  NOEXCEPT { return val >> 8; }
 
 }
 
@@ -242,21 +243,21 @@ quint16 ImageDataMessagePrivate::rgbTo16bit(const QRgb& color) const NOEXCEPT
     quint16 red   = static_cast<quint16>(qRed(color))   & ::maskRed();
     quint16 green = static_cast<quint16>(qGreen(color)) & ::maskGreen();
     quint16 blue  = static_cast<quint16>(qBlue(color))  & ::maskBlue();
-    red   <<= ::shiftRed();
-    green <<= ::shiftGreen();
-    blue  <<= ::shiftBlue();
+    red   = ::shiftRed(red);
+    green = ::shiftGreen(green);
+    blue  = ::shiftBlue(blue);
 
     return static_cast<quint16>(red | green | blue);
 }
 
 QRgb ImageDataMessagePrivate::rgbFrom16bit(quint16 bits) const NOEXCEPT
 {
-    quint16 red   = bits & (::maskRed()   << ::shiftRed());
-    quint16 green = bits & (::maskGreen() << ::shiftGreen());
-    quint16 blue  = bits & (::maskBlue()  << ::shiftBlue());
-    red   >>= ::shiftRed();
-    green >>= ::shiftGreen();
-    blue  >>= ::shiftBlue();
+    quint16 red   = bits & (::shiftRed(::maskRed()));
+    quint16 green = bits & (::shiftGreen(::maskGreen()));
+    quint16 blue  = bits & (::shiftBlue(::maskBlue()));
+    red   = ::backShiftRed(red);
+    green = ::backShiftGreen(green);
+    blue  = ::backShiftBlue(blue);
 
     return qRgb(red, green, blue);
 }
