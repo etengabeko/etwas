@@ -3,4 +3,5 @@ TEMPLATE = subdirs
 SUBDIRS = \
     serialization \
 #    send-receive
-    retranslate-srv
+    retranslate-srv \
+    display-control

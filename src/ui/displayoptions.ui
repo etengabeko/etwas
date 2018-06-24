@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>DisplayOptions</class>
+ <widget class="QWidget" name="DisplayOptions">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>330</width>
+    <height>167</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Display Options</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_3">
+     <item>
+      <widget class="QCheckBox" name="imageFirstCheckBox">
+       <property name="text">
+        <string>1st image</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="imageFirstLabel">
+       <property name="text">
+        <string>...</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_4">
+     <item>
+      <widget class="QCheckBox" name="imageSecondCheckBox">
+       <property name="text">
+        <string>2nd image</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="imageSecondLabel">
+       <property name="text">
+        <string>...</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QCheckBox" name="blinkingCheckBox">
+     <property name="text">
+      <string>Blinking</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <widget class="QLabel" name="timeOnLabel">
+       <property name="text">
+        <string>Time On:</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QSpinBox" name="timeOnSpinBox">
+       <property name="suffix">
+        <string> msec</string>
+       </property>
+       <property name="maximum">
+        <number>2550</number>
+       </property>
+       <property name="singleStep">
+        <number>10</number>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="timeOffLabel">
+       <property name="text">
+        <string>Time Off:</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QSpinBox" name="timeOffSpinBox">
+       <property name="suffix">
+        <string> msec</string>
+       </property>
+       <property name="maximum">
+        <number>2550</number>
+       </property>
+       <property name="singleStep">
+        <number>10</number>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_2">
+     <item>
+      <widget class="QLabel" name="brightLabel">
+       <property name="text">
+        <string>Bright:</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QSlider" name="brightSlider">
+       <property name="maximum">
+        <number>15</number>
+       </property>
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
