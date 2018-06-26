@@ -4,6 +4,8 @@
 #include <QPixmap>
 #include <QWidget>
 
+class QLabel;
+class QString;
 class QTimer;
 
 namespace Ui
@@ -25,10 +27,8 @@ public:
     explicit DisplayControlWidget(bool isDebugMode = false, QWidget* parent = nullptr);
     ~DisplayControlWidget();
 
-    void setCurrentImage(ImageNumber num);
-
-    void setFirstImage(const QPixmap& img);
-    void setSecondImage(const QPixmap& img);
+    void setFirstImage(const QString& pixmapFileName);
+    void setSecondImage(const QString& pixmapFileName);
 
     void resetFirstImage();
     void resetSecondImage();
@@ -39,23 +39,22 @@ public:
     void setTimeOn(int msec);
     void setTimeOff(int msec);
 
-public:
+public slots:
     void setActive(bool enabled);
 
 signals:
-    void pressed();
-    void released();
     void activated(bool enabled);
 
 private slots:
-    void slotTimeoutOn();
-    void slotTimeoutOff();
+    void slotTimeout();
 
 private:
     void setImage(ImageNumber num, const QPixmap& img);
     void resetImage(ImageNumber num);
+    void setCurrentImage(ImageNumber num);
 
-    void resetTimers();
+    void resetTimer();
+    void resetCurrentImage();
 
 private:
     Ui::DisplayControl* m_ui = nullptr;
@@ -69,10 +68,8 @@ private:
     QPixmap m_firstImage;
     QPixmap m_secondImage;
 
-    QPixmap m_brightMask;
-
-    QTimer* m_timerOn = nullptr;
-    QTimer* m_timerOff = nullptr;
+    QTimer* m_timer = nullptr;
+    QLabel* m_displayLabel = nullptr;
 
 };
 

@@ -9,8 +9,8 @@ int main(int argc, char* argv[])
     QApplication app(argc, argv);
     Logger::initialize(Logger::Level::Trace);
 
-    const QPixmap img1st(":/on.bmp");
-    const QPixmap img2nd(":/off.bmp");
+    const QString img1st(":/on.bmp");
+    const QString img2nd(":/off.bmp");
 
     DisplayOptionsWidget opt;
     DisplayControlWidget* ctrl = new DisplayControlWidget(true);
@@ -56,9 +56,6 @@ int main(int argc, char* argv[])
                      {
                          ctrl->setBrightLevel(level);
                      });
-
-    QObject::connect(ctrl, &DisplayControlWidget::activated,
-                     [] (bool enabled) { Logger::instance().debug(qApp->tr("DisplayControlWidget is %1").arg((enabled ? "Turn ON" : "Turn OFF"))); });
 
     opt.show();
     ctrl->show();

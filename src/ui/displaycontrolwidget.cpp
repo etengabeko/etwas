@@ -1,37 +1,53 @@
 #include "displaycontrolwidget.h"
 #include "ui_displaycontrol.h"
 
-#include <QBitmap>
+#include <QGraphicsOpacityEffect>
+#include <QHBoxLayout>
+#include <QLabel>
+#include <QString>
 #include <QTimer>
 
-#include "logger/logger.h"
 #include "protocol/types.h"
+
+namespace
+{
+
+qreal transparentLevel() { return 0.3; }
+qreal opaqueLevel() { return 1.0; }
+
+}
 
 DisplayControlWidget::DisplayControlWidget(bool isDebugMode, QWidget* parent) :
     QWidget(parent),
     m_ui(new Ui::DisplayControl()),
     m_isDebugMode(isDebugMode),
-    m_timerOn(new QTimer(this)),
-    m_timerOff(new QTimer(this))
+    m_timer(new QTimer(this)),
+    m_displayLabel(new QLabel(this))
 {
     m_ui->setupUi(this);
 
-    QObject::connect(m_timerOn, &QTimer::timeout,
-                     this, &DisplayControlWidget::slotTimeoutOn);
-    QObject::connect(m_timerOff, &QTimer::timeout,
-                     this, &DisplayControlWidget::slotTimeoutOff);
+    if (m_ui->displayButton->layout() == nullptr)
+    {
+        m_ui->displayButton->setLayout(new QHBoxLayout());
+    }
+    m_ui->displayButton->layout()->addWidget(m_displayLabel);
+    m_displayLabel->setAlignment(Qt::AlignCenter);
 
-    QObject::connect(this, &DisplayControlWidget::pressed,
-                     [this]() { emit activated(true); });
-    QObject::connect(this, &DisplayControlWidget::released,
-                     [this]() { emit activated(false); });
+    QGraphicsOpacityEffect* effect = new QGraphicsOpacityEffect();
+    effect->setOpacity(::opaqueLevel());
+    m_displayLabel->setGraphicsEffect(effect);
+
+    QObject::connect(m_timer, &QTimer::timeout,
+                     this, &DisplayControlWidget::slotTimeout);
 
     if (m_isDebugMode)
     {
+        QObject::connect(this, &DisplayControlWidget::activated,
+                         this, &DisplayControlWidget::setActive);
         QObject::connect(m_ui->displayButton, &QToolButton::pressed,
-                         this, &DisplayControlWidget::pressed);
+                         [this]() { emit activated(true); });
         QObject::connect(m_ui->displayButton, &QToolButton::released,
-                         this, &DisplayControlWidget::released);
+                         [this]() { emit activated(false); });
     }
 }
 
@@ -57,8 +73,7 @@ void DisplayControlWidget::setCurrentImage(ImageNumber num)
         return;
     }
 
-    // TODO: add mask
-    m_ui->displayButton->setIcon(QIcon(*current));
+    m_displayLabel->setPixmap(*current);
 }
 
 void DisplayControlWidget::resetFirstImage()
@@ -76,14 +91,14 @@ void DisplayControlWidget::resetImage(ImageNumber num)
     setImage(num, QPixmap());
 }
 
-void DisplayControlWidget::setFirstImage(const QPixmap& img)
+void DisplayControlWidget::setFirstImage(const QString& pixmapFileName)
 {
-    setImage(ImageNumber::First, img);
+    setImage(ImageNumber::First, QPixmap(pixmapFileName));
 }
 
-void DisplayControlWidget::setSecondImage(const QPixmap& img)
+void DisplayControlWidget::setSecondImage(const QString& pixmapFileName)
 {
-    setImage(ImageNumber::Second, img);
+    setImage(ImageNumber::Second, QPixmap(pixmapFileName));
 }
 
 void DisplayControlWidget::setImage(ImageNumber num, const QPixmap& img)
@@ -98,64 +113,82 @@ void DisplayControlWidget::setImage(ImageNumber num, const QPixmap& img)
         break;
     default:
         Q_ASSERT_X(false, "DisplayControl::setImage", "Unexpected value of ImageNumber");
-        break;
+        return;
     }
+
+    resetCurrentImage();
 }
 
 void DisplayControlWidget::setBrightLevel(int level)
 {
     m_brightLevel = std::min(std::max(level, static_cast<int>(protocol::BrightLevel::Min)),
                              static_cast<int>(protocol::BrightLevel::Max));
-    // TODO: set opacity
-    // m_brightMask
+    QGraphicsOpacityEffect* effect = qobject_cast<QGraphicsOpacityEffect*>(m_displayLabel->graphicsEffect());
+    if (effect != nullptr)
+    {
+        const qreal opacity = ::transparentLevel() + (::opaqueLevel() - ::transparentLevel()) * m_brightLevel/static_cast<qreal>(protocol::BrightLevel::Max);
+        effect->setOpacity(opacity);
+    }
 }
 
 void DisplayControlWidget::setTimeOn(int msec)
 {
     m_timeOnMsec = msec;
-    resetTimers();
+    resetTimer();
 }
 
 void DisplayControlWidget::setTimeOff(int msec)
 {
     m_timeOffMsec = msec;
-    resetTimers();
-}
-
-void DisplayControlWidget::resetTimers()
-{
-    m_timerOn->setInterval(m_timeOnMsec + m_timeOffMsec);
-    m_timerOff->setInterval(m_timeOnMsec + m_timeOffMsec);
+    resetTimer();
 }
 
 void DisplayControlWidget::setBlinkingEnabled(bool enabled)
 {
-    if (enabled)
+    m_blinkingEnabled = enabled;
+    resetTimer();
+    resetCurrentImage();
+}
+
+void DisplayControlWidget::resetTimer()
+{
+    if (   m_blinkingEnabled
+        && m_timeOnMsec > 0
+        && m_timeOffMsec > 0)
     {
-        if (m_timeOnMsec > 0)
-        {
-            m_timerOn->start();
-        }
-        if (m_timeOffMsec > 0)
-        {
-            QTimer::singleShot(m_timeOnMsec, [this]() { m_timerOff->start(); });
-        }
+        m_timer->start(m_timeOnMsec + m_timeOffMsec);
+        slotTimeout();
     }
     else
     {
-        m_timerOn->stop();
-        m_timerOff->stop();
+        m_timer->stop();
     }
 }
 
-void DisplayControlWidget::slotTimeoutOn()
+void DisplayControlWidget::resetCurrentImage()
 {
-    Logger::instance().trace(tr("set first image"));
-    setCurrentImage(ImageNumber::First);
+    if (!m_blinkingEnabled)
+    {
+        if (!m_firstImage.isNull())
+        {
+            setCurrentImage(ImageNumber::First);
+        }
+        else
+        {
+            setCurrentImage(ImageNumber::Second);
+        }
+    }
 }
 
-void DisplayControlWidget::slotTimeoutOff()
+void DisplayControlWidget::slotTimeout()
 {
-    Logger::instance().trace(tr("set second image"));
-    setCurrentImage(ImageNumber::Second);
+    setCurrentImage(ImageNumber::First);
+
+    QTimer::singleShot(m_timeOnMsec, [this]() { if (m_blinkingEnabled) setCurrentImage(ImageNumber::Second); });
+}
+
+void DisplayControlWidget::setActive(bool enabled)
+{
+    const QString ss = QString("background-color: %1;").arg((enabled ? "yellow" : "none"));
+    m_ui->displayButton->setStyleSheet(ss);
 }

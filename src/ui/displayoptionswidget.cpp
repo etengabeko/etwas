@@ -1,13 +1,35 @@
 #include "displayoptionswidget.h"
 #include "ui_displayoptions.h"
 
+#include <QGraphicsOpacityEffect>
 #include <QPixmap>
+#include <QString>
+
+#include "protocol/types.h"
+
+namespace
+{
+
+qreal transparentLevel() { return 0.3; }
+qreal opaqueLevel() { return 1.0; }
+
+}
 
 DisplayOptionsWidget::DisplayOptionsWidget(QWidget* parent) :
     QWidget(parent),
     m_ui(new Ui::DisplayOptions())
 {
     m_ui->setupUi(this);
+
+    m_ui->brightSlider->setRange(static_cast<int>(protocol::BrightLevel::Min),
+                                 static_cast<int>(protocol::BrightLevel::Max));
+
+    QGraphicsOpacityEffect* effect = new QGraphicsOpacityEffect();
+    effect->setOpacity(::opaqueLevel());
+    m_ui->imageFirstLabel->setGraphicsEffect(effect);
+    effect = new QGraphicsOpacityEffect();
+    effect->setOpacity(::opaqueLevel());
+    m_ui->imageSecondLabel->setGraphicsEffect(effect);
 
     QObject::connect(m_ui->imageFirstCheckBox, &QCheckBox::toggled,
                      this, &DisplayOptionsWidget::imageFirstEnabled);
@@ -21,6 +43,8 @@ DisplayOptionsWidget::DisplayOptionsWidget(QWidget* parent) :
                      this, &DisplayOptionsWidget::timeOffChanged);
     QObject::connect(m_ui->brightSlider, &QSlider::valueChanged,
                      this, &DisplayOptionsWidget::brightChanged);
+    QObject::connect(m_ui->brightSlider, &QSlider::valueChanged,
+                     this, &DisplayOptionsWidget::slotChangeBrightness);
 }
 
 DisplayOptionsWidget::~DisplayOptionsWidget()
@@ -29,12 +53,29 @@ DisplayOptionsWidget::~DisplayOptionsWidget()
     m_ui = nullptr;
 }
 
-void DisplayOptionsWidget::setFirstImage(const QPixmap& img)
+void DisplayOptionsWidget::setFirstImage(const QString& pixmapFileName)
 {
-    m_ui->imageFirstLabel->setPixmap(img);
+    m_ui->imageFirstLabel->setPixmap(QPixmap(pixmapFileName));
 }
 
-void DisplayOptionsWidget::setSecondImage(const QPixmap& img)
+void DisplayOptionsWidget::setSecondImage(const QString& pixmapFileName)
 {
-    m_ui->imageSecondLabel->setPixmap(img);
+    m_ui->imageSecondLabel->setPixmap(QPixmap(pixmapFileName));
+}
+
+void DisplayOptionsWidget::slotChangeBrightness(int level)
+{
+    const qreal opacity = ::transparentLevel() + (::opaqueLevel() - ::transparentLevel()) * level/static_cast<qreal>(protocol::BrightLevel::Max);
+
+    QGraphicsOpacityEffect* effect = qobject_cast<QGraphicsOpacityEffect*>(m_ui->imageFirstLabel->graphicsEffect());
+    if (effect != nullptr)
+    {
+        effect->setOpacity(opacity);
+    }
+    effect = qobject_cast<QGraphicsOpacityEffect*>(m_ui->imageSecondLabel->graphicsEffect());
+    if (effect != nullptr)
+    {
+        effect->setOpacity(opacity);
+    }
+
 }

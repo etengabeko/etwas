@@ -3,7 +3,7 @@
 
 #include <QWidget>
 
-class QPixmap;
+class QString;
 
 namespace Ui
 {
@@ -18,8 +18,8 @@ public:
     explicit DisplayOptionsWidget(QWidget* parent = nullptr);
     ~DisplayOptionsWidget();
 
-    void setFirstImage(const QPixmap& img);
-    void setSecondImage(const QPixmap& img);
+    void setFirstImage(const QString& pixmapFileName);
+    void setSecondImage(const QString& pixmapFileName);
 
 signals:
     void imageFirstEnabled(bool enabled);
@@ -30,6 +30,9 @@ signals:
     void timeOffChanged(int msec);
 
     void brightChanged(int level);
+
+private slots:
+    void slotChangeBrightness(int level);
 
 private:
     Ui::DisplayOptions* m_ui = nullptr;
