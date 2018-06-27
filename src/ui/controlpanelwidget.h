@@ -91,6 +91,11 @@ private:
 
     void applyButtonsStates(const QVector<protocol::ButtonState>& states);
 
+    void createDisplayOptionsMessage();
+    void createBlinkOptionsMessage();
+    void createBrightOptionsMessage();
+    quint8 findActiveControlId(bool* ok) const;
+
 private:
     Ui::ControlPanel* m_ui = nullptr;
     const bool m_isDebugMode;
@@ -102,7 +107,7 @@ private:
     std::unique_ptr<ioservice::OutputController> m_outCtrl;
 
     QVector<quint8> m_controlIds;
-    QHash<quint8, DisplayControlWidget*> m_controlWidgets;
+    QHash<int, DisplayControlWidget*> m_controlWidgets;
 
     DisplayOptionsWidget* m_optionsWidget = nullptr;
     DisplayControlWidget* m_activeControl = nullptr;

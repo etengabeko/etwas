@@ -84,7 +84,7 @@ ControlPanelWidget::~ControlPanelWidget()
 
 void ControlPanelWidget::removeAllContols()
 {
-    QHashIterator<quint8, DisplayControlWidget*> it(m_controlWidgets);
+    QHashIterator<int, DisplayControlWidget*> it(m_controlWidgets);
     while (it.hasNext())
     {
         DisplayControlWidget* each = it.next().value();
@@ -582,6 +582,8 @@ void ControlPanelWidget::slotActiveControlImageFirstChange(bool enabled)
         m_activeControl->setFirstImage(m_activeControl->firstImage());
     else
         m_activeControl->resetFirstImage();
+
+    createDisplayOptionsMessage();
 }
 
 void ControlPanelWidget::slotActiveControlImageSecondChange(bool enabled)
@@ -592,6 +594,8 @@ void ControlPanelWidget::slotActiveControlImageSecondChange(bool enabled)
         m_activeControl->setSecondImage(m_activeControl->secondImage());
     else
         m_activeControl->resetSecondImage();
+
+    createDisplayOptionsMessage();
 }
 
 void ControlPanelWidget::slotActiveControlBlinkingChange(bool enabled)
@@ -599,6 +603,7 @@ void ControlPanelWidget::slotActiveControlBlinkingChange(bool enabled)
     Q_CHECK_PTR(m_activeControl);
 
     m_activeControl->setBlinkingEnabled(enabled);
+    createDisplayOptionsMessage();
 }
 
 void ControlPanelWidget::slotActiveControlTimeOnChange(int msec)
@@ -606,6 +611,7 @@ void ControlPanelWidget::slotActiveControlTimeOnChange(int msec)
     Q_CHECK_PTR(m_activeControl);
 
     m_activeControl->setTimeOn(msec);
+    createBlinkOptionsMessage();
 }
 
 void ControlPanelWidget::slotActiveControlTimeOffChange(int msec)
@@ -613,6 +619,7 @@ void ControlPanelWidget::slotActiveControlTimeOffChange(int msec)
     Q_CHECK_PTR(m_activeControl);
 
     m_activeControl->setTimeOff(msec);
+    createBlinkOptionsMessage();
 }
 
 void ControlPanelWidget::slotActiveControlBrightChange(int level)
@@ -620,4 +627,94 @@ void ControlPanelWidget::slotActiveControlBrightChange(int level)
     Q_CHECK_PTR(m_activeControl);
 
     m_activeControl->setBrightLevel(level);
+    createBrightOptionsMessage();
+}
+
+quint8 ControlPanelWidget::findActiveControlId(bool* ok) const
+{
+    Q_CHECK_PTR(ok);
+
+    *ok = false;
+
+    if (m_activeControl != nullptr)
+    {
+        const int kInvalid = -1;
+        int res = m_controlWidgets.key(m_activeControl, kInvalid);
+        if (res != kInvalid)
+        {
+            *ok = true;
+            return static_cast<quint8>(res);
+        }
+    }
+
+    return 0;
+}
+
+void ControlPanelWidget::createDisplayOptionsMessage()
+{
+    using protocol::BlinkState;
+    using protocol::ImageSelection;
+    using protocol::outcoming::DisplayOptionsMessage;
+
+    bool ok = false;
+    const quint8 controlId = findActiveControlId(&ok);
+    if (ok)
+    {
+        DisplayOptionsMessage* message = new DisplayOptionsMessage();
+        message->setDisplayNumber(controlId);
+        message->setBlinkState(m_activeControl->isBlinkingEnabled() ? BlinkState::On
+                                                                    : BlinkState::Off);
+        if (   m_activeControl->isFirstImageEnabled()
+            && m_activeControl->isSecondImageEnabled())
+        {
+            message->setImageSelection(ImageSelection::Both);
+        }
+        else if (m_activeControl->isFirstImageEnabled())
+        {
+            message->setImageSelection(ImageSelection::First);
+        }
+        else if (m_activeControl->isSecondImageEnabled())
+        {
+            message->setImageSelection(ImageSelection::Second);
+        }
+        else
+        {
+            message->setImageSelection(ImageSelection::Nothing);
+        }
+
+        slotSendMessage(QSharedPointer<protocol::AbstractMessage>(message));
+    }
+}
+
+void ControlPanelWidget::createBlinkOptionsMessage()
+{
+    using protocol::outcoming::BlinkOptionsMessage;
+
+    bool ok = false;
+    const quint8 controlId = findActiveControlId(&ok);
+    if (ok)
+    {
+        BlinkOptionsMessage* message = new BlinkOptionsMessage();
+        message->setDisplayNumber(controlId);
+        message->setTimeOn(static_cast<quint8>(m_activeControl->timeOn() / 10));
+        message->setTimeOff(static_cast<quint8>(m_activeControl->timeOff() / 10));
+
+        slotSendMessage(QSharedPointer<protocol::AbstractMessage>(message));
+    }
+}
+
+void ControlPanelWidget::createBrightOptionsMessage()
+{
+    using protocol::outcoming::BrightOptionsMessage;
+
+    bool ok = false;
+    const quint8 controlId = findActiveControlId(&ok);
+    if (ok)
+    {
+        BrightOptionsMessage* message = new BrightOptionsMessage();
+        message->setDisplayNumber(controlId);
+        message->setBrightLevel(static_cast<quint8>(m_activeControl->brightLevel()));
+
+        slotSendMessage(QSharedPointer<protocol::AbstractMessage>(message));
+    }
 }
