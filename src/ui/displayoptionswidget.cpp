@@ -1,7 +1,6 @@
 #include "displayoptionswidget.h"
 #include "ui_displayoptions.h"
 
-#include <QCloseEvent>
 #include <QGraphicsOpacityEffect>
 #include <QPixmap>
 #include <QString>
@@ -17,7 +16,7 @@ qreal opaqueLevel() { return 1.0; }
 }
 
 DisplayOptionsWidget::DisplayOptionsWidget(QWidget* parent) :
-    QWidget(parent),
+    SubWindow(parent),
     m_ui(new Ui::DisplayOptions())
 {
     m_ui->setupUi(this);
@@ -52,12 +51,6 @@ DisplayOptionsWidget::~DisplayOptionsWidget()
 {
     delete m_ui;
     m_ui = nullptr;
-}
-
-void DisplayOptionsWidget::closeEvent(QCloseEvent* event)
-{
-    QWidget::closeEvent(event);
-    emit closed();
 }
 
 void DisplayOptionsWidget::setFirstImage(const QString& pixmapFileName)

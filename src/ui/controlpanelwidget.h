@@ -5,10 +5,10 @@
 
 #include <QHash>
 #include <QVector>
-#include <QWidget>
+
+#include <ui/subwindow.h>
 
 class QByteArray;
-class QCloseEvent;
 class QThread;
 template <typename T> class QSharedPointer;
 
@@ -36,7 +36,7 @@ namespace Ui
 class ControlPanel;
 } // Ui
 
-class ControlPanelWidget : public QWidget
+class ControlPanelWidget : public SubWindow
 {
     Q_OBJECT
 
@@ -47,7 +47,10 @@ public:
     void initialize();
 
 signals:
-    void closed();
+    void subwindowCreated(SubWindow* child);
+    void subwindowShown(SubWindow* child);
+    void subwindowHidden(SubWindow* child);
+    void subwindowClosed(SubWindow* child);
 
 private slots:
     void slotBreakInitialization();
@@ -69,9 +72,14 @@ private slots:
     void slotSendDeviceIdentity();
     void slotChangeButtonsState(bool enabled);
 
-private:
-    void closeEvent(QCloseEvent* event);
+    void slotActiveControlImageFirstChange(bool enabled);
+    void slotActiveControlImageSecondChange(bool enabled);
+    void slotActiveControlBlinkingChange(bool enabled);
+    void slotActiveControlTimeOnChange(int msec);
+    void slotActiveControlTimeOffChange(int msec);
+    void slotActiveControlBrightChange(int level);
 
+private:
     void makeDebugConfiguration(int buttonsCount);
     void makeConfiguration(const protocol::incoming::Message& message);
 

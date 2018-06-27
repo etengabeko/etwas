@@ -39,7 +39,8 @@ INCLUDEPATH += $$ROOT_PROJECT_SRC_DIR
 ROOT_PROJECT_HEADERS = \
     $$ROOT_PROJECT_SRC_DIR/logger/logger.h \
     $$ROOT_PROJECT_SRC_DIR/ui/displaycontrolwidget.h \
-    $$ROOT_PROJECT_SRC_DIR/ui/displayoptionswidget.h
+    $$ROOT_PROJECT_SRC_DIR/ui/displayoptionswidget.h \
+    $$ROOT_PROJECT_SRC_DIR/ui/subwindow.h
 
 HEADERS = \
     $$ROOT_PROJECT_HEADERS
@@ -49,6 +50,7 @@ SOURCES = \
     $$ROOT_PROJECT_SRC_DIR/logger/logger.cpp \
     $$ROOT_PROJECT_SRC_DIR/ui/displaycontrolwidget.cpp \
     $$ROOT_PROJECT_SRC_DIR/ui/displayoptionswidget.cpp \
+    $$ROOT_PROJECT_SRC_DIR/ui/subwindow.cpp \
     # main
     $$PWD/src/main.cpp
 

@@ -8,6 +8,8 @@ class QMdiArea;
 class QMdiSubWindow;
 class QString;
 
+class SubWindow;
+
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -20,23 +22,27 @@ public:
     };
 
 public:
-    explicit MainWindow(Mode mode = Mode::Work, QWidget* parent = nullptr);
+    explicit MainWindow(Mode mode = Mode::Work,
+                        QWidget* parent = nullptr);
     ~MainWindow();
 
 private slots:
     void slotNewControlPanel();
     void slotNewControlPanelDebug();
 
+    void slotAddSubWindow(SubWindow* subwindow);
+    void slotRemoveSubWindow(SubWindow* subwindow);
+    void slotShowSubWindow(SubWindow* subwindow);
+    void slotHideSubWindow(SubWindow* subwindow);
     void slotCloseSubWindow();
 
 private:
     void initMenu(Mode mode);
     void createNewControlPanel(Mode mode);
-    void closeSubWindow(QWidget* subwindow);
 
 private:
     QMdiArea* m_central = nullptr;
-    QHash<QWidget*, QMdiSubWindow*> m_subwindows;
+    QHash<SubWindow*, QMdiSubWindow*> m_subwindows;
 
 };
 

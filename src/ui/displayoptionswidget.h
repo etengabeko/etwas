@@ -1,9 +1,8 @@
 #ifndef UI_DISPLAY_OPTIONS_WIDGET_H
 #define UI_DISPLAY_OPTIONS_WIDGET_H
 
-#include <QWidget>
+#include <ui/subwindow.h>
 
-class QCloseEvent;
 class QString;
 
 namespace Ui
@@ -11,7 +10,7 @@ namespace Ui
 class DisplayOptions;
 } // Ui
 
-class DisplayOptionsWidget : public QWidget
+class DisplayOptionsWidget : public SubWindow
 {
     Q_OBJECT
 
@@ -33,8 +32,6 @@ public:
     void setBrightLevel(int level);
 
 signals:
-    void closed();
-
     void imageFirstEnabled(bool enabled);
     void imageSecondEnabled(bool enabled);
     void blinkingEnabled(bool enabled);
@@ -46,9 +43,6 @@ signals:
 
 private slots:
     void slotChangeBrightness(int level);
-
-private:
-    void closeEvent(QCloseEvent* event);
 
 private:
     Ui::DisplayOptions* m_ui = nullptr;

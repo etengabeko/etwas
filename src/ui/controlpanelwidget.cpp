@@ -4,7 +4,6 @@
 #include <algorithm>
 
 #include <QByteArray>
-#include <QCloseEvent>
 #include <QGridLayout>
 #include <QHostAddress>
 #include <QMovie>
@@ -35,7 +34,7 @@ QString titleString() { return qApp->tr("Device"); }
 }
 
 ControlPanelWidget::ControlPanelWidget(bool isDebugMode, QWidget* parent) :
-    QWidget(parent),
+    SubWindow(parent),
     m_ui(new Ui::ControlPanel()),
     m_isDebugMode(isDebugMode),
     m_recvThread(new QThread())
@@ -75,6 +74,7 @@ ControlPanelWidget::~ControlPanelWidget()
     m_outCtrl.reset();
     m_transport.reset();
 
+    emit subwindowClosed(m_optionsWidget);
     delete m_optionsWidget;
     m_optionsWidget = nullptr;
 
@@ -82,12 +82,6 @@ ControlPanelWidget::~ControlPanelWidget()
 
     delete m_ui;
     m_ui = nullptr;
-}
-
-void ControlPanelWidget::closeEvent(QCloseEvent* event)
-{
-    QWidget::closeEvent(event);
-    emit closed();
 }
 
 void ControlPanelWidget::removeAllContols()
@@ -299,8 +293,22 @@ void ControlPanelWidget::slotChangeActiveControl(bool enabled)
         if (m_optionsWidget == nullptr)
         {
             m_optionsWidget = new DisplayOptionsWidget();
+            emit subwindowCreated(m_optionsWidget);
+
             QObject::connect(m_optionsWidget, &DisplayOptionsWidget::closed,
                              this, &ControlPanelWidget::slotOptionsClose);
+            QObject::connect(m_optionsWidget, &DisplayOptionsWidget::imageFirstEnabled,
+                             this, static_cast<void(ControlPanelWidget::*)(bool)>(&ControlPanelWidget::slotActiveControlImageFirstChange));
+            QObject::connect(m_optionsWidget, &DisplayOptionsWidget::imageSecondEnabled,
+                             this, static_cast<void(ControlPanelWidget::*)(bool)>(&ControlPanelWidget::slotActiveControlImageSecondChange));
+            QObject::connect(m_optionsWidget, &DisplayOptionsWidget::blinkingEnabled,
+                             this, &ControlPanelWidget::slotActiveControlBlinkingChange);
+            QObject::connect(m_optionsWidget, &DisplayOptionsWidget::timeOnChanged,
+                             this, &ControlPanelWidget::slotActiveControlTimeOnChange);
+            QObject::connect(m_optionsWidget, &DisplayOptionsWidget::timeOffChanged,
+                             this, &ControlPanelWidget::slotActiveControlTimeOffChange);
+            QObject::connect(m_optionsWidget, &DisplayOptionsWidget::brightChanged,
+                             this, &ControlPanelWidget::slotActiveControlBrightChange);
         }
 
         m_optionsWidget->setFirstImage(m_activeControl->firstImage());
@@ -313,7 +321,15 @@ void ControlPanelWidget::slotChangeActiveControl(bool enabled)
         m_optionsWidget->setBrightLevel(m_activeControl->brightLevel());
     }
 
-    m_optionsWidget->setVisible(enabled);
+    if (enabled)
+    {
+        emit subwindowShown(m_optionsWidget);
+    }
+    else
+    {
+        emit subwindowHidden(m_optionsWidget);
+    }
+//    m_optionsWidget->setVisible(enabled);
 }
 
 void ControlPanelWidget::slotOptionsClose()
@@ -352,7 +368,7 @@ void ControlPanelWidget::slotSendDeviceIdentity()
     using protocol::incoming::DeviceIdentityMessage;
 
     DeviceIdentityMessage* msg = new DeviceIdentityMessage();
-    msg->setFirmwareVersion(::firmwareVersion());
+    msg->setFirmwareVersion(static_cast<quint8>(::firmwareVersion()));
     msg->setButtonsNumbers(m_controlIds);
 
     slotSendMessage(QSharedPointer<protocol::AbstractMessage>(msg));
@@ -480,7 +496,7 @@ void ControlPanelWidget::applyButtonsStates(const QVector<protocol::ButtonState>
     QVectorIterator<ButtonState> stateIt(states);
     for (auto it = m_controlIds.cbegin(), end = m_controlIds.cend(); it != end; ++it)
     {
-        m_controlWidgets[*it]->setActive(stateIt.next() == ButtonState::On);
+        m_controlWidgets[*it]->highlight(stateIt.next() == ButtonState::On);
     }
 }
 
@@ -558,4 +574,52 @@ void ControlPanelWidget::processMessage(const protocol::outcoming::Message& mess
         Q_ASSERT_X(false, "ControlPanelWidget::processMessage", "Unexpected outcoming MessageType");
         break;
     }
+}
+
+void ControlPanelWidget::slotActiveControlImageFirstChange(bool enabled)
+{
+    Q_CHECK_PTR(m_activeControl);
+
+    if (enabled)
+        m_activeControl->setFirstImage(m_activeControl->firstImage());
+    else
+        m_activeControl->resetFirstImage();
+}
+
+void ControlPanelWidget::slotActiveControlImageSecondChange(bool enabled)
+{
+    Q_CHECK_PTR(m_activeControl);
+
+    if (enabled)
+        m_activeControl->setSecondImage(m_activeControl->secondImage());
+    else
+        m_activeControl->resetSecondImage();
+}
+
+void ControlPanelWidget::slotActiveControlBlinkingChange(bool enabled)
+{
+    Q_CHECK_PTR(m_activeControl);
+
+    m_activeControl->setBlinkingEnabled(enabled);
+}
+
+void ControlPanelWidget::slotActiveControlTimeOnChange(int msec)
+{
+    Q_CHECK_PTR(m_activeControl);
+
+    m_activeControl->setTimeOn(msec);
+}
+
+void ControlPanelWidget::slotActiveControlTimeOffChange(int msec)
+{
+    Q_CHECK_PTR(m_activeControl);
+
+    m_activeControl->setTimeOff(msec);
+}
+
+void ControlPanelWidget::slotActiveControlBrightChange(int level)
+{
+    Q_CHECK_PTR(m_activeControl);
+
+    m_activeControl->setBrightLevel(level);
 }

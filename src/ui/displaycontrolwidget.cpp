@@ -42,7 +42,7 @@ DisplayControlWidget::DisplayControlWidget(bool isDebugMode, QWidget* parent) :
     if (m_isDebugMode)
     {
         QObject::connect(this, &DisplayControlWidget::activated,
-                         this, &DisplayControlWidget::setActive);
+                         this, &DisplayControlWidget::highlight);
         QObject::connect(m_ui->displayButton, &QToolButton::pressed,
                          [this]() { emit activated(true); });
         QObject::connect(m_ui->displayButton, &QToolButton::released,
@@ -242,13 +242,14 @@ bool DisplayControlWidget::isActive() const
 
 void DisplayControlWidget::setActive(bool enabled)
 {
-    if (m_isDebugMode)
-    {
-        const QString ss = QString("background-color: %1;").arg((enabled ? "yellow" : "none"));
-        m_ui->displayButton->setStyleSheet(ss);
-    }
-    else
+    if (!m_isDebugMode)
     {
         m_ui->displayButton->setChecked(enabled);
     }
+}
+
+void DisplayControlWidget::highlight(bool enabled)
+{
+    const QString ss = QString("background-color: %1;").arg((enabled ? "yellow" : "none"));
+    m_ui->displayButton->setStyleSheet(ss);
 }

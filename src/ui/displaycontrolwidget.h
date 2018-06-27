@@ -53,6 +53,7 @@ public:
     bool isActive() const;
 
 public slots:
+    void highlight(bool enabled);
     void setActive(bool enabled);
 
 signals:

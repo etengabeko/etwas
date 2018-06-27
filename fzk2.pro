@@ -69,7 +69,8 @@ HEADERS = \
     $$PWD/src/ui/createmessageswidget.h \
     $$PWD/src/ui/displaycontrolwidget.h \
     $$PWD/src/ui/displayoptionswidget.h \
-    $$PWD/src/ui/mainwindow.h
+    $$PWD/src/ui/mainwindow.h \
+    $$PWD/src/ui/subwindow.h
 
 SOURCES = \
     # logger
@@ -94,6 +95,7 @@ SOURCES = \
     $$PWD/src/ui/displaycontrolwidget.cpp \
     $$PWD/src/ui/displayoptionswidget.cpp \
     $$PWD/src/ui/mainwindow.cpp \
+    $$PWD/src/ui/subwindow.cpp \
     # main
     $$PWD/src/main.cpp
 
