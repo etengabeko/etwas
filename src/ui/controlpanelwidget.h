@@ -63,7 +63,8 @@ private slots:
     void slotReceiveMessage(const QSharedPointer<protocol::AbstractMessage>& message);
     void slotSendMessage(const QSharedPointer<protocol::AbstractMessage>& message);
 
-    void slotShowDisplayOptions(bool enabled);
+    void slotChangeActiveControl(bool enabled);
+    void slotOptionsClose();
 
     void slotSendDeviceIdentity();
     void slotChangeButtonsState(bool enabled);

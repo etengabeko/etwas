@@ -3,6 +3,7 @@
 
 #include <QWidget>
 
+class QCloseEvent;
 class QString;
 
 namespace Ui
@@ -32,6 +33,8 @@ public:
     void setBrightLevel(int level);
 
 signals:
+    void closed();
+
     void imageFirstEnabled(bool enabled);
     void imageSecondEnabled(bool enabled);
     void blinkingEnabled(bool enabled);
@@ -43,6 +46,9 @@ signals:
 
 private slots:
     void slotChangeBrightness(int level);
+
+private:
+    void closeEvent(QCloseEvent* event);
 
 private:
     Ui::DisplayOptions* m_ui = nullptr;

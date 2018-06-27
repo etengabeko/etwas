@@ -5,7 +5,6 @@
 
 #include <QByteArray>
 #include <QCloseEvent>
-#include <QDebug>
 #include <QGridLayout>
 #include <QHostAddress>
 #include <QMovie>
@@ -271,7 +270,7 @@ void ControlPanelWidget::initConnectionsForControl(DisplayControlWidget* control
     if (!m_isDebugMode)
     {
         QObject::connect(control, &DisplayControlWidget::activated,
-                         this, &ControlPanelWidget::slotShowDisplayOptions);
+                         this, &ControlPanelWidget::slotChangeActiveControl);
     }
     else
     {
@@ -280,38 +279,50 @@ void ControlPanelWidget::initConnectionsForControl(DisplayControlWidget* control
     }
 }
 
-void ControlPanelWidget::slotShowDisplayOptions(bool enabled)
+void ControlPanelWidget::slotChangeActiveControl(bool enabled)
 {
-    if (m_optionsWidget == nullptr)
+    if (enabled)
     {
-        m_optionsWidget = new DisplayOptionsWidget();
-        // TODO: connections
+        if (m_activeControl != nullptr)
+        {
+            m_activeControl->setActive(false);
+        }
+        m_activeControl = qobject_cast<DisplayControlWidget*>(sender());
+    }
+    else
+    {
+        m_activeControl = nullptr;
     }
 
-    DisplayControlWidget* sender = qobject_cast<DisplayControlWidget*>(this->sender());
-    DisplayControlWidget* previousActive = m_activeControl;
-    m_activeControl = nullptr;
-
-    if (previousActive != nullptr)
+    if (m_activeControl != nullptr)
     {
-        previousActive->setActive(false);
+        if (m_optionsWidget == nullptr)
+        {
+            m_optionsWidget = new DisplayOptionsWidget();
+            QObject::connect(m_optionsWidget, &DisplayOptionsWidget::closed,
+                             this, &ControlPanelWidget::slotOptionsClose);
+        }
+
+        m_optionsWidget->setFirstImage(m_activeControl->firstImage());
+        m_optionsWidget->setFirstImageEnabled(m_activeControl->isFirstImageEnabled());
+        m_optionsWidget->setSecondImage(m_activeControl->secondImage());
+        m_optionsWidget->setSecondImageEnabled(m_activeControl->isSecondImageEnabled());
+        m_optionsWidget->setBlinkingEnabled(m_activeControl->isBlinkingEnabled());
+        m_optionsWidget->setTimeOn(m_activeControl->timeOn());
+        m_optionsWidget->setTimeOff(m_activeControl->timeOff());
+        m_optionsWidget->setBrightLevel(m_activeControl->brightLevel());
     }
 
-    if (   enabled
-        && sender != nullptr)
-    {
-        m_optionsWidget->setFirstImage(sender->firstImage());
-        m_optionsWidget->setFirstImageEnabled(sender->isFirstImageEnabled());
-        m_optionsWidget->setSecondImage(sender->secondImage());
-        m_optionsWidget->setSecondImageEnabled(sender->isSecondImageEnabled());
-        m_optionsWidget->setBlinkingEnabled(sender->isBlinkingEnabled());
-        m_optionsWidget->setTimeOn(sender->timeOn());
-        m_optionsWidget->setTimeOff(sender->timeOff());
-        m_optionsWidget->setBrightLevel(sender->brightLevel());
-    }
-
-    m_activeControl = (enabled ? sender : nullptr);
     m_optionsWidget->setVisible(enabled);
+}
+
+void ControlPanelWidget::slotOptionsClose()
+{
+    if (m_activeControl != nullptr)
+    {
+        m_activeControl->setActive(false);
+        m_activeControl = nullptr;
+    }
 }
 
 void ControlPanelWidget::slotChangeButtonsState(bool enabled)
@@ -464,12 +475,6 @@ void ControlPanelWidget::processMessage(const protocol::incoming::Message& messa
 
 void ControlPanelWidget::applyButtonsStates(const QVector<protocol::ButtonState>& states)
 {
-    if (m_controlIds.size() != states.size())
-    {
-        qDebug().noquote() << "m_controlIds.size() != states.size(): " << m_controlIds.size() << "!=" << states.size();
-        return;
-    }
-
     using protocol::ButtonState;
 
     QVectorIterator<ButtonState> stateIt(states);
