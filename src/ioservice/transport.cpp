@@ -1,9 +1,8 @@
 #include "transport.h"
 #include "transport_private.h"
 
-#include <functional>
-
 #include <QByteArray>
+#include <QString>
 
 #include "settings/settings.h"
 
@@ -15,26 +14,43 @@ Transport::Transport(const settings::Settings& settings,
     QObject(parent),
     m_pimpl(new details::TransportPrivate(settings.address(),
                                           settings.port(),
-                                          std::bind(&Transport::onReceived,
-                                                    this,
-                                                    std::placeholders::_1)))
+                                          this))
 {
-
+    QObject::connect(m_pimpl, &details::TransportPrivate::connected,
+                     this, &Transport::connected);
+    QObject::connect(m_pimpl, &details::TransportPrivate::disconnected,
+                     this, &Transport::disconnected);
+    QObject::connect(m_pimpl, &details::TransportPrivate::error,
+                     this, &Transport::error);
+    QObject::connect(m_pimpl, &details::TransportPrivate::received,
+                     this, &Transport::received);
+    QObject::connect(m_pimpl, &details::TransportPrivate::sent,
+                     this, &Transport::sent);
 }
 
 Transport::~Transport() NOEXCEPT
 {
-    m_pimpl.reset();
+    delete m_pimpl;
+    m_pimpl = nullptr;
 }
 
-QPair<bool, QString> Transport::start()
+const settings::Settings& Transport::currentSettings() const
 {
-    return m_pimpl->start();
+    static settings::Settings conf;
+    conf.setAddress(m_pimpl->address());
+    conf.setPort(m_pimpl->port());
+
+    return conf;;
 }
 
-void Transport::onReceived(const QByteArray& data)
+const QString Transport::errorString() const
 {
-    emit received(data);
+    return m_pimpl->errorString();
+}
+
+void Transport::start()
+{
+    m_pimpl->start();
 }
 
 void Transport::slotSend(const QByteArray& data)

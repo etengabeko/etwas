@@ -2,10 +2,10 @@
 #define UI_DISPLAY_CONTROL_WIDGET_H
 
 #include <QPixmap>
+#include <QString>
 #include <QWidget>
 
 class QLabel;
-class QString;
 class QTimer;
 
 namespace Ui
@@ -27,17 +27,30 @@ public:
     explicit DisplayControlWidget(bool isDebugMode = false, QWidget* parent = nullptr);
     ~DisplayControlWidget();
 
+    bool isFirstImageEnabled() const;
+    const QString& firstImage() const;
     void setFirstImage(const QString& pixmapFileName);
+
+    bool isSecondImageEnabled() const;
+    const QString& secondImage() const;
     void setSecondImage(const QString& pixmapFileName);
 
     void resetFirstImage();
     void resetSecondImage();
 
+    int brightLevel() const;
     void setBrightLevel(int level);
 
+    bool isBlinkingEnabled() const;
     void setBlinkingEnabled(bool enabled);
+
+    int timeOn() const;
     void setTimeOn(int msec);
+
+    int timeOff() const;
     void setTimeOff(int msec);
+
+    bool isActive() const;
 
 public slots:
     void setActive(bool enabled);
@@ -65,8 +78,11 @@ private:
     int m_timeOffMsec = 0;
     bool m_blinkingEnabled = false;
 
-    QPixmap m_firstImage;
-    QPixmap m_secondImage;
+    QString m_firstImage;
+    QString m_secondImage;
+
+    QPixmap m_firstImagePixmap;
+    QPixmap m_secondImagePixmap;
 
     QTimer* m_timer = nullptr;
     QLabel* m_displayLabel = nullptr;

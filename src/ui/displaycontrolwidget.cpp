@@ -4,7 +4,6 @@
 #include <QGraphicsOpacityEffect>
 #include <QHBoxLayout>
 #include <QLabel>
-#include <QString>
 #include <QTimer>
 
 #include "protocol/types.h"
@@ -49,6 +48,12 @@ DisplayControlWidget::DisplayControlWidget(bool isDebugMode, QWidget* parent) :
         QObject::connect(m_ui->displayButton, &QToolButton::released,
                          [this]() { emit activated(false); });
     }
+    else
+    {
+        m_ui->displayButton->setCheckable(true);
+        QObject::connect(m_ui->displayButton, &QToolButton::toggled,
+                         this, &DisplayControlWidget::activated);
+    }
 }
 
 DisplayControlWidget::~DisplayControlWidget()
@@ -57,23 +62,43 @@ DisplayControlWidget::~DisplayControlWidget()
     m_ui = nullptr;
 }
 
+bool DisplayControlWidget::isFirstImageEnabled() const
+{
+    return !m_firstImagePixmap.isNull();
+}
+
+const QString& DisplayControlWidget::firstImage() const
+{
+    return m_firstImage;
+}
+
+bool DisplayControlWidget::isSecondImageEnabled() const
+{
+    return !m_secondImagePixmap.isNull();
+}
+
+const QString& DisplayControlWidget::secondImage() const
+{
+    return m_secondImage;
+}
+
 void DisplayControlWidget::setCurrentImage(ImageNumber num)
 {
-    const QPixmap* current = nullptr;
+    const QPixmap* currentPixmap = nullptr;
     switch (num)
     {
     case ImageNumber::First:
-        current = &m_firstImage;
+        currentPixmap = &m_firstImagePixmap;
         break;
     case ImageNumber::Second:
-        current = &m_secondImage;
+        currentPixmap = &m_secondImagePixmap;
         break;
     default:
         Q_ASSERT_X(false, "DisplayControlWidget::setCurrentImage", "Unexpected value of ImageNumber");
         return;
     }
 
-    m_displayLabel->setPixmap(*current);
+    m_displayLabel->setPixmap(*currentPixmap);
 }
 
 void DisplayControlWidget::resetFirstImage()
@@ -93,11 +118,13 @@ void DisplayControlWidget::resetImage(ImageNumber num)
 
 void DisplayControlWidget::setFirstImage(const QString& pixmapFileName)
 {
+    m_firstImage = pixmapFileName;
     setImage(ImageNumber::First, QPixmap(pixmapFileName));
 }
 
 void DisplayControlWidget::setSecondImage(const QString& pixmapFileName)
 {
+    m_secondImage = pixmapFileName;
     setImage(ImageNumber::Second, QPixmap(pixmapFileName));
 }
 
@@ -106,10 +133,10 @@ void DisplayControlWidget::setImage(ImageNumber num, const QPixmap& img)
     switch (num)
     {
     case ImageNumber::First:
-        m_firstImage = img;
+        m_firstImagePixmap = img;
         break;
     case ImageNumber::Second:
-        m_secondImage = img;
+        m_secondImagePixmap = img;
         break;
     default:
         Q_ASSERT_X(false, "DisplayControl::setImage", "Unexpected value of ImageNumber");
@@ -117,6 +144,11 @@ void DisplayControlWidget::setImage(ImageNumber num, const QPixmap& img)
     }
 
     resetCurrentImage();
+}
+
+int DisplayControlWidget::brightLevel() const
+{
+    return m_brightLevel;
 }
 
 void DisplayControlWidget::setBrightLevel(int level)
@@ -131,16 +163,31 @@ void DisplayControlWidget::setBrightLevel(int level)
     }
 }
 
+int DisplayControlWidget::timeOn() const
+{
+    return m_timeOnMsec;
+}
+
 void DisplayControlWidget::setTimeOn(int msec)
 {
     m_timeOnMsec = msec;
     resetTimer();
 }
 
+int DisplayControlWidget::timeOff() const
+{
+    return m_timeOffMsec;
+}
+
 void DisplayControlWidget::setTimeOff(int msec)
 {
     m_timeOffMsec = msec;
     resetTimer();
+}
+
+bool DisplayControlWidget::isBlinkingEnabled() const
+{
+    return m_blinkingEnabled;
 }
 
 void DisplayControlWidget::setBlinkingEnabled(bool enabled)
@@ -169,7 +216,7 @@ void DisplayControlWidget::resetCurrentImage()
 {
     if (!m_blinkingEnabled)
     {
-        if (!m_firstImage.isNull())
+        if (!m_firstImagePixmap.isNull())
         {
             setCurrentImage(ImageNumber::First);
         }
@@ -187,8 +234,21 @@ void DisplayControlWidget::slotTimeout()
     QTimer::singleShot(m_timeOnMsec, [this]() { if (m_blinkingEnabled) setCurrentImage(ImageNumber::Second); });
 }
 
+bool DisplayControlWidget::isActive() const
+{
+    return (m_isDebugMode ? m_ui->displayButton->isDown()
+                          : false);
+}
+
 void DisplayControlWidget::setActive(bool enabled)
 {
-    const QString ss = QString("background-color: %1;").arg((enabled ? "yellow" : "none"));
-    m_ui->displayButton->setStyleSheet(ss);
+    if (m_isDebugMode)
+    {
+        const QString ss = QString("background-color: %1;").arg((enabled ? "yellow" : "none"));
+        m_ui->displayButton->setStyleSheet(ss);
+    }
+    else
+    {
+        m_ui->displayButton->setChecked(enabled);
+    }
 }

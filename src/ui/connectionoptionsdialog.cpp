@@ -11,7 +11,7 @@ ConnectionOptionsDialog::ConnectionOptionsDialog(QWidget* parent) :
     m_ui(new Ui::ConnectionOptions())
 {
     m_ui->setupUi(this);
-    m_ui->errorLabel->setStyleSheet("QLabel { color: red }");
+    m_ui->errorLabel->setStyleSheet("color: red;");
 
     QObject::connect(m_ui->applyButton, &QPushButton::clicked,
                      this, &ConnectionOptionsDialog::slotApply);
@@ -67,14 +67,4 @@ quint16 ConnectionOptionsDialog::port() const
 void ConnectionOptionsDialog::setPort(quint16 portnum)
 {
     m_ui->portSpinBox->setValue(portnum);
-}
-
-bool ConnectionOptionsDialog::isDebugMode() const
-{
-    return m_isDebugMode;
-}
-
-void ConnectionOptionsDialog::setDebugMode(bool enabled)
-{
-    m_isDebugMode = enabled;
 }

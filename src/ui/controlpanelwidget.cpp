@@ -1,60 +1,85 @@
 #include "controlpanelwidget.h"
 #include "ui_controlpanel.h"
 
+#include <algorithm>
+
 #include <QByteArray>
 #include <QCloseEvent>
+#include <QDebug>
+#include <QGridLayout>
 #include <QHostAddress>
+#include <QMovie>
 #include <QScrollBar>
 #include <QSharedPointer>
-
-#include "createmessageswidget.h"
+#include <QThread>
 
 #include "ioservice/inputcontroller.h"
 #include "ioservice/outputcontroller.h"
 #include "ioservice/transport.h"
 #include "logger/logger.h"
 #include "protocol/protocol.h"
+#include "protocol/types.h"
 #include "settings/settings.h"
+#include "ui/connectionoptionsdialog.h"
+#include "ui/displaycontrolwidget.h"
+#include "ui/displayoptionswidget.h"
+
+namespace
+{
+
+int firmwareVersion() { return 0x02; }
+int controlsGridColumnCount() { return 3; } // TODO
+quint8 debugControlsCount() { return 9; }
+
+QString titleString() { return qApp->tr("Device"); }
+
+}
 
 ControlPanelWidget::ControlPanelWidget(bool isDebugMode, QWidget* parent) :
     QWidget(parent),
     m_ui(new Ui::ControlPanel()),
-    m_isDebugMode(isDebugMode)
+    m_isDebugMode(isDebugMode),
+    m_recvThread(new QThread())
 {
     m_ui->setupUi(this);
 
-    QObject::connect(m_ui->incomingRadioButton, &QRadioButton::toggled,
-                     this, &ControlPanelWidget::slotChangeReceiveMessagesType);
-    QObject::connect(m_ui->outcomingRadioButton, &QRadioButton::toggled,
-                     this, &ControlPanelWidget::slotChangeReceiveMessagesType);
+    m_ui->deviceIdentityFrame->hide();
+    if (m_ui->workingPage->layout() == nullptr)
+    {
+        m_ui->workingPage->setLayout(new QGridLayout());
+    }
+
+    QMovie* preloadMovie = new QMovie(this);
+    preloadMovie->setFileName(":/preload.gif");
+    m_ui->preloadImageLabel->setMovie(preloadMovie);
+    preloadMovie->start();
+
     QObject::connect(m_ui->clearButton, &QPushButton::clicked,
                      m_ui->logTextEdit, &QPlainTextEdit::clear);
-
-    if (!m_isDebugMode)
-    {
-        m_ui->receiveGroupBox->hide();
-
-        // TODO
-    }
-    else
-    {
-        CreateMessagesWidget* debugMessageWidget = new CreateMessagesWidget(this);
-        QLayout* lout = m_ui->controlGroupBox->layout();
-        QLayoutItem* item = lout->takeAt(lout->count()-1);
-        lout->addWidget(debugMessageWidget);
-        lout->addItem(item);
-
-        QObject::connect(debugMessageWidget, &CreateMessagesWidget::messageCreated,
-                         this, &ControlPanelWidget::slotSendMessage);
-    }
-
+    QObject::connect(m_ui->breakButton, &QPushButton::clicked,
+                     this, &ControlPanelWidget::slotBreakInitialization);
+    QObject::connect(m_ui->retryButton, &QPushButton::clicked,
+                     this, &ControlPanelWidget::slotRetryInitialization);
+    QObject::connect(m_ui->deviceIdentityButton, &QPushButton::clicked,
+                     this, &ControlPanelWidget::slotSendDeviceIdentity);
 }
 
 ControlPanelWidget::~ControlPanelWidget()
 {
+    m_recvThread->quit();
+    m_recvThread->wait();
+
+    delete m_recvThread;
+    m_recvThread = nullptr;
+
     m_inCtrl.reset();
     m_outCtrl.reset();
     m_transport.reset();
+
+    delete m_optionsWidget;
+    m_optionsWidget = nullptr;
+
+    removeAllContols();
 
     delete m_ui;
     m_ui = nullptr;
@@ -66,86 +91,313 @@ void ControlPanelWidget::closeEvent(QCloseEvent* event)
     emit closed();
 }
 
-bool ControlPanelWidget::initialize(const QHostAddress& address, quint16 port)
+void ControlPanelWidget::removeAllContols()
+{
+    QHashIterator<quint8, DisplayControlWidget*> it(m_controlWidgets);
+    while (it.hasNext())
+    {
+        DisplayControlWidget* each = it.next().value();
+        delete each;
+    }
+
+    m_controlWidgets.clear();
+    m_controlIds.clear();
+}
+
+void ControlPanelWidget::initialize()
 {
     using namespace ioservice;
     using protocol::MessageDirection;
 
+    m_ui->stackedWidget->setCurrentWidget(m_ui->preloadPage);
+    m_ui->preloadImageLabel->hide();
+    m_ui->breakButton->hide();
+    m_ui->retryButton->hide();
+
+    ConnectionOptionsDialog dlg(this);
+    if (dlg.exec() != ConnectionOptionsDialog::Accepted)
+    {
+        m_ui->statusLabel->setText(tr("Connection is not initialized"));
+        m_ui->preloadImageLabel->hide();
+        m_ui->retryButton->show();
+        return;
+    }
+
+    m_ui->preloadImageLabel->show();
+    m_ui->breakButton->show();
+    m_ui->retryButton->hide();
+
     settings::Settings conf;
-    conf.setAddress(address);
-    conf.setPort(port);
+    conf.setAddress(dlg.address());
+    conf.setPort(dlg.port());
+
+    m_ui->statusLabel->setText(tr("Connecting to host %1:%2")
+                               .arg(conf.address().toString())
+                               .arg(conf.port()));
 
     m_transport.reset(new Transport(conf));
+    m_transport->moveToThread(m_recvThread);
+
     m_outCtrl.reset(new OutputController(m_transport.get()));
+    m_inCtrl.reset(new InputController(m_transport.get(),
+                                       m_isDebugMode ? MessageDirection::Outcoming
+                                                     : MessageDirection::Incoming));
+
+    QObject::connect(m_transport.get(), &Transport::received,
+                     this, &ControlPanelWidget::slotOnBytesReceive);
+    QObject::connect(m_transport.get(), &Transport::sent,
+                     this, &ControlPanelWidget::slotOnBytesSend);
+
+    QObject::connect(m_inCtrl.get(), &InputController::messageReceived,
+                     this, &ControlPanelWidget::slotReceiveMessage);
+
+    QObject::connect(m_recvThread, &QThread::started,
+                     m_transport.get(), &Transport::start);
+    QObject::connect(m_transport.get(), &Transport::connected,
+                     this, &ControlPanelWidget::slotOnConnect);
+    QObject::connect(m_transport.get(), &Transport::disconnected,
+                     this, &ControlPanelWidget::slotOnDisconnect);
+    QObject::connect(m_transport.get(), &Transport::error,
+                     this, &ControlPanelWidget::slotOnError);
+
+    m_recvThread->start();
+}
+
+void ControlPanelWidget::slotBreakInitialization()
+{
+    // TODO
+    Logger::instance().trace(tr("TODO: Break"));
+}
+
+void ControlPanelWidget::slotRetryInitialization()
+{
+    initialize();
+}
+
+void ControlPanelWidget::slotOnError()
+{
+    slotOnDisconnect();
+}
+
+void ControlPanelWidget::slotOnConnect()
+{
+    setWindowTitle(tr("[Connected] %1 - %2:%3")
+                   .arg(::titleString())
+                   .arg(m_transport->currentSettings().address().toString())
+                   .arg(m_transport->currentSettings().port()));
+
+    m_ui->stackedWidget->setCurrentWidget(m_ui->preloadPage);
+    m_ui->statusLabel->setText(tr("Waiting device's configuration"));
+    m_ui->preloadImageLabel->show();
+    m_ui->breakButton->show();
+    m_ui->retryButton->hide();
+
+    if (m_isDebugMode)
+    {
+        makeDebugConfiguration(::debugControlsCount());
+    }
+}
+
+void ControlPanelWidget::makeDebugConfiguration(int buttonsCount)
+{
+    Q_ASSERT(buttonsCount > 0);
+
+    m_ui->deviceIdentityFrame->show();
+
+    m_controlIds.reserve(buttonsCount);
+    for (quint8 i = 0; i < buttonsCount; ++i)
+    {
+        m_controlIds.append(i);
+    }
+
+    createControls();
+}
+
+void ControlPanelWidget::makeConfiguration(const protocol::incoming::Message& message)
+{
+    using protocol::incoming::DeviceIdentityMessage;
+
+    const DeviceIdentityMessage& dimsg = dynamic_cast<const DeviceIdentityMessage&>(message);
+
+    m_controlIds.reserve(dimsg.buttonsNumbers().size());
+
+    for (const quint8 each : dimsg.buttonsNumbers())
+    {
+        m_controlIds.append(each);
+    }
+
+    createControls();
+}
+
+void ControlPanelWidget::createControls()
+{
+    int row = 0;
+    int column = 0;
+
+    for (auto it = m_controlIds.cbegin(), end = m_controlIds.cend(); it != end; ++it)
+    {
+        createControl(*it, row, column);
+
+        if (++column >= ::controlsGridColumnCount())
+        {
+            ++row;
+            column = 0;
+        }
+    }
+    m_ui->stackedWidget->setCurrentWidget(m_ui->workingPage);
+}
+
+
+void ControlPanelWidget::createControl(quint8 controlId, int row, int column)
+{
+    if (!m_controlWidgets.contains(controlId))
+    {
+        DisplayControlWidget* wgt = new DisplayControlWidget(m_isDebugMode);
+        m_controlWidgets.insert(controlId, wgt);
+        initConnectionsForControl(wgt);
+
+        QGridLayout* lout = qobject_cast<QGridLayout*>(m_ui->workingPage->layout());
+        if (lout != nullptr)
+        {
+            lout->addWidget(wgt, row, column);
+        }
+    }
+}
+
+void ControlPanelWidget::initConnectionsForControl(DisplayControlWidget* control)
+{
+    Q_CHECK_PTR(control);
 
     if (!m_isDebugMode)
     {
-        m_ui->incomingRadioButton->setChecked(true);
+        QObject::connect(control, &DisplayControlWidget::activated,
+                         this, &ControlPanelWidget::slotShowDisplayOptions);
     }
     else
     {
-        m_ui->outcomingRadioButton->setChecked(true);
-    }
-
-    QObject::connect(m_transport.get(), &Transport::received,
-                     this, &ControlPanelWidget::slotReceiveBytes);
-
-    auto res = m_transport->start();
-    if (res.first)
-    {
-        setWindowTitle(QString("%1 - %2:%3")
-                       .arg(windowTitle())
-                       .arg(address.toString())
-                       .arg(port));
-        Logger::instance().debug(tr("Transport started successful"));
-    }
-    else
-    {
-        emit error(res.second);
-    }
-    return res.first;
-}
-
-void ControlPanelWidget::slotChangeReceiveMessagesType(bool checked)
-{
-    using ioservice::InputController;
-
-    if (checked)
-    {
-        if (sender() == m_ui->incomingRadioButton)
-        {
-            m_inCtrl.reset(new InputController(m_transport.get(), protocol::MessageDirection::Incoming));
-        }
-        else if (sender() == m_ui->outcomingRadioButton)
-        {
-            m_inCtrl.reset(new InputController(m_transport.get(), protocol::MessageDirection::Outcoming));
-        }
-
-        if (m_inCtrl != nullptr)
-        {
-            QObject::connect(m_inCtrl.get(), &InputController::messageReceived,
-                             this, &ControlPanelWidget::slotReceiveMessage);
-        }
+        QObject::connect(control, &DisplayControlWidget::activated,
+                         this, &ControlPanelWidget::slotChangeButtonsState);
     }
 }
 
-void ControlPanelWidget::slotReceiveBytes(const QByteArray& bytes)
+void ControlPanelWidget::slotShowDisplayOptions(bool enabled)
 {
-    const QString str = tr("Received bytes [%1]: %2")
+    if (m_optionsWidget == nullptr)
+    {
+        m_optionsWidget = new DisplayOptionsWidget();
+        // TODO: connections
+    }
+
+    DisplayControlWidget* sender = qobject_cast<DisplayControlWidget*>(this->sender());
+    DisplayControlWidget* previousActive = m_activeControl;
+    m_activeControl = nullptr;
+
+    if (previousActive != nullptr)
+    {
+        previousActive->setActive(false);
+    }
+
+    if (   enabled
+        && sender != nullptr)
+    {
+        m_optionsWidget->setFirstImage(sender->firstImage());
+        m_optionsWidget->setFirstImageEnabled(sender->isFirstImageEnabled());
+        m_optionsWidget->setSecondImage(sender->secondImage());
+        m_optionsWidget->setSecondImageEnabled(sender->isSecondImageEnabled());
+        m_optionsWidget->setBlinkingEnabled(sender->isBlinkingEnabled());
+        m_optionsWidget->setTimeOn(sender->timeOn());
+        m_optionsWidget->setTimeOff(sender->timeOff());
+        m_optionsWidget->setBrightLevel(sender->brightLevel());
+    }
+
+    m_activeControl = (enabled ? sender : nullptr);
+    m_optionsWidget->setVisible(enabled);
+}
+
+void ControlPanelWidget::slotChangeButtonsState(bool enabled)
+{
+    Q_UNUSED(enabled);
+
+    using protocol::ButtonState;
+    using protocol::incoming::ButtonsStateMessage;
+
+    QVector<ButtonState> states;
+    states.reserve(m_controlIds.size());
+
+    for (quint8 each : m_controlIds)
+    {
+        DisplayControlWidget* control = m_controlWidgets[each];
+        states.append(control->isActive() ? ButtonState::On
+                                          : ButtonState::Off);
+    }
+    ButtonsStateMessage* msg = new ButtonsStateMessage();
+    msg->setButtonsStates(std::move(states));
+
+    slotSendMessage(QSharedPointer<protocol::AbstractMessage>(msg));
+}
+
+void ControlPanelWidget::slotSendDeviceIdentity()
+{
+    using protocol::incoming::DeviceIdentityMessage;
+
+    DeviceIdentityMessage* msg = new DeviceIdentityMessage();
+    msg->setFirmwareVersion(::firmwareVersion());
+    msg->setButtonsNumbers(m_controlIds);
+
+    slotSendMessage(QSharedPointer<protocol::AbstractMessage>(msg));
+}
+
+void ControlPanelWidget::slotOnDisconnect()
+{
+    m_recvThread->quit();
+    m_recvThread->wait();
+
+    if (m_optionsWidget != nullptr)
+    {
+        m_optionsWidget->hide();
+    }
+
+    if (m_isDebugMode)
+    {
+        m_ui->deviceIdentityFrame->hide();
+    }
+
+    removeAllContols();
+
+    setWindowTitle(tr("[Disconneted] %1 - %2:%3")
+                   .arg(::titleString())
+                   .arg(m_transport->currentSettings().address().toString())
+                   .arg(m_transport->currentSettings().port()));
+
+    m_ui->stackedWidget->setCurrentWidget(m_ui->preloadPage);
+    m_ui->statusLabel->setText(tr("Error connection: %1")
+                               .arg(m_transport->errorString()));
+    m_ui->preloadImageLabel->hide();
+    m_ui->breakButton->hide();
+    m_ui->retryButton->show();
+}
+
+void ControlPanelWidget::slotOnBytesReceive(const QByteArray& bytes)
+{
+    const QString str = tr("Received bytes size = %1: %2")
             .arg(bytes.size())
             .arg(QString::fromLatin1(bytes.toHex()));
-    Logger::instance().debug(str);
+
+    QString log = m_ui->logTextEdit->toPlainText();
+    if (!log.isEmpty())
+    {
+        log += "\n";
+    }
+    log += str;
+    m_ui->logTextEdit->setPlainText(log);
+    m_ui->logTextEdit->verticalScrollBar()->setValue(m_ui->logTextEdit->verticalScrollBar()->maximum());
 }
 
-void ControlPanelWidget::slotReceiveMessage(const QSharedPointer<protocol::AbstractMessage>& message)
+void ControlPanelWidget::slotOnBytesSend(const QByteArray& bytes)
 {
-    Q_CHECK_PTR(message);
-
-    const QByteArray ba = message->serialize();
-    const QString str = tr("Parsed message [%1]: %2")
-            .arg(ba.size())
-            .arg(QString::fromLatin1(ba.toHex()));
-    Logger::instance().debug(str);
+    const QString str = tr("Sent bytes size = %1: %2")
+            .arg(bytes.size())
+            .arg(QString::fromLatin1(bytes.toHex()));
 
     QString log = m_ui->logTextEdit->toPlainText();
     if (!log.isEmpty())
@@ -159,22 +411,146 @@ void ControlPanelWidget::slotReceiveMessage(const QSharedPointer<protocol::Abstr
 
 void ControlPanelWidget::slotSendMessage(const QSharedPointer<protocol::AbstractMessage>& message)
 {
+    if (message != nullptr)
+    {
+        m_outCtrl->slotSend(*message);
+    }
+}
+
+void ControlPanelWidget::slotReceiveMessage(const QSharedPointer<protocol::AbstractMessage>& message)
+{
     Q_CHECK_PTR(message);
 
-    const QByteArray ba = message->serialize();
-    const QString str = tr("Sent message [%1]: %2")
-            .arg(ba.size())
-            .arg(QString::fromLatin1(ba.toHex()));
-    Logger::instance().debug(str);
+    using protocol::MessageDirection;
 
-    QString log = m_ui->logTextEdit->toPlainText();
-    if (!log.isEmpty())
+    switch (message->direction())
     {
-        log += "\n";
+    case MessageDirection::Incoming:
+        if (!m_isDebugMode)
+        {
+            processMessage(dynamic_cast<const protocol::incoming::Message&>(*message));
+        }
+        break;
+    case MessageDirection::Outcoming:
+        if (m_isDebugMode)
+        {
+            processMessage(dynamic_cast<const protocol::outcoming::Message&>(*message));
+        }
+        break;
+    default:
+        Q_ASSERT_X(false, "ControlPanelWidget::slotReceiveMessage", "Unexpected MessageDirection");
+        break;
     }
-    log += str;
-    m_ui->logTextEdit->setPlainText(log);
-    m_ui->logTextEdit->verticalScrollBar()->setValue(m_ui->logTextEdit->verticalScrollBar()->maximum());
+}
 
-    m_outCtrl->slotSend(*message);
+void ControlPanelWidget::processMessage(const protocol::incoming::Message& message)
+{
+    using namespace protocol::incoming;
+
+    switch (message.type())
+    {
+    case MessageType::DeviceIdentity:
+        removeAllContols();
+        makeConfiguration(message);
+        break;
+    case MessageType::ButtonsState:
+        applyButtonsStates(dynamic_cast<const ButtonsStateMessage&>(message).buttonsStates());
+        break;
+    default:
+        Q_ASSERT_X(false, "ControlPanelWidget::processMessage", "Unexpected incoming MessageType");
+        break;
+    }
+}
+
+void ControlPanelWidget::applyButtonsStates(const QVector<protocol::ButtonState>& states)
+{
+    if (m_controlIds.size() != states.size())
+    {
+        qDebug().noquote() << "m_controlIds.size() != states.size(): " << m_controlIds.size() << "!=" << states.size();
+        return;
+    }
+
+    using protocol::ButtonState;
+
+    QVectorIterator<ButtonState> stateIt(states);
+    for (auto it = m_controlIds.cbegin(), end = m_controlIds.cend(); it != end; ++it)
+    {
+        m_controlWidgets[*it]->setActive(stateIt.next() == ButtonState::On);
+    }
+}
+
+void ControlPanelWidget::processMessage(const protocol::outcoming::Message& message)
+{
+    using namespace protocol::outcoming;
+
+    switch (message.type())
+    {
+    case MessageType::BlinkOptions:
+        {
+            const BlinkOptionsMessage& blomsg = dynamic_cast<const BlinkOptionsMessage&>(message);
+            QVector<quint8>::const_iterator founded = std::find(m_controlIds.cbegin(), m_controlIds.cend(), blomsg.displayNumber());
+            if (founded != m_controlIds.cend())
+            {
+                DisplayControlWidget* control = m_controlWidgets[*founded];
+                control->setTimeOn(10 * blomsg.timeOn());
+                control->setTimeOff(10 * blomsg.timeOff());
+            }
+        }
+        break;
+    case MessageType::BrightOptions:
+        {
+            const BrightOptionsMessage& bromsg = dynamic_cast<const BrightOptionsMessage&>(message);
+            QVector<quint8>::const_iterator founded = std::find(m_controlIds.cbegin(), m_controlIds.cend(), bromsg.displayNumber());
+            if (founded != m_controlIds.cend())
+            {
+                DisplayControlWidget* control = m_controlWidgets[*founded];
+                control->setBrightLevel(bromsg.brightLevel());
+            }
+        }
+        break;
+    case MessageType::DisplayImages:
+        {
+        // TODO: image num -> image filename
+        }
+        break;
+    case MessageType::DisplayOptions:
+        {
+            const DisplayOptionsMessage& domsg = dynamic_cast<const DisplayOptionsMessage&>(message);
+            QVector<quint8>::const_iterator founded = std::find(m_controlIds.cbegin(), m_controlIds.cend(), domsg.displayNumber());
+            if (founded != m_controlIds.cend())
+            {
+                DisplayControlWidget* control = m_controlWidgets[*founded];
+                control->setBlinkingEnabled(domsg.blinkState() == protocol::BlinkState::On);
+                switch (domsg.imageSelection())
+                {
+                case protocol::ImageSelection::Nothing:
+                    control->resetFirstImage();
+                    control->resetSecondImage();
+                    break;
+                case protocol::ImageSelection::First:
+                    control->setFirstImage(control->firstImage());
+                    control->resetSecondImage();
+                    break;
+                case protocol::ImageSelection::Second:
+                    control->resetFirstImage();
+                    control->setSecondImage(control->secondImage());
+                    break;
+                case protocol::ImageSelection::Both:
+                    control->setFirstImage(control->firstImage());
+                    control->setSecondImage(control->secondImage());
+                    break;
+                default:
+                    break;
+                }
+            }
+        }
+        break;
+    case MessageType::DeviceAddress:
+    case MessageType::ImagesData:
+        qDebug().noquote() << "TODO: process message type" << static_cast<quint8>(message.type());
+        break;
+    default:
+        Q_ASSERT_X(false, "ControlPanelWidget::processMessage", "Unexpected outcoming MessageType");
+        break;
+    }
 }

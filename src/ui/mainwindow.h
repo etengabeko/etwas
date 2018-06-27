@@ -12,7 +12,7 @@ class MainWindow : public QMainWindow
 {
     Q_OBJECT
 
-private:
+public:
     enum class Mode
     {
         Debug,
@@ -20,21 +20,18 @@ private:
     };
 
 public:
-    explicit MainWindow(QWidget* parent = nullptr);
+    explicit MainWindow(Mode mode = Mode::Work, QWidget* parent = nullptr);
     ~MainWindow();
 
 private slots:
-    void slotNewConnection();
-    void slotNewDebugConnection();
     void slotNewControlPanel();
+    void slotNewControlPanelDebug();
 
     void slotCloseSubWindow();
 
-    void slotOnError(const QString& message);
-
 private:
-    void initMenu();
-    void createNewConnection(Mode mode);
+    void initMenu(Mode mode);
+    void createNewControlPanel(Mode mode);
     void closeSubWindow(QWidget* subwindow);
 
 private:

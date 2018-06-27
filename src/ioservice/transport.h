@@ -1,10 +1,7 @@
 #ifndef IOSERVICE_TRANSPORT_H
 #define IOSERVICE_TRANSPORT_H
 
-#include <memory>
-
 #include <QObject>
-#include <QPair>
 
 class QByteArray;
 class QString;
@@ -30,20 +27,25 @@ public:
                        QObject* parent = nullptr);
     ~Transport() NOEXCEPT;
 
-    QPair<bool, QString> start();
+    const settings::Settings& currentSettings() const;
+    const QString errorString() const;
 
 signals:
+    void connected();
+    void disconnected();
+    void error();
+
     void received(const QByteArray& data);
+    void sent(const QByteArray& data);
 
 public slots:
+    void start();
+
     void slotSend(const QByteArray& data);
     void slotSend(QByteArray&& data);
 
 private:
-    void onReceived(const QByteArray& data);
-
-private:
-    std::unique_ptr<details::TransportPrivate> m_pimpl;
+    details::TransportPrivate* m_pimpl;
 
 };
 

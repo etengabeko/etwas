@@ -58,9 +58,39 @@ void DisplayOptionsWidget::setFirstImage(const QString& pixmapFileName)
     m_ui->imageFirstLabel->setPixmap(QPixmap(pixmapFileName));
 }
 
+void DisplayOptionsWidget::setFirstImageEnabled(bool enabled)
+{
+    m_ui->imageFirstCheckBox->setChecked(enabled);
+}
+
 void DisplayOptionsWidget::setSecondImage(const QString& pixmapFileName)
 {
     m_ui->imageSecondLabel->setPixmap(QPixmap(pixmapFileName));
+}
+
+void DisplayOptionsWidget::setSecondImageEnabled(bool enabled)
+{
+    m_ui->imageSecondCheckBox->setChecked(enabled);
+}
+
+void DisplayOptionsWidget::setBlinkingEnabled(bool enabled)
+{
+    m_ui->blinkingCheckBox->setChecked(enabled);
+}
+
+void DisplayOptionsWidget::setTimeOn(int msec)
+{
+    m_ui->timeOnSpinBox->setValue(msec);
+}
+
+void DisplayOptionsWidget::setTimeOff(int msec)
+{
+    m_ui->timeOffSpinBox->setValue(msec);
+}
+
+void DisplayOptionsWidget::setBrightLevel(int level)
+{
+    m_ui->brightSlider->setValue(level);
 }
 
 void DisplayOptionsWidget::slotChangeBrightness(int level)
@@ -77,5 +107,4 @@ void DisplayOptionsWidget::slotChangeBrightness(int level)
     {
         effect->setOpacity(opacity);
     }
-
 }

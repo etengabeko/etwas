@@ -11,10 +11,15 @@ namespace ioservice
 namespace details
 {
 
-OutputControllerPrivate::OutputControllerPrivate(Transport* transport) :
+OutputControllerPrivate::OutputControllerPrivate(Transport* transport,
+                                                 QObject *parent) :
+    QObject(parent),
     m_transport(transport)
 {
     Q_CHECK_PTR(transport);
+
+    QObject::connect(this, &OutputControllerPrivate::sent,
+                     m_transport, static_cast<void(Transport::*)(const QByteArray&)>(&Transport::slotSend));
 }
 
 OutputControllerPrivate::~OutputControllerPrivate() NOEXCEPT
@@ -31,7 +36,7 @@ void OutputControllerPrivate::send(const protocol::AbstractMessage& message)
         stream << message;
     }
 
-    m_transport->slotSend(std::move(ba));
+    emit sent(ba);
 }
 
 } // details

@@ -1,6 +1,6 @@
-<!DOCTYPE RCC><RCC version="1.0">
-<qresource prefix="/">
-    <file alias="on.bmp">resources/on.bmp</file>
-    <file alias="off.bmp">resources/off.bmp</file>
-</qresource>
+<RCC>
+    <qresource prefix="/">
+        <file alias="on.bmp">resources/on.bmp</file>
+        <file alias="off.bmp">resources/off.bmp</file>
+    </qresource>
 </RCC>

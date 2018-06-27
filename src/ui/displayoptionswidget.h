@@ -19,7 +19,17 @@ public:
     ~DisplayOptionsWidget();
 
     void setFirstImage(const QString& pixmapFileName);
+    void setFirstImageEnabled(bool enabled);
+
     void setSecondImage(const QString& pixmapFileName);
+    void setSecondImageEnabled(bool enabled);
+
+    void setBlinkingEnabled(bool enabled);
+
+    void setTimeOn(int msec);
+    void setTimeOff(int msec);
+
+    void setBrightLevel(int level);
 
 signals:
     void imageFirstEnabled(bool enabled);

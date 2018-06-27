@@ -1,10 +1,7 @@
 #ifndef IOSERVICE_TRANSPORT_PRIVATE_H
 #define IOSERVICE_TRANSPORT_PRIVATE_H
 
-#include <functional>
-
 #include <QHostAddress>
-#include <QPair>
 
 class QByteArray;
 class QString;
@@ -21,24 +18,35 @@ class TransportPrivate : public QObject
 public:
     TransportPrivate(const QHostAddress& address,
                      quint16 port,
-                     std::function<void(const QByteArray&)> onReceive,
                      QObject* parent = nullptr);
     ~TransportPrivate() NOEXCEPT;
 
-    QPair<bool, QString> start();
+    void start();
 
     void send(const QByteArray& data);
     void send(QByteArray&& data);
 
+    const QHostAddress& address() const;
+    quint16 port() const;
+
+    const QString errorString() const;
+
+signals:
+    void connected();
+    void disconnected();
+    void error();
+
+    void received(const QByteArray& data);
+    void sent(const QByteArray& data);
+
 private slots:
-    void slotReceive();
+    void slotOnReceive();
 
 private:
     QTcpSocket* m_socket = nullptr;
 
     QHostAddress m_address;
     quint16 m_port = 0;
-    std::function<void(const QByteArray&)> m_onReceive;
 
 };
 

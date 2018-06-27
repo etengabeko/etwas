@@ -24,6 +24,7 @@ BUILD_DIR = $$PWD/build
 OBJECTS_DIR = $$BUILD_DIR/obj
 MOC_DIR = $$BUILD_DIR/moc
 UI_DIR = $$BUILD_DIR/ui
+RCC_DIR = $$BUILD_DIR/rcc
 DESTDIR = $$BUILD_DIR/bin
 
 isEmpty(PREFIX) {
@@ -102,6 +103,9 @@ FORMS = \
     $$PWD/src/ui/createmessages.ui \
     $$PWD/src/ui/displaycontrol.ui \
     $$PWD/src/ui/displayoptions.ui
+
+RESOURCES = \
+    $$PWD/src/resources.qrc
 
 INSTALLS += \
     target \
