@@ -48,8 +48,6 @@ public:
 
 signals:
     void subwindowCreated(SubWindow* child);
-    void subwindowShown(SubWindow* child);
-    void subwindowHidden(SubWindow* child);
     void subwindowClosed(SubWindow* child);
 
 private slots:

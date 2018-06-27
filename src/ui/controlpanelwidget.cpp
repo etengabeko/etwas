@@ -64,6 +64,8 @@ ControlPanelWidget::ControlPanelWidget(bool isDebugMode, QWidget* parent) :
 
 ControlPanelWidget::~ControlPanelWidget()
 {
+    emit subwindowClosed(m_optionsWidget);
+
     m_recvThread->quit();
     m_recvThread->wait();
 
@@ -73,10 +75,6 @@ ControlPanelWidget::~ControlPanelWidget()
     m_inCtrl.reset();
     m_outCtrl.reset();
     m_transport.reset();
-
-    emit subwindowClosed(m_optionsWidget);
-    delete m_optionsWidget;
-    m_optionsWidget = nullptr;
 
     removeAllContols();
 
@@ -288,7 +286,7 @@ void ControlPanelWidget::slotChangeActiveControl(bool enabled)
         m_activeControl = nullptr;
     }
 
-    if (m_activeControl != nullptr)
+    if (enabled && m_activeControl != nullptr)
     {
         if (m_optionsWidget == nullptr)
         {
@@ -323,13 +321,13 @@ void ControlPanelWidget::slotChangeActiveControl(bool enabled)
 
     if (enabled)
     {
-        emit subwindowShown(m_optionsWidget);
+        m_optionsWidget->show();
     }
     else
     {
-        emit subwindowHidden(m_optionsWidget);
+        emit subwindowClosed(m_optionsWidget);
+        m_optionsWidget = nullptr;
     }
-//    m_optionsWidget->setVisible(enabled);
 }
 
 void ControlPanelWidget::slotOptionsClose()

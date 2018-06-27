@@ -32,8 +32,6 @@ private slots:
 
     void slotAddSubWindow(SubWindow* subwindow);
     void slotRemoveSubWindow(SubWindow* subwindow);
-    void slotShowSubWindow(SubWindow* subwindow);
-    void slotHideSubWindow(SubWindow* subwindow);
     void slotCloseSubWindow();
 
 private:

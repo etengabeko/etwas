@@ -69,14 +69,8 @@ void MainWindow::createNewControlPanel(MainWindow::Mode mode)
 
     QObject::connect(control, &SubWindow::closed,
                      this, &MainWindow::slotCloseSubWindow);
-    QObject::connect(control, &SubWindow::closed,
-                     control, &SubWindow::deleteLater);
     QObject::connect(control, &ControlPanelWidget::subwindowCreated,
                      this, &MainWindow::slotAddSubWindow);
-    QObject::connect(control, &ControlPanelWidget::subwindowShown,
-                     this, &MainWindow::slotShowSubWindow);
-    QObject::connect(control, &ControlPanelWidget::subwindowHidden,
-                     this, &MainWindow::slotHideSubWindow);
     QObject::connect(control, &ControlPanelWidget::subwindowClosed,
                      this, &MainWindow::slotRemoveSubWindow);
 
@@ -110,23 +104,5 @@ void MainWindow::slotRemoveSubWindow(SubWindow* subwindow)
             m_central->removeSubWindow(mdi);
             mdi->deleteLater();
         }
-    }
-}
-
-void MainWindow::slotShowSubWindow(SubWindow* subwindow)
-{
-    if (   subwindow != nullptr
-        && m_subwindows.contains(subwindow))
-    {
-        subwindow->show();
-    }
-}
-
-void MainWindow::slotHideSubWindow(SubWindow* subwindow)
-{
-    if (   subwindow != nullptr
-        && m_subwindows.contains(subwindow))
-    {
-        subwindow->hide();
     }
 }
