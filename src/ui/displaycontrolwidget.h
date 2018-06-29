@@ -60,7 +60,8 @@ signals:
     void activated(bool enabled);
 
 private slots:
-    void slotTimeout();
+    void slotTimeoutFirst();
+    void slotTimeoutSecond();
 
 private:
     void setImage(ImageNumber num, const QPixmap& img);

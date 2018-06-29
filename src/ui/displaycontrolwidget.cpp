@@ -37,7 +37,7 @@ DisplayControlWidget::DisplayControlWidget(bool isDebugMode, QWidget* parent) :
     m_displayLabel->setGraphicsEffect(effect);
 
     QObject::connect(m_timer, &QTimer::timeout,
-                     this, &DisplayControlWidget::slotTimeout);
+                     this, &DisplayControlWidget::slotTimeoutFirst);
 
     if (m_isDebugMode)
     {
@@ -204,7 +204,7 @@ void DisplayControlWidget::resetTimer()
         && m_timeOffMsec > 0)
     {
         m_timer->start(m_timeOnMsec + m_timeOffMsec);
-        slotTimeout();
+        slotTimeoutFirst();
     }
     else
     {
@@ -227,11 +227,19 @@ void DisplayControlWidget::resetCurrentImage()
     }
 }
 
-void DisplayControlWidget::slotTimeout()
+void DisplayControlWidget::slotTimeoutFirst()
 {
     setCurrentImage(ImageNumber::First);
 
-    QTimer::singleShot(m_timeOnMsec, [this]() { if (m_blinkingEnabled) setCurrentImage(ImageNumber::Second); });
+    QTimer::singleShot(m_timeOnMsec, this, &DisplayControlWidget::slotTimeoutSecond);
+}
+
+void DisplayControlWidget::slotTimeoutSecond()
+{
+     if (m_blinkingEnabled)
+     {
+         setCurrentImage(ImageNumber::Second);
+     }
 }
 
 bool DisplayControlWidget::isActive() const

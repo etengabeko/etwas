@@ -103,6 +103,7 @@ void ControlPanelWidget::removeAllContols()
 
     m_controlWidgets.clear();
     m_controlIds.clear();
+    m_activeControl = nullptr;
 }
 
 void ControlPanelWidget::initialize()
@@ -269,15 +270,15 @@ void ControlPanelWidget::initConnectionsForControl(DisplayControlWidget* control
 {
     Q_CHECK_PTR(control);
 
-    if (!m_isDebugMode)
+    if (m_isDebugMode)
     {
         QObject::connect(control, &DisplayControlWidget::activated,
-                         this, &ControlPanelWidget::slotChangeActiveControl);
+                         this, &ControlPanelWidget::slotChangeButtonsState);
     }
     else
     {
         QObject::connect(control, &DisplayControlWidget::activated,
-                         this, &ControlPanelWidget::slotChangeButtonsState);
+                         this, &ControlPanelWidget::slotChangeActiveControl);
     }
 }
 
@@ -337,6 +338,7 @@ void ControlPanelWidget::slotChangeActiveControl(bool enabled)
     {
         emit subwindowClosed(m_optionsWidget);
         m_optionsWidget = nullptr;
+        m_activeControl = nullptr;
     }
 }
 
@@ -389,7 +391,8 @@ void ControlPanelWidget::slotOnDisconnect()
 
     if (m_optionsWidget != nullptr)
     {
-        m_optionsWidget->hide();
+        emit subwindowClosed(m_optionsWidget);
+        m_optionsWidget = nullptr;
     }
 
     if (m_isDebugMode)
@@ -593,7 +596,7 @@ void ControlPanelWidget::slotActiveControlImageFirstChange(bool enabled)
     else
         m_activeControl->resetFirstImage();
 
-    createDisplayOptionsMessage();
+    createDisplayOptionsMessage(); // TODO
 }
 
 void ControlPanelWidget::slotActiveControlImageSecondChange(bool enabled)
@@ -605,39 +608,51 @@ void ControlPanelWidget::slotActiveControlImageSecondChange(bool enabled)
     else
         m_activeControl->resetSecondImage();
 
-    createDisplayOptionsMessage();
+    createDisplayOptionsMessage(); // TODO
 }
 
 void ControlPanelWidget::slotActiveControlBlinkingChange(bool enabled)
 {
     Q_CHECK_PTR(m_activeControl);
 
-    m_activeControl->setBlinkingEnabled(enabled);
-    createDisplayOptionsMessage();
+    if (m_activeControl->isBlinkingEnabled() != enabled)
+    {
+        m_activeControl->setBlinkingEnabled(enabled);
+        createDisplayOptionsMessage();
+    }
 }
 
 void ControlPanelWidget::slotActiveControlTimeOnChange(int msec)
 {
     Q_CHECK_PTR(m_activeControl);
 
-    m_activeControl->setTimeOn(msec);
-    createBlinkOptionsMessage();
+    if (m_activeControl->timeOn() != msec)
+    {
+        m_activeControl->setTimeOn(msec);
+        createBlinkOptionsMessage();
+    }
 }
 
 void ControlPanelWidget::slotActiveControlTimeOffChange(int msec)
 {
     Q_CHECK_PTR(m_activeControl);
 
-    m_activeControl->setTimeOff(msec);
-    createBlinkOptionsMessage();
+    if (m_activeControl->timeOff() != msec)
+    {
+        m_activeControl->setTimeOff(msec);
+        createBlinkOptionsMessage();
+    }
 }
 
 void ControlPanelWidget::slotActiveControlBrightChange(int level)
 {
     Q_CHECK_PTR(m_activeControl);
 
-    m_activeControl->setBrightLevel(level);
-    createBrightOptionsMessage();
+    if (m_activeControl->brightLevel() != level)
+    {
+        m_activeControl->setBrightLevel(level);
+        createBrightOptionsMessage();
+    }
 }
 
 quint8 ControlPanelWidget::findActiveControlId(bool* ok) const
