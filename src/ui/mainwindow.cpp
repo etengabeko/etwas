@@ -64,7 +64,9 @@ void MainWindow::slotNewControlPanelDebug()
 
 void MainWindow::createNewControlPanel(MainWindow::Mode mode)
 {
-    ControlPanelWidget* control = new ControlPanelWidget((mode == Mode::Debug), this);
+    ControlPanelWidget* control = new ControlPanelWidget((mode == Mode::Debug),
+                                                         QString::null, // TODO
+                                                         this);
     slotAddSubWindow(control);
 
     QObject::connect(control, &SubWindow::closed,

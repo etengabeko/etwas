@@ -7,7 +7,6 @@
 int main(int argc, char* argv[])
 {
     QApplication app(argc, argv);
-    Logger::initialize(Logger::Level::Trace);
 
     const QString img1st(":/on.bmp");
     const QString img2nd(":/off.bmp");

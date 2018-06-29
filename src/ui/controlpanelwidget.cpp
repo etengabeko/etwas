@@ -25,6 +25,7 @@
 namespace
 {
 
+Logger::Level customLogLevel() { return Logger::Level::Trace; }
 int firmwareVersion() { return 0x02; }
 int controlsGridColumnCount() { return 3; } // TODO
 quint8 debugControlsCount() { return 9; }
@@ -33,10 +34,13 @@ QString titleString() { return qApp->tr("Device"); }
 
 }
 
-ControlPanelWidget::ControlPanelWidget(bool isDebugMode, QWidget* parent) :
+ControlPanelWidget::ControlPanelWidget(bool isDebugMode,
+                                       const QString& logFileName,
+                                       QWidget* parent) :
     SubWindow(parent),
     m_ui(new Ui::ControlPanel()),
     m_isDebugMode(isDebugMode),
+    m_logger(std::move(initLogger(logFileName))),
     m_recvThread(new QThread())
 {
     m_ui->setupUi(this);
@@ -80,6 +84,12 @@ ControlPanelWidget::~ControlPanelWidget()
 
     delete m_ui;
     m_ui = nullptr;
+}
+
+Logger ControlPanelWidget::initLogger(const QString& logFileName) const
+{
+    return (!logFileName.isEmpty() ? Logger(::customLogLevel(), Logger::Device::File, logFileName)
+                                   : Logger(::customLogLevel()));
 }
 
 void ControlPanelWidget::removeAllContols()
@@ -157,7 +167,7 @@ void ControlPanelWidget::initialize()
 void ControlPanelWidget::slotBreakInitialization()
 {
     // TODO
-    Logger::instance().trace(tr("TODO: Break"));
+    m_logger.trace(tr("TODO: Break"));
 }
 
 void ControlPanelWidget::slotRetryInitialization()

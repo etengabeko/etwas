@@ -1,10 +1,8 @@
 #include "logger.h"
 
-#include <cassert>
 #include <chrono>
 #include <ctime>
 #include <fstream>
-#include <iomanip>
 #include <iostream>
 #include <string>
 
@@ -28,8 +26,6 @@ const std::tm currentTime()
 }
 
 }
-
-std::unique_ptr<Logger> Logger::m_instance(nullptr);
 
 class LoggerPrivate
 {
@@ -130,9 +126,7 @@ private:
     {
         const std::tm tm = ::currentTime();
         device << tm.tm_hour << ":" << tm.tm_min << ":" << tm.tm_sec
-               << " ["
-               << levelLabel
-               << "]: "
+               << " [" << levelLabel << "]: "
                << message
                << std::endl;
     }
@@ -167,21 +161,6 @@ Logger& Logger::operator =(Logger&& other) NOEXCEPT
 {
     m_pimpl.swap(other.m_pimpl);
     return *this;
-}
-
-Logger& Logger::initialize(Level level,
-                           Device device,
-                           const QString& fileName)
-{
-    m_instance.reset(new Logger(level, device, fileName));
-    return *m_instance;
-}
-
-Logger& Logger::instance() NOEXCEPT
-{
-    assert(   m_instance != nullptr
-           && "Logger not initialized.");
-    return *m_instance;
 }
 
 void Logger::info(const QString& message)

@@ -6,6 +6,7 @@
 #include <QHash>
 #include <QVector>
 
+#include <logger/logger.h>
 #include <ui/subwindow.h>
 
 class QByteArray;
@@ -41,7 +42,9 @@ class ControlPanelWidget : public SubWindow
     Q_OBJECT
 
 public:
-    explicit ControlPanelWidget(bool isDebugMode = false, QWidget* parent = nullptr);
+    explicit ControlPanelWidget(bool isDebugMode,
+                                const QString& logFileName,
+                                QWidget* parent = nullptr);
     ~ControlPanelWidget();
 
     void initialize();
@@ -78,6 +81,7 @@ private slots:
     void slotActiveControlBrightChange(int level);
 
 private:
+    Logger initLogger(const QString& logFileName) const;
     void makeDebugConfiguration(int buttonsCount);
     void makeConfiguration(const protocol::incoming::Message& message);
 
@@ -99,6 +103,7 @@ private:
 private:
     Ui::ControlPanel* m_ui = nullptr;
     const bool m_isDebugMode;
+    Logger m_logger;
 
     QThread* m_recvThread = nullptr;
 

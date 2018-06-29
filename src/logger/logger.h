@@ -24,12 +24,11 @@ public:
         Both    = Console | File
     };
 
-private:
-    Logger(Level level,
-           Device device,
-           const QString& fileName = QString::null);
 
 public:
+    Logger(Level level,
+           Device device = Device::Console,
+           const QString& fileName = QString::null);
     ~Logger() NOEXCEPT;
 
     Logger(const Logger& other) = delete;
@@ -38,11 +37,6 @@ public:
     Logger(Logger&& other) NOEXCEPT;
     Logger& operator= (Logger&& other) NOEXCEPT;
 
-    static Logger& initialize(Level level,
-                              Device device = Device::Console,
-                              const QString& fileName = QString::null);
-    static Logger& instance() NOEXCEPT;
-
     void info(const QString& message);
     void warning(const QString& message);
     void error(const QString& message);
@@ -50,8 +44,6 @@ public:
     void trace(const QString& message);
 
 private:
-    static std::unique_ptr<Logger> m_instance;
-
     std::unique_ptr<LoggerPrivate> m_pimpl;
 
 };
