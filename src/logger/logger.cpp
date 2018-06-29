@@ -129,7 +129,7 @@ private:
                               const std::string& message)
     {
         const std::tm tm = ::currentTime();
-        device << std::put_time(&tm, "%H:%M:%S")
+        device << tm.tm_hour << ":" << tm.tm_min << ":" << tm.tm_sec
                << " ["
                << levelLabel
                << "]: "

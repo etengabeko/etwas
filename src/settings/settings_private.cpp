@@ -22,7 +22,7 @@ void SettingsPrivate::setAddress(const QHostAddress& addr)
 
 void SettingsPrivate::setAddress(QHostAddress&& addr) NOEXCEPT
 {
-    m_address.swap(addr);
+    std::swap(m_address, addr);
 }
 
 quint16 SettingsPrivate::port() const NOEXCEPT
