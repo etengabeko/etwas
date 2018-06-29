@@ -3,6 +3,7 @@
 
 #include <QApplication>
 #include <QCursor>
+#include <QFileDialog>
 #include <QHostInfo>
 #include <QString>
 
@@ -17,6 +18,8 @@ ConnectionOptionsDialog::ConnectionOptionsDialog(QWidget* parent) :
                      this, &ConnectionOptionsDialog::slotApply);
     QObject::connect(m_ui->cancelButton, &QPushButton::clicked,
                      this, &ConnectionOptionsDialog::reject);
+    QObject::connect(m_ui->selectButton, &QPushButton::clicked,
+                     this, &ConnectionOptionsDialog::slotSelectFileName);
 }
 
 ConnectionOptionsDialog::~ConnectionOptionsDialog()
@@ -25,7 +28,7 @@ ConnectionOptionsDialog::~ConnectionOptionsDialog()
     m_ui = nullptr;
 }
 
-void ConnectionOptionsDialog::setErrorString(const QString& message)
+void ConnectionOptionsDialog::slotSetErrorString(const QString& message)
 {
     m_ui->errorLabel->setText(message);
 }
@@ -43,7 +46,7 @@ void ConnectionOptionsDialog::slotApply()
     }
     else
     {
-        setErrorString(info.errorString());
+        slotSetErrorString(info.errorString());
         QApplication::restoreOverrideCursor();
     }
 }
@@ -67,4 +70,26 @@ quint16 ConnectionOptionsDialog::port() const
 void ConnectionOptionsDialog::setPort(quint16 portnum)
 {
     m_ui->portSpinBox->setValue(portnum);
+}
+
+QString ConnectionOptionsDialog::logFileName() const
+{
+    return (m_ui->logfileGroupBox->isChecked() ? m_ui->fileNameLineEdit->text()
+                                               : QString::null);
+}
+
+void ConnectionOptionsDialog::setLogFileName(const QString& fileName)
+{
+    m_ui->fileNameLineEdit->setText(fileName);
+}
+
+void ConnectionOptionsDialog::slotSelectFileName()
+{
+    const QString fileName = QFileDialog::getSaveFileName(this,
+                                                          tr("Select Log filename"),
+                                                          QApplication::applicationDirPath());
+    if (!fileName.isEmpty())
+    {
+        setLogFileName(fileName);
+    }
 }

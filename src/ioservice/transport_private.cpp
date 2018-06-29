@@ -39,8 +39,9 @@ quint16 TransportPrivate::port() const
 
 const QString TransportPrivate::errorString() const
 {
-    return (m_socket != nullptr ? m_socket->errorString()
-                                : tr("Socket is not initialized"));
+    return (m_socket == nullptr ? tr("Socket is not initialized")
+                                : (m_socket->error() == QTcpSocket::UnknownSocketError ? QString::null
+                                                                                       : m_socket->errorString()));
 }
 
 void TransportPrivate::start()
@@ -65,6 +66,14 @@ void TransportPrivate::start()
     }
 
     m_socket->connectToHost(m_address, m_port);
+}
+
+void TransportPrivate::stop()
+{
+    if (m_socket != nullptr)
+    {
+        m_socket->close();
+    }
 }
 
 void TransportPrivate::slotOnReceive()

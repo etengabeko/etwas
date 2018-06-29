@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>400</width>
-    <height>150</height>
+    <height>230</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -19,7 +19,7 @@
   <property name="minimumSize">
    <size>
     <width>400</width>
-    <height>150</height>
+    <height>230</height>
    </size>
   </property>
   <property name="windowTitle">
@@ -121,6 +121,35 @@
     </widget>
    </item>
    <item>
+    <widget class="QGroupBox" name="logfileGroupBox">
+     <property name="title">
+      <string>Save Traffic Log</string>
+     </property>
+     <property name="checkable">
+      <bool>true</bool>
+     </property>
+     <layout class="QHBoxLayout" name="horizontalLayout_2">
+      <item>
+       <widget class="QLabel" name="fileNameLabel">
+        <property name="text">
+         <string>Filename:</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLineEdit" name="fileNameLineEdit"/>
+      </item>
+      <item>
+       <widget class="QPushButton" name="selectButton">
+        <property name="text">
+         <string>Select</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
       <spacer name="horizontalSpacer">
@@ -153,6 +182,15 @@
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>addressLineEdit</tabstop>
+  <tabstop>portSpinBox</tabstop>
+  <tabstop>logfileGroupBox</tabstop>
+  <tabstop>applyButton</tabstop>
+  <tabstop>cancelButton</tabstop>
+  <tabstop>fileNameLineEdit</tabstop>
+  <tabstop>selectButton</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

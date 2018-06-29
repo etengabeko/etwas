@@ -22,6 +22,7 @@ public:
     ~TransportPrivate() NOEXCEPT;
 
     void start();
+    void stop();
 
     void send(const QByteArray& data);
     void send(QByteArray&& data);

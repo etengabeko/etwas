@@ -15,6 +15,16 @@ Logger::Device operator& (Logger::Device lhs,
     return static_cast<Logger::Device>(static_cast<uint>(rhs) & static_cast<uint>(lhs));
 }
 
+std::string expandValue(int value)
+{
+    std::string res = std::to_string(value);
+    if (res.size() < 2)
+    {
+        res = "0" + res;
+    }
+    return res;
+}
+
 const std::tm currentTime()
 {
     using namespace std::chrono;
@@ -23,6 +33,21 @@ const std::tm currentTime()
     std::tm result = *std::localtime(&now);
 
     return result;
+}
+
+const std::string currentTimeString()
+{
+    const std::tm tm = currentTime();
+    std::string res;
+    res.reserve(8);
+
+    res  = expandValue(tm.tm_hour);
+    res += ":";
+    res += expandValue(tm.tm_min);
+    res += ":";
+    res += expandValue(tm.tm_sec);
+
+    return res;
 }
 
 }
@@ -103,7 +128,7 @@ private:
         {
             m_file = new std::ofstream();
             m_file->exceptions(std::ofstream::failbit | std::ofstream::badbit);
-            m_file->open(fileName, std::ios_base::out);
+            m_file->open(fileName, std::ios_base::app);
         }
     }
 
@@ -124,8 +149,7 @@ private:
                               const std::string& levelLabel,
                               const std::string& message)
     {
-        const std::tm tm = ::currentTime();
-        device << tm.tm_hour << ":" << tm.tm_min << ":" << tm.tm_sec
+        device << ::currentTimeString()
                << " [" << levelLabel << "]: "
                << message
                << std::endl;

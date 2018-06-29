@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>342</width>
+    <width>371</width>
     <height>167</height>
    </rect>
   </property>
@@ -139,6 +139,14 @@
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>imageFirstCheckBox</tabstop>
+  <tabstop>imageSecondCheckBox</tabstop>
+  <tabstop>blinkingCheckBox</tabstop>
+  <tabstop>timeOnSpinBox</tabstop>
+  <tabstop>timeOffSpinBox</tabstop>
+  <tabstop>brightSlider</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

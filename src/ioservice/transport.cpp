@@ -53,6 +53,11 @@ void Transport::start()
     m_pimpl->start();
 }
 
+void Transport::stop()
+{
+    m_pimpl->stop();
+}
+
 void Transport::slotSend(const QByteArray& data)
 {
     m_pimpl->send(data);

@@ -4,7 +4,7 @@
 #include <QDialog>
 #include <QHostAddress>
 
-class QHostAddress;
+class QString;
 
 namespace Ui
 {
@@ -25,11 +25,13 @@ public:
     quint16 port() const;
     void setPort(quint16 portnum);
 
-public slots:
-    void setErrorString(const QString& message);
+    QString logFileName() const;
+    void setLogFileName(const QString& fileName);
 
-private:
+private slots:
     void slotApply();
+    void slotSelectFileName();
+    void slotSetErrorString(const QString& message);
 
 private:
     Ui::ConnectionOptions* m_ui = nullptr;

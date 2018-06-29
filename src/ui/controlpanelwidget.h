@@ -6,10 +6,10 @@
 #include <QHash>
 #include <QVector>
 
-#include <logger/logger.h>
 #include <ui/subwindow.h>
 
 class QByteArray;
+class QCloseEvent;
 class QThread;
 template <typename T> class QSharedPointer;
 
@@ -29,6 +29,7 @@ namespace incoming  { class Message; }
 namespace outcoming { class Message; }
 } // protocol
 
+class Logger;
 class DisplayControlWidget;
 class DisplayOptionsWidget;
 
@@ -43,7 +44,6 @@ class ControlPanelWidget : public SubWindow
 
 public:
     explicit ControlPanelWidget(bool isDebugMode,
-                                const QString& logFileName,
                                 QWidget* parent = nullptr);
     ~ControlPanelWidget();
 
@@ -71,6 +71,7 @@ private slots:
     void slotOptionsClose();
 
     void slotSendDeviceIdentity();
+    void slotChangeDeviceAddress();
     void slotChangeButtonsState(bool enabled);
 
     void slotActiveControlImageFirstChange(bool enabled);
@@ -81,7 +82,6 @@ private slots:
     void slotActiveControlBrightChange(int level);
 
 private:
-    Logger initLogger(const QString& logFileName) const;
     void makeDebugConfiguration(int buttonsCount);
     void makeConfiguration(const protocol::incoming::Message& message);
 
@@ -100,10 +100,15 @@ private:
     void createBrightOptionsMessage();
     quint8 findActiveControlId(bool* ok) const;
 
+    void stopTransport();
+    void setNotConnectedState();
+
+    void closeEvent(QCloseEvent* event);
+
 private:
     Ui::ControlPanel* m_ui = nullptr;
     const bool m_isDebugMode;
-    Logger m_logger;
+    std::unique_ptr<Logger> m_logger;
 
     QThread* m_recvThread = nullptr;
 

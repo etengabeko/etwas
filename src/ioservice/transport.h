@@ -40,6 +40,7 @@ signals:
 
 public slots:
     void start();
+    void stop();
 
     void slotSend(const QByteArray& data);
     void slotSend(QByteArray&& data);

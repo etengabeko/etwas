@@ -4,12 +4,18 @@
 #include <algorithm>
 
 #include <QByteArray>
+#include <QCloseEvent>
+#include <QDateTime>
+#include <QDebug>
+#include <QDir>
+#include <QFileInfo>
 #include <QGridLayout>
 #include <QHostAddress>
 #include <QMovie>
 #include <QScrollBar>
 #include <QSharedPointer>
 #include <QThread>
+#include <QTimer>
 
 #include "ioservice/inputcontroller.h"
 #include "ioservice/outputcontroller.h"
@@ -25,27 +31,36 @@
 namespace
 {
 
-Logger::Level customLogLevel() { return Logger::Level::Trace; }
 int firmwareVersion() { return 0x02; }
 int controlsGridColumnCount() { return 3; } // TODO
 quint8 debugControlsCount() { return 9; }
 
 QString titleString() { return qApp->tr("Device"); }
 
+Logger::Level customLogLevel() { return Logger::Level::Trace; }
+const QString customLogFileName()
+{
+    return QFileInfo(QDir::temp(),
+                     QString("%1.log").arg(QDateTime::currentDateTime().toString("yyyyMMdd_hhmmss")))
+            .absoluteFilePath();
+}
+
 }
 
 ControlPanelWidget::ControlPanelWidget(bool isDebugMode,
-                                       const QString& logFileName,
                                        QWidget* parent) :
     SubWindow(parent),
     m_ui(new Ui::ControlPanel()),
     m_isDebugMode(isDebugMode),
-    m_logger(std::move(initLogger(logFileName))),
     m_recvThread(new QThread())
 {
     m_ui->setupUi(this);
 
-    m_ui->deviceIdentityFrame->hide();
+    m_ui->deviceAddressButton->hide();
+    m_ui->deviceIdentityButton->hide();
+    m_ui->logFileNameLineEdit->hide();
+    m_ui->logFileNameLabel->hide();
+
     if (m_ui->workingPage->layout() == nullptr)
     {
         m_ui->workingPage->setLayout(new QGridLayout());
@@ -56,14 +71,18 @@ ControlPanelWidget::ControlPanelWidget(bool isDebugMode,
     m_ui->preloadImageLabel->setMovie(preloadMovie);
     preloadMovie->start();
 
-    QObject::connect(m_ui->clearButton, &QPushButton::clicked,
-                     m_ui->logTextEdit, &QPlainTextEdit::clear);
+    QObject::connect(m_ui->incomingClearButton, &QPushButton::clicked,
+                     m_ui->incomingLogTextEdit, &QPlainTextEdit::clear);
+    QObject::connect(m_ui->outcomingClearButton, &QPushButton::clicked,
+                     m_ui->outcomingLogTextEdit, &QPlainTextEdit::clear);
     QObject::connect(m_ui->breakButton, &QPushButton::clicked,
                      this, &ControlPanelWidget::slotBreakInitialization);
     QObject::connect(m_ui->retryButton, &QPushButton::clicked,
                      this, &ControlPanelWidget::slotRetryInitialization);
     QObject::connect(m_ui->deviceIdentityButton, &QPushButton::clicked,
                      this, &ControlPanelWidget::slotSendDeviceIdentity);
+    QObject::connect(m_ui->deviceAddressButton, &QPushButton::clicked,
+                     this, &ControlPanelWidget::slotChangeDeviceAddress);
 }
 
 ControlPanelWidget::~ControlPanelWidget()
@@ -86,10 +105,24 @@ ControlPanelWidget::~ControlPanelWidget()
     m_ui = nullptr;
 }
 
-Logger ControlPanelWidget::initLogger(const QString& logFileName) const
+void ControlPanelWidget::closeEvent(QCloseEvent* event)
 {
-    return (!logFileName.isEmpty() ? Logger(::customLogLevel(), Logger::Device::File, logFileName)
-                                   : Logger(::customLogLevel()));
+    stopTransport();
+
+    const int kSleepDelayMsec = 10;
+    QThread::msleep(kSleepDelayMsec);
+    QApplication::processEvents();
+
+    SubWindow::closeEvent(event);
+}
+
+void ControlPanelWidget::stopTransport()
+{
+    if (m_transport != nullptr)
+    {
+        const int kMinDelayMsec = 1;
+        QTimer::singleShot(kMinDelayMsec, m_transport.get(), &ioservice::Transport::stop);
+    }
 }
 
 void ControlPanelWidget::removeAllContols()
@@ -117,11 +150,16 @@ void ControlPanelWidget::initialize()
     m_ui->retryButton->hide();
 
     ConnectionOptionsDialog dlg(this);
+    QString logFileName = (!m_ui->logFileNameLineEdit->text().isEmpty() ? m_ui->logFileNameLineEdit->text()
+                                                                        : ::customLogFileName());
+    dlg.setLogFileName(logFileName);
     if (dlg.exec() != ConnectionOptionsDialog::Accepted)
     {
         m_ui->statusLabel->setText(tr("Connection is not initialized"));
         m_ui->preloadImageLabel->hide();
         m_ui->retryButton->show();
+        m_ui->logFileNameLineEdit->hide();
+        m_ui->logFileNameLabel->hide();
         return;
     }
 
@@ -133,9 +171,22 @@ void ControlPanelWidget::initialize()
     conf.setAddress(dlg.address());
     conf.setPort(dlg.port());
 
-    m_ui->statusLabel->setText(tr("Connecting to host %1:%2")
-                               .arg(conf.address().toString())
-                               .arg(conf.port()));
+    logFileName = dlg.logFileName();
+    m_ui->logFileNameLineEdit->setText(logFileName);
+    if (!logFileName.isEmpty())
+    {
+        m_logger.reset(new Logger(::customLogLevel(),
+                                  Logger::Device::File,
+                                  logFileName));
+        m_ui->logFileNameLineEdit->show();
+        m_ui->logFileNameLabel->show();
+    }
+    else
+    {
+        m_logger.reset(new Logger(::customLogLevel()));
+        m_ui->logFileNameLineEdit->hide();
+        m_ui->logFileNameLabel->hide();
+    }
 
     m_transport.reset(new Transport(conf));
     m_transport->moveToThread(m_recvThread);
@@ -162,13 +213,28 @@ void ControlPanelWidget::initialize()
     QObject::connect(m_transport.get(), &Transport::error,
                      this, &ControlPanelWidget::slotOnError);
 
+    const QString strAddress = QString("%1:%2")
+            .arg(conf.address().toString())
+            .arg(conf.port());
+    m_ui->statusLabel->setText(tr("Connecting to host %1").arg(strAddress));
+    m_logger->info(tr("Try connect to %1").arg(strAddress));
+
     m_recvThread->start();
 }
 
 void ControlPanelWidget::slotBreakInitialization()
 {
+    stopTransport();
+
+    m_ui->statusLabel->setText(tr("Connection was interrupted"));
+    m_ui->preloadImageLabel->hide();
+    m_ui->breakButton->hide();
+    m_ui->retryButton->show();
+}
+
+void ControlPanelWidget::slotChangeDeviceAddress()
+{
     // TODO
-    m_logger.trace(tr("TODO: Break"));
 }
 
 void ControlPanelWidget::slotRetryInitialization()
@@ -178,15 +244,24 @@ void ControlPanelWidget::slotRetryInitialization()
 
 void ControlPanelWidget::slotOnError()
 {
-    slotOnDisconnect();
+    if (m_logger != nullptr)
+    {
+        const QString errorString = m_transport->errorString();
+        m_logger->error(errorString);
+        m_ui->statusLabel->setText(tr("Error connection: %1").arg(errorString));
+    }
+
+    setNotConnectedState();
 }
 
 void ControlPanelWidget::slotOnConnect()
 {
-    setWindowTitle(tr("[Connected] %1 - %2:%3")
-                   .arg(::titleString())
-                   .arg(m_transport->currentSettings().address().toString())
-                   .arg(m_transport->currentSettings().port()));
+    const QString strAddress = QString("%1:%2")
+                               .arg(m_transport->currentSettings().address().toString())
+                               .arg(m_transport->currentSettings().port());
+
+    m_logger->info(tr("Connected to %1").arg(strAddress));
+    setWindowTitle(tr("[Connected] %1 - %2").arg(::titleString()).arg(strAddress));
 
     m_ui->stackedWidget->setCurrentWidget(m_ui->preloadPage);
     m_ui->statusLabel->setText(tr("Waiting device's configuration"));
@@ -198,13 +273,17 @@ void ControlPanelWidget::slotOnConnect()
     {
         makeDebugConfiguration(::debugControlsCount());
     }
+    else
+    {
+        m_ui->deviceAddressButton->show();
+    }
 }
 
 void ControlPanelWidget::makeDebugConfiguration(int buttonsCount)
 {
     Q_ASSERT(buttonsCount > 0);
 
-    m_ui->deviceIdentityFrame->show();
+    m_ui->deviceIdentityButton->show();
 
     m_controlIds.reserve(buttonsCount);
     for (quint8 i = 0; i < buttonsCount; ++i)
@@ -386,6 +465,21 @@ void ControlPanelWidget::slotSendDeviceIdentity()
 
 void ControlPanelWidget::slotOnDisconnect()
 {
+    const QString strAddress = QString("%1:%2")
+                               .arg(m_transport->currentSettings().address().toString())
+                               .arg(m_transport->currentSettings().port());
+    m_logger->info(tr("Disconnected from %1").arg(strAddress));
+    if (m_transport->errorString().isEmpty())
+    {
+        m_ui->statusLabel->setText(tr("Connection was cancelled"));
+    }
+    setWindowTitle(tr("[Disconnected] %1 - %2").arg(::titleString()).arg(strAddress));
+
+    setNotConnectedState();
+}
+
+void ControlPanelWidget::setNotConnectedState()
+{
     m_recvThread->quit();
     m_recvThread->wait();
 
@@ -397,19 +491,16 @@ void ControlPanelWidget::slotOnDisconnect()
 
     if (m_isDebugMode)
     {
-        m_ui->deviceIdentityFrame->hide();
+        m_ui->deviceIdentityButton->hide();
+    }
+    else
+    {
+        m_ui->deviceAddressButton->hide();
     }
 
     removeAllContols();
 
-    setWindowTitle(tr("[Disconneted] %1 - %2:%3")
-                   .arg(::titleString())
-                   .arg(m_transport->currentSettings().address().toString())
-                   .arg(m_transport->currentSettings().port()));
-
     m_ui->stackedWidget->setCurrentWidget(m_ui->preloadPage);
-    m_ui->statusLabel->setText(tr("Error connection: %1")
-                               .arg(m_transport->errorString()));
     m_ui->preloadImageLabel->hide();
     m_ui->breakButton->hide();
     m_ui->retryButton->show();
@@ -417,34 +508,36 @@ void ControlPanelWidget::slotOnDisconnect()
 
 void ControlPanelWidget::slotOnBytesReceive(const QByteArray& bytes)
 {
-    const QString str = tr("Received bytes size = %1: %2")
+    const QString str = tr("Received bytes (size %1): %2")
             .arg(bytes.size())
-            .arg(QString::fromLatin1(bytes.toHex()));
+            .arg(QString::fromLatin1(bytes.toHex()).toUpper());
+    m_logger->info(str);
 
-    QString log = m_ui->logTextEdit->toPlainText();
+    QString log = m_ui->incomingLogTextEdit->toPlainText();
     if (!log.isEmpty())
     {
         log += "\n";
     }
     log += str;
-    m_ui->logTextEdit->setPlainText(log);
-    m_ui->logTextEdit->verticalScrollBar()->setValue(m_ui->logTextEdit->verticalScrollBar()->maximum());
+    m_ui->incomingLogTextEdit->setPlainText(log);
+    m_ui->incomingLogTextEdit->verticalScrollBar()->setValue(m_ui->incomingLogTextEdit->verticalScrollBar()->maximum());
 }
 
 void ControlPanelWidget::slotOnBytesSend(const QByteArray& bytes)
 {
-    const QString str = tr("Sent bytes size = %1: %2")
+    const QString str = tr("Sent bytes (size %1): %2")
             .arg(bytes.size())
-            .arg(QString::fromLatin1(bytes.toHex()));
+            .arg(QString::fromLatin1(bytes.toHex()).toUpper());
+    m_logger->info(str);
 
-    QString log = m_ui->logTextEdit->toPlainText();
+    QString log = m_ui->outcomingLogTextEdit->toPlainText();
     if (!log.isEmpty())
     {
         log += "\n";
     }
     log += str;
-    m_ui->logTextEdit->setPlainText(log);
-    m_ui->logTextEdit->verticalScrollBar()->setValue(m_ui->logTextEdit->verticalScrollBar()->maximum());
+    m_ui->outcomingLogTextEdit->setPlainText(log);
+    m_ui->outcomingLogTextEdit->verticalScrollBar()->setValue(m_ui->outcomingLogTextEdit->verticalScrollBar()->maximum());
 }
 
 void ControlPanelWidget::slotSendMessage(const QSharedPointer<protocol::AbstractMessage>& message)
