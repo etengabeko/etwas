@@ -28,6 +28,8 @@ public:
     QString logFileName() const;
     void setLogFileName(const QString& fileName);
 
+    void hideLogOptions();
+
 private slots:
     void slotApply();
     void slotSelectFileName();

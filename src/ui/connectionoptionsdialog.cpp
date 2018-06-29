@@ -85,11 +85,16 @@ void ConnectionOptionsDialog::setLogFileName(const QString& fileName)
 
 void ConnectionOptionsDialog::slotSelectFileName()
 {
-    const QString fileName = QFileDialog::getSaveFileName(this,
+    const QString fileName = QFileDialog::getSaveFileName(nullptr,
                                                           tr("Select Log filename"),
                                                           QApplication::applicationDirPath());
     if (!fileName.isEmpty())
     {
         setLogFileName(fileName);
     }
+}
+
+void ConnectionOptionsDialog::hideLogOptions()
+{
+    m_ui->logfileGroupBox->hide();
 }

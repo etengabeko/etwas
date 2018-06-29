@@ -234,7 +234,18 @@ void ControlPanelWidget::slotBreakInitialization()
 
 void ControlPanelWidget::slotChangeDeviceAddress()
 {
-    // TODO
+    using protocol::outcoming::DeviceAddressMessage;
+
+    ConnectionOptionsDialog dlg;
+    dlg.hideLogOptions();
+    if (dlg.exec() == ConnectionOptionsDialog::Accepted)
+    {
+        DeviceAddressMessage* message = new DeviceAddressMessage();
+        message->setAddress(dlg.address().toString());
+        message->setPort(dlg.port());
+
+        slotSendMessage(QSharedPointer<protocol::AbstractMessage>(message));
+    }
 }
 
 void ControlPanelWidget::slotRetryInitialization()
@@ -671,6 +682,11 @@ void ControlPanelWidget::processMessage(const protocol::outcoming::Message& mess
         }
         break;
     case MessageType::DeviceAddress:
+        {
+            const DeviceAddressMessage& damsg = dynamic_cast<const DeviceAddressMessage&>(message);
+            qInfo().noquote() << tr("Receive request to change device address to %1:%2").arg(damsg.address()).arg(damsg.port());
+        }
+        break;
     case MessageType::ImagesData:
         qDebug().noquote() << "TODO: process message type" << static_cast<quint8>(message.type());
         break;
