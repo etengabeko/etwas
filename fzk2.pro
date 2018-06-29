@@ -66,7 +66,6 @@ HEADERS = \
     # ui
     $$PWD/src/ui/connectionoptionsdialog.h \
     $$PWD/src/ui/controlpanelwidget.h \
-    $$PWD/src/ui/createmessageswidget.h \
     $$PWD/src/ui/displaycontrolwidget.h \
     $$PWD/src/ui/displayoptionswidget.h \
     $$PWD/src/ui/mainwindow.h \
@@ -91,7 +90,6 @@ SOURCES = \
     # ui
     $$PWD/src/ui/connectionoptionsdialog.cpp \
     $$PWD/src/ui/controlpanelwidget.cpp \
-    $$PWD/src/ui/createmessageswidget.cpp \
     $$PWD/src/ui/displaycontrolwidget.cpp \
     $$PWD/src/ui/displayoptionswidget.cpp \
     $$PWD/src/ui/mainwindow.cpp \
@@ -102,7 +100,6 @@ SOURCES = \
 FORMS = \
     $$PWD/src/ui/connectionoptions.ui \
     $$PWD/src/ui/controlpanel.ui \
-    $$PWD/src/ui/createmessages.ui \
     $$PWD/src/ui/displaycontrol.ui \
     $$PWD/src/ui/displayoptions.ui
 
