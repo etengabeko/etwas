@@ -4,6 +4,7 @@
 #include <memory>
 
 #include <QHash>
+#include <QString>
 #include <QVector>
 
 #include <ui/subwindow.h>
@@ -108,11 +109,14 @@ private:
 private:
     Ui::ControlPanel* m_ui = nullptr;
     const bool m_isDebugMode;
-    std::unique_ptr<Logger> m_logger;
 
     QThread* m_recvThread = nullptr;
+    std::unique_ptr<Logger> m_logger;
 
-    std::unique_ptr<ioservice::Transport> m_transport;
+    QString m_currentAddress;
+    quint16 m_currentPort = 0;
+
+    ioservice::Transport* m_transport = nullptr;
     std::unique_ptr<ioservice::InputController> m_inCtrl;
     std::unique_ptr<ioservice::OutputController> m_outCtrl;
 

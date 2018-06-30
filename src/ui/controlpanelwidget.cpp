@@ -90,6 +90,7 @@ ControlPanelWidget::~ControlPanelWidget()
     emit subwindowClosed(m_optionsWidget);
 
     m_recvThread->quit();
+    m_transport = nullptr;
     m_recvThread->wait();
 
     delete m_recvThread;
@@ -97,7 +98,6 @@ ControlPanelWidget::~ControlPanelWidget()
 
     m_inCtrl.reset();
     m_outCtrl.reset();
-    m_transport.reset();
 
     removeAllContols();
 
@@ -108,21 +108,23 @@ ControlPanelWidget::~ControlPanelWidget()
 void ControlPanelWidget::closeEvent(QCloseEvent* event)
 {
     stopTransport();
-
-    const int kSleepDelayMsec = 10;
-    QThread::msleep(kSleepDelayMsec);
-    QApplication::processEvents();
-
     SubWindow::closeEvent(event);
 }
 
 void ControlPanelWidget::stopTransport()
 {
+    QApplication::setOverrideCursor(Qt::WaitCursor);
+
     if (m_transport != nullptr)
     {
         const int kMinDelayMsec = 1;
-        QTimer::singleShot(kMinDelayMsec, m_transport.get(), &ioservice::Transport::stop);
+        QTimer::singleShot(kMinDelayMsec, m_transport, &ioservice::Transport::stop);
+        QThread::msleep(10* kMinDelayMsec);
     }
+
+    QApplication::processEvents();
+
+    QApplication::restoreOverrideCursor();
 }
 
 void ControlPanelWidget::removeAllContols()
@@ -150,9 +152,18 @@ void ControlPanelWidget::initialize()
     m_ui->retryButton->hide();
 
     ConnectionOptionsDialog dlg(this);
+    if (!m_currentAddress.isEmpty())
+    {
+        dlg.setAddress(QHostAddress(m_currentAddress));
+    }
+    if (m_currentPort > 0)
+    {
+        dlg.setPort(m_currentPort);
+    }
     QString logFileName = (!m_ui->logFileNameLineEdit->text().isEmpty() ? m_ui->logFileNameLineEdit->text()
                                                                         : ::customLogFileName());
     dlg.setLogFileName(logFileName);
+
     if (dlg.exec() != ConnectionOptionsDialog::Accepted)
     {
         m_ui->statusLabel->setText(tr("Connection is not initialized"));
@@ -166,6 +177,9 @@ void ControlPanelWidget::initialize()
     m_ui->preloadImageLabel->show();
     m_ui->breakButton->show();
     m_ui->retryButton->hide();
+
+    m_currentAddress = dlg.address().toString();
+    m_currentPort = dlg.port();
 
     settings::Settings conf;
     conf.setAddress(dlg.address());
@@ -188,34 +202,37 @@ void ControlPanelWidget::initialize()
         m_ui->logFileNameLabel->hide();
     }
 
-    m_transport.reset(new Transport(conf));
+    m_transport = new Transport(conf);
     m_transport->moveToThread(m_recvThread);
 
-    m_outCtrl.reset(new OutputController(m_transport.get()));
-    m_inCtrl.reset(new InputController(m_transport.get(),
+    m_outCtrl.reset(new OutputController(m_transport));
+    m_inCtrl.reset(new InputController(m_transport,
                                        m_isDebugMode ? MessageDirection::Outcoming
                                                      : MessageDirection::Incoming));
 
-    QObject::connect(m_transport.get(), &Transport::received,
+    QObject::connect(m_transport, &Transport::received,
                      this, &ControlPanelWidget::slotOnBytesReceive);
-    QObject::connect(m_transport.get(), &Transport::sent,
+    QObject::connect(m_transport, &Transport::sent,
                      this, &ControlPanelWidget::slotOnBytesSend);
 
     QObject::connect(m_inCtrl.get(), &InputController::messageReceived,
                      this, &ControlPanelWidget::slotReceiveMessage);
 
     QObject::connect(m_recvThread, &QThread::started,
-                     m_transport.get(), &Transport::start);
-    QObject::connect(m_transport.get(), &Transport::connected,
+                     m_transport, &Transport::start);
+    QObject::connect(m_recvThread, &QThread::finished,
+                     m_transport, &Transport::deleteLater);
+
+    QObject::connect(m_transport, &Transport::connected,
                      this, &ControlPanelWidget::slotOnConnect);
-    QObject::connect(m_transport.get(), &Transport::disconnected,
+    QObject::connect(m_transport, &Transport::disconnected,
                      this, &ControlPanelWidget::slotOnDisconnect);
-    QObject::connect(m_transport.get(), &Transport::error,
+    QObject::connect(m_transport, &Transport::error,
                      this, &ControlPanelWidget::slotOnError);
 
     const QString strAddress = QString("%1:%2")
-            .arg(conf.address().toString())
-            .arg(conf.port());
+                               .arg(m_currentAddress)
+                               .arg(m_currentPort);
     m_ui->statusLabel->setText(tr("Connecting to host %1").arg(strAddress));
     m_logger->info(tr("Try connect to %1").arg(strAddress));
 
@@ -237,7 +254,16 @@ void ControlPanelWidget::slotChangeDeviceAddress()
     using protocol::outcoming::DeviceAddressMessage;
 
     ConnectionOptionsDialog dlg;
+    if (!m_currentAddress.isEmpty())
+    {
+        dlg.setAddress(QHostAddress(m_currentAddress));
+    }
+    if (m_currentPort > 0)
+    {
+        dlg.setPort(m_currentPort);
+    }
     dlg.hideLogOptions();
+
     if (dlg.exec() == ConnectionOptionsDialog::Accepted)
     {
         DeviceAddressMessage* message = new DeviceAddressMessage();
@@ -268,9 +294,8 @@ void ControlPanelWidget::slotOnError()
 void ControlPanelWidget::slotOnConnect()
 {
     const QString strAddress = QString("%1:%2")
-                               .arg(m_transport->currentSettings().address().toString())
-                               .arg(m_transport->currentSettings().port());
-
+                               .arg(m_currentAddress)
+                               .arg(m_currentPort);
     m_logger->info(tr("Connected to %1").arg(strAddress));
     setWindowTitle(tr("[Connected] %1 - %2").arg(::titleString()).arg(strAddress));
 
@@ -477,14 +502,16 @@ void ControlPanelWidget::slotSendDeviceIdentity()
 void ControlPanelWidget::slotOnDisconnect()
 {
     const QString strAddress = QString("%1:%2")
-                               .arg(m_transport->currentSettings().address().toString())
-                               .arg(m_transport->currentSettings().port());
+                               .arg(m_currentAddress)
+                               .arg(m_currentPort);
     m_logger->info(tr("Disconnected from %1").arg(strAddress));
-    if (m_transport->errorString().isEmpty())
+    setWindowTitle(tr("[Disconnected] %1 - %2").arg(::titleString()).arg(strAddress));
+
+    if (   m_transport != nullptr
+        && m_transport->errorString().isEmpty())
     {
         m_ui->statusLabel->setText(tr("Connection was cancelled"));
     }
-    setWindowTitle(tr("[Disconnected] %1 - %2").arg(::titleString()).arg(strAddress));
 
     setNotConnectedState();
 }
@@ -492,6 +519,7 @@ void ControlPanelWidget::slotOnDisconnect()
 void ControlPanelWidget::setNotConnectedState()
 {
     m_recvThread->quit();
+    m_transport = nullptr;
     m_recvThread->wait();
 
     if (m_optionsWidget != nullptr)
