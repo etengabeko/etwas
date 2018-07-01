@@ -1,12 +1,8 @@
 #include "imagestoragewidget.h"
 #include "ui_imagestorage.h"
 
-#include <QAction>
 #include <QDebug>
-#include <QHBoxLayout>
 #include <QMenu>
-#include <QToolBar>
-#include <QVBoxLayout>
 
 #include "storage/imagestorage.h"
 
@@ -20,25 +16,12 @@ ImageStorageWidget::ImageStorageWidget(storage::ImageStorage* storage,
 
     m_ui->setupUi(this);
 
-    QVBoxLayout* mainLayout = qobject_cast<QVBoxLayout*>(layout());
-    if (mainLayout != nullptr)
-    {
-        QHBoxLayout* toolbarLayout = new QHBoxLayout();
-        mainLayout->insertLayout(0, toolbarLayout);
-        QToolBar* tbar = new QToolBar(this);
-        toolbarLayout->addWidget(tbar);
-
-        m_addAction = tbar->addAction(tr("Load"));
-        m_rmAction = tbar->addAction(tr("Remove"));
-
-        QObject::connect(m_addAction, &QAction::triggered,
-                         this, &ImageStorageWidget::slotAddImages);
-        QObject::connect(m_rmAction, &QAction::triggered,
-                         this, &ImageStorageWidget::slotRemoveImages);
-    }
-
-    QObject::connect(m_ui->applyButton, &QPushButton::clicked,
-                     this, &ImageStorageWidget::slotApply);
+    QObject::connect(m_ui->addButton, &QToolButton::clicked,
+                     this, &ImageStorageWidget::slotAddImages);
+    QObject::connect(m_ui->removeButton, &QToolButton::clicked,
+                     this, &ImageStorageWidget::slotRemoveImages);
+    QObject::connect(m_ui->selectButton, &QPushButton::clicked,
+                     this, &ImageStorageWidget::slotSelect);
     QObject::connect(m_ui->cancelButton, &QPushButton::clicked,
                      this, &ImageStorageWidget::close);
 }
@@ -49,10 +32,10 @@ ImageStorageWidget::~ImageStorageWidget()
     m_ui = nullptr;
 }
 
-void ImageStorageWidget::slotApply()
+void ImageStorageWidget::slotSelect()
 {
     // TODO
-    qDebug() << "slotApply()";
+    qDebug() << "slotSelect()";
 }
 
 void ImageStorageWidget::slotAddImages()

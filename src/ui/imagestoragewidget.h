@@ -3,8 +3,6 @@
 
 #include <ui/subwindow.h>
 
-class QAction;
-
 namespace storage
 {
 class ImageStorage;
@@ -24,8 +22,11 @@ public:
                        QWidget* parent = nullptr);
     ~ImageStorageWidget();
 
+signals:
+    void imageSelected(quint8 imageIndex);
+
 private slots:
-    void slotApply();
+    void slotSelect();
     void slotAddImages();
     void slotRemoveImages();
 
@@ -35,10 +36,8 @@ private:
 
 private:
     Ui::ImageStorage* m_ui;
-    storage::ImageStorage* m_storage;
 
-    QAction* m_addAction = nullptr;
-    QAction* m_rmAction = nullptr;
+    storage::ImageStorage* m_storage;
 
 };
 

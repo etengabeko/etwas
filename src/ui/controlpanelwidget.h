@@ -58,6 +58,7 @@ public:
 
 signals:
     void subwindowCreated(SubWindow* child);
+    void subwindowRaised(SubWindow* child);
     void subwindowClosed(SubWindow* child);
 
 private slots:
@@ -75,7 +76,9 @@ private slots:
     void slotSendMessage(const QSharedPointer<protocol::AbstractMessage>& message);
 
     void slotChangeActiveControl(bool enabled);
+    void slotApplySelectedImage(quint8 imageIndex);
     void slotOptionsClose();
+    void slotImagesClose();
 
     void slotSendDeviceIdentity();
     void slotSendImagesData();
@@ -88,6 +91,8 @@ private slots:
     void slotActiveControlTimeOnChange(int msec);
     void slotActiveControlTimeOffChange(int msec);
     void slotActiveControlBrightChange(int level);
+    void slotActiveControlImageFirstSelect();
+    void slotActiveControlImageSecondSelect();
 
 private:
     void makeDebugConfiguration(int buttonsCount);
@@ -98,12 +103,15 @@ private:
     void initConnectionsForControl(DisplayControlWidget* control);
     void removeAllContols();
 
+    void showImagesWidget();
+
     void processMessage(const protocol::incoming::Message& message);
     void processMessage(const protocol::outcoming::Message& message);
 
     void applyButtonsStates(const QVector<protocol::ButtonState>& states);
 
     void createDisplayOptionsMessage();
+    void createDisplayImagesMessage();
     void createBlinkOptionsMessage();
     void createBrightOptionsMessage();
     quint8 findActiveControlId(bool* ok) const;
@@ -135,6 +143,14 @@ private:
     DisplayOptionsWidget* m_optionsWidget = nullptr;
     DisplayControlWidget* m_activeControl = nullptr;
     ImageStorageWidget*   m_imagesWidget  = nullptr;
+
+    enum class SelectedImage
+    {
+        First,
+        Second
+    };
+
+    SelectedImage m_lastSelected = SelectedImage::First;
 
 };
 

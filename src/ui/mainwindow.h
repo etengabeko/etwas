@@ -31,6 +31,7 @@ private slots:
     void slotNewControlPanelDebug();
 
     void slotAddSubWindow(SubWindow* subwindow);
+    void slotRaiseSubWindow(SubWindow* subwindow);
     void slotRemoveSubWindow(SubWindow* subwindow);
     void slotCloseSubWindow();
 

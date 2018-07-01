@@ -29,6 +29,7 @@
 #include "ui/connectionoptionsdialog.h"
 #include "ui/displaycontrolwidget.h"
 #include "ui/displayoptionswidget.h"
+#include "ui/imagestoragewidget.h"
 
 namespace
 {
@@ -99,6 +100,7 @@ ControlPanelWidget::ControlPanelWidget(bool isDebugMode,
 ControlPanelWidget::~ControlPanelWidget()
 {
     emit subwindowClosed(m_optionsWidget);
+    emit subwindowClosed(m_imagesWidget);
 
     m_recvThread->quit();
     m_transport = nullptr;
@@ -434,6 +436,8 @@ void ControlPanelWidget::slotChangeActiveControl(bool enabled)
             m_optionsWidget = new DisplayOptionsWidget(m_imgStorage.get());
             emit subwindowCreated(m_optionsWidget);
 
+            QObject::connect(m_imgStorage.get(), &storage::ImageStorage::imagesChanged,
+                             m_optionsWidget, &DisplayOptionsWidget::reloadImages);
             QObject::connect(m_optionsWidget, &DisplayOptionsWidget::closed,
                              this, &ControlPanelWidget::slotOptionsClose);
             QObject::connect(m_optionsWidget, &DisplayOptionsWidget::imageFirstEnabled,
@@ -448,6 +452,10 @@ void ControlPanelWidget::slotChangeActiveControl(bool enabled)
                              this, &ControlPanelWidget::slotActiveControlTimeOffChange);
             QObject::connect(m_optionsWidget, &DisplayOptionsWidget::brightChanged,
                              this, &ControlPanelWidget::slotActiveControlBrightChange);
+            QObject::connect(m_optionsWidget, &DisplayOptionsWidget::imageFirstSelected,
+                             this, &ControlPanelWidget::slotActiveControlImageFirstSelect);
+            QObject::connect(m_optionsWidget, &DisplayOptionsWidget::imageSecondSelected,
+                             this, &ControlPanelWidget::slotActiveControlImageSecondSelect);
         }
 
         m_optionsWidget->setFirstImage(m_activeControl->firstImageIndex());
@@ -472,6 +480,43 @@ void ControlPanelWidget::slotChangeActiveControl(bool enabled)
     }
 }
 
+void ControlPanelWidget::slotApplySelectedImage(quint8 imageIndex)
+{
+    if (m_activeControl != nullptr)
+    {
+        switch (m_lastSelected)
+        {
+        case SelectedImage::First:
+            m_activeControl->setFirstImage(imageIndex);
+            break;
+        case SelectedImage::Second:
+            m_activeControl->setSecondImage(imageIndex);
+            break;
+        default:
+            break;
+        }
+    }
+
+    if (m_optionsWidget != nullptr)
+    {
+        switch (m_lastSelected)
+        {
+        case SelectedImage::First:
+            m_optionsWidget->setFirstImage(imageIndex);
+            break;
+        case SelectedImage::Second:
+            m_optionsWidget->setSecondImage(imageIndex);
+            break;
+        default:
+            break;
+        }
+    }
+
+    createDisplayImagesMessage();
+
+    m_imagesWidget->close();
+}
+
 void ControlPanelWidget::slotOptionsClose()
 {
     if (m_activeControl != nullptr)
@@ -479,6 +524,12 @@ void ControlPanelWidget::slotOptionsClose()
         m_activeControl->setActive(false);
         m_activeControl = nullptr;
     }
+}
+
+void ControlPanelWidget::slotImagesClose()
+{
+    emit subwindowClosed(m_imagesWidget);
+    m_imagesWidget = nullptr;
 }
 
 void ControlPanelWidget::slotChangeButtonsState(bool enabled)
@@ -822,6 +873,38 @@ void ControlPanelWidget::slotActiveControlImageSecondChange(bool enabled)
     }
 }
 
+void ControlPanelWidget::slotActiveControlImageFirstSelect()
+{
+    m_lastSelected = SelectedImage::First;
+    showImagesWidget();
+}
+
+void ControlPanelWidget::slotActiveControlImageSecondSelect()
+{
+    m_lastSelected = SelectedImage::Second;
+    showImagesWidget();
+}
+
+void ControlPanelWidget::showImagesWidget()
+{
+    if (m_imagesWidget == nullptr)
+    {
+        m_imagesWidget = new ImageStorageWidget(m_imgStorage.get());
+        emit subwindowCreated(m_imagesWidget);
+
+        QObject::connect(m_imagesWidget, &ImageStorageWidget::closed,
+                         this, &ControlPanelWidget::slotImagesClose);
+        QObject::connect(m_imagesWidget, &ImageStorageWidget::imageSelected,
+                         this, &ControlPanelWidget::slotApplySelectedImage);
+
+        m_imagesWidget->show();
+    }
+    else
+    {
+        emit subwindowRaised(m_imagesWidget);
+    }
+}
+
 void ControlPanelWidget::slotActiveControlBlinkingChange(bool enabled)
 {
     Q_CHECK_PTR(m_activeControl);
@@ -916,6 +999,29 @@ void ControlPanelWidget::createDisplayOptionsMessage()
         else
         {
             message->setImageSelection(ImageSelection::Nothing);
+        }
+
+        slotSendMessage(QSharedPointer<protocol::AbstractMessage>(message));
+    }
+}
+
+void ControlPanelWidget::createDisplayImagesMessage()
+{
+    using protocol::outcoming::DisplayImagesMessage;
+
+    bool ok = false;
+    const quint8 controlId = findActiveControlId(&ok);
+    if (ok)
+    {
+        DisplayImagesMessage* message = new DisplayImagesMessage();
+        message->setDisplayNumber(controlId);
+        if (m_activeControl->firstImageIndex() != storage::ImageStorage::kInvalidIndex)
+        {
+            message->setFirstImageNumber(static_cast<quint8>(m_activeControl->firstImageIndex()));
+        }
+        if (m_activeControl->secondImageIndex() != storage::ImageStorage::kInvalidIndex)
+        {
+            message->setSecondImageNumber(static_cast<quint8>(m_activeControl->secondImageIndex()));
         }
 
         slotSendMessage(QSharedPointer<protocol::AbstractMessage>(message));

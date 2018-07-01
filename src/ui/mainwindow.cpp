@@ -71,6 +71,8 @@ void MainWindow::createNewControlPanel(MainWindow::Mode mode)
                      this, &MainWindow::slotCloseSubWindow);
     QObject::connect(control, &ControlPanelWidget::subwindowCreated,
                      this, &MainWindow::slotAddSubWindow);
+    QObject::connect(control, &ControlPanelWidget::subwindowRaised,
+                     this, &MainWindow::slotRaiseSubWindow);
     QObject::connect(control, &ControlPanelWidget::subwindowClosed,
                      this, &MainWindow::slotRemoveSubWindow);
 
@@ -85,6 +87,16 @@ void MainWindow::slotAddSubWindow(SubWindow* subwindow)
     {
         QMdiSubWindow* mdi = m_central->addSubWindow(subwindow);
         m_subwindows.insert(subwindow, mdi);
+    }
+}
+
+void MainWindow::slotRaiseSubWindow(SubWindow* subwindow)
+{
+    if (   subwindow != nullptr
+        && m_subwindows.contains(subwindow))
+    {
+        QMdiSubWindow* mdi = m_subwindows[subwindow];
+        m_central->setActiveSubWindow(mdi);
     }
 }
 
