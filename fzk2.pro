@@ -63,11 +63,14 @@ HEADERS = \
     $$PWD/src/ioservice/inputcontroller_private.h \
     $$PWD/src/ioservice/outputcontroller.h \
     $$PWD/src/ioservice/outputcontroller_private.h \
+    # storage
+    $$PWD/src/storage/imagestorage.h \
     # ui
     $$PWD/src/ui/connectionoptionsdialog.h \
     $$PWD/src/ui/controlpanelwidget.h \
     $$PWD/src/ui/displaycontrolwidget.h \
     $$PWD/src/ui/displayoptionswidget.h \
+    $$PWD/src/ui/imagestoragewidget.h \
     $$PWD/src/ui/mainwindow.h \
     $$PWD/src/ui/subwindow.h
 
@@ -87,11 +90,14 @@ SOURCES = \
     $$PWD/src/ioservice/inputcontroller_private.cpp \
     $$PWD/src/ioservice/outputcontroller.cpp \
     $$PWD/src/ioservice/outputcontroller_private.cpp \
+    # storage
+    $$PWD/src/storage/imagestorage.cpp \
     # ui
     $$PWD/src/ui/connectionoptionsdialog.cpp \
     $$PWD/src/ui/controlpanelwidget.cpp \
     $$PWD/src/ui/displaycontrolwidget.cpp \
     $$PWD/src/ui/displayoptionswidget.cpp \
+    $$PWD/src/ui/imagestoragewidget.cpp \
     $$PWD/src/ui/mainwindow.cpp \
     $$PWD/src/ui/subwindow.cpp \
     # main
@@ -101,7 +107,8 @@ FORMS = \
     $$PWD/src/ui/connectionoptions.ui \
     $$PWD/src/ui/controlpanel.ui \
     $$PWD/src/ui/displaycontrol.ui \
-    $$PWD/src/ui/displayoptions.ui
+    $$PWD/src/ui/displayoptions.ui \
+    $$PWD/src/ui/imagestorage.ui
 
 RESOURCES = \
     $$PWD/src/resources.qrc

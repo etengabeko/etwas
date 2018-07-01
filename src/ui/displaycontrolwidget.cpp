@@ -7,6 +7,7 @@
 #include <QTimer>
 
 #include "protocol/types.h"
+#include "storage/imagestorage.h"
 
 namespace
 {
@@ -16,13 +17,20 @@ qreal opaqueLevel() { return 1.0; }
 
 }
 
-DisplayControlWidget::DisplayControlWidget(bool isDebugMode, QWidget* parent) :
+DisplayControlWidget::DisplayControlWidget(const storage::ImageStorage* const storage,
+                                           bool isDebugMode,
+                                           QWidget* parent) :
     QWidget(parent),
     m_ui(new Ui::DisplayControl()),
+    m_imgStorage(storage),
     m_isDebugMode(isDebugMode),
+    m_firstImageIndex(storage::ImageStorage::kInvalidIndex),
+    m_secondImageIndex(storage::ImageStorage::kInvalidIndex),
     m_timer(new QTimer(this)),
     m_displayLabel(new QLabel(this))
 {
+    Q_ASSERT(m_imgStorage);
+
     m_ui->setupUi(this);
 
     if (m_ui->displayButton->layout() == nullptr)
@@ -67,9 +75,16 @@ bool DisplayControlWidget::isFirstImageEnabled() const
     return !m_firstImagePixmap.isNull();
 }
 
-const QString& DisplayControlWidget::firstImage() const
+void DisplayControlWidget::setFirstImageEnable(bool enabled)
 {
-    return m_firstImage;
+    if (enabled)
+    {
+        reloadImage(ImageNumber::First);
+    }
+    else
+    {
+        resetFirstImage();
+    }
 }
 
 bool DisplayControlWidget::isSecondImageEnabled() const
@@ -77,9 +92,16 @@ bool DisplayControlWidget::isSecondImageEnabled() const
     return !m_secondImagePixmap.isNull();
 }
 
-const QString& DisplayControlWidget::secondImage() const
+void DisplayControlWidget::setSecondImageEnable(bool enabled)
 {
-    return m_secondImage;
+    if (enabled)
+    {
+        reloadImage(ImageNumber::Second);
+    }
+    else
+    {
+        resetSecondImage();
+    }
 }
 
 void DisplayControlWidget::setCurrentImage(ImageNumber num)
@@ -116,16 +138,48 @@ void DisplayControlWidget::resetImage(ImageNumber num)
     setImage(num, QPixmap());
 }
 
-void DisplayControlWidget::setFirstImage(const QString& pixmapFileName)
+int DisplayControlWidget::firstImageIndex() const
 {
-    m_firstImage = pixmapFileName;
-    setImage(ImageNumber::First, QPixmap(pixmapFileName));
+    return m_firstImageIndex;
 }
 
-void DisplayControlWidget::setSecondImage(const QString& pixmapFileName)
+int DisplayControlWidget::secondImageIndex() const
 {
-    m_secondImage = pixmapFileName;
-    setImage(ImageNumber::Second, QPixmap(pixmapFileName));
+    return m_secondImageIndex;
+}
+
+void DisplayControlWidget::setFirstImage(quint8 imageIndex)
+{
+    m_firstImageIndex = static_cast<int>(imageIndex);
+    reloadImage(ImageNumber::First);
+}
+
+void DisplayControlWidget::setSecondImage(quint8 imageIndex)
+{
+    m_secondImageIndex = static_cast<int>(imageIndex);
+    reloadImage(ImageNumber::Second);
+}
+
+void DisplayControlWidget::reloadImage(ImageNumber num)
+{
+    const int current = (num == ImageNumber::First ? m_firstImageIndex
+                                                   : m_secondImageIndex);
+
+    if (   current != storage::ImageStorage::kInvalidIndex
+        && m_imgStorage->availableImages().contains(static_cast<quint8>(current)))
+    {
+        setImage(num, m_imgStorage->imageByIndex(static_cast<quint8>(current)));
+    }
+    else
+    {
+        resetImage(num);
+    }
+}
+
+void DisplayControlWidget::reloadImages()
+{
+    reloadImage(ImageNumber::First);
+    reloadImage(ImageNumber::Second);
 }
 
 void DisplayControlWidget::setImage(ImageNumber num, const QPixmap& img)

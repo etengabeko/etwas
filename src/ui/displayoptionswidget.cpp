@@ -6,6 +6,7 @@
 #include <QString>
 
 #include "protocol/types.h"
+#include "storage/imagestorage.h"
 
 namespace
 {
@@ -15,10 +16,16 @@ qreal opaqueLevel() { return 1.0; }
 
 }
 
-DisplayOptionsWidget::DisplayOptionsWidget(QWidget* parent) :
+DisplayOptionsWidget::DisplayOptionsWidget(const storage::ImageStorage* const storage,
+                                           QWidget* parent) :
     SubWindow(parent),
-    m_ui(new Ui::DisplayOptions())
+    m_ui(new Ui::DisplayOptions()),
+    m_imgStorage(storage),
+    m_firstImageIndex(storage::ImageStorage::kInvalidIndex),
+    m_secondImageIndex(storage::ImageStorage::kInvalidIndex)
 {
+    Q_ASSERT(m_imgStorage);
+
     m_ui->setupUi(this);
 
     m_ui->brightSlider->setRange(static_cast<int>(protocol::BrightLevel::Min),
@@ -31,6 +38,10 @@ DisplayOptionsWidget::DisplayOptionsWidget(QWidget* parent) :
     effect->setOpacity(::opaqueLevel());
     m_ui->imageSecondLabel->setGraphicsEffect(effect);
 
+    QObject::connect(m_ui->imageFirstButton, &QPushButton::clicked,
+                     this, &DisplayOptionsWidget::imageFirstSelected);
+    QObject::connect(m_ui->imageSecondButton, &QPushButton::clicked,
+                     this, &DisplayOptionsWidget::imageSecondSelected);
     QObject::connect(m_ui->imageFirstCheckBox, &QCheckBox::toggled,
                      this, &DisplayOptionsWidget::imageFirstEnabled);
     QObject::connect(m_ui->imageSecondCheckBox, &QCheckBox::toggled,
@@ -53,19 +64,42 @@ DisplayOptionsWidget::~DisplayOptionsWidget()
     m_ui = nullptr;
 }
 
-void DisplayOptionsWidget::setFirstImage(const QString& pixmapFileName)
+void DisplayOptionsWidget::reloadImages()
 {
-    m_ui->imageFirstLabel->setPixmap(QPixmap(pixmapFileName));
+    reloadImage(m_firstImageIndex, m_ui->imageFirstLabel);
+    reloadImage(m_secondImageIndex, m_ui->imageSecondLabel);
+}
+
+void DisplayOptionsWidget::setFirstImage(int imageIndex)
+{
+    m_firstImageIndex = imageIndex;
+    reloadImage(m_firstImageIndex, m_ui->imageFirstLabel);
+}
+
+void DisplayOptionsWidget::setSecondImage(int imageIndex)
+{
+    m_secondImageIndex = imageIndex;
+    reloadImage(m_secondImageIndex, m_ui->imageSecondLabel);
+}
+
+void DisplayOptionsWidget::reloadImage(int imageIndex, QLabel* dest)
+{
+    Q_CHECK_PTR(dest);
+
+    if (   imageIndex != storage::ImageStorage::kInvalidIndex
+        && m_imgStorage->availableImages().contains(static_cast<quint8>(imageIndex)))
+    {
+        dest->setPixmap(QPixmap(m_imgStorage->imageByIndex(static_cast<quint8>(imageIndex))));
+    }
+    else
+    {
+        dest->setPixmap(QPixmap());
+    }
 }
 
 void DisplayOptionsWidget::setFirstImageEnabled(bool enabled)
 {
     m_ui->imageFirstCheckBox->setChecked(enabled);
-}
-
-void DisplayOptionsWidget::setSecondImage(const QString& pixmapFileName)
-{
-    m_ui->imageSecondLabel->setPixmap(QPixmap(pixmapFileName));
 }
 
 void DisplayOptionsWidget::setSecondImageEnabled(bool enabled)

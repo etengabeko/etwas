@@ -1,11 +1,11 @@
 TEMPLATE = app
-PROJECT = display-control
+PROJECT = convert-pixmap
 TARGET = $$PROJECT
 
 QT = \
     core \
     gui \
-    widgets
+    testlib
 
 CONFIG += warn_on
 
@@ -22,7 +22,6 @@ else {
 BUILD_DIR = $$PWD/build
 OBJECTS_DIR = $$BUILD_DIR/obj
 MOC_DIR = $$BUILD_DIR/moc
-UI_DIR = $$BUILD_DIR/ui
 RCC_DIR = $$BUILD_DIR/rcc
 DESTDIR = $$BUILD_DIR/sbin
 
@@ -37,10 +36,8 @@ ROOT_PROJECT_SRC_DIR = $$PWD/../../src
 INCLUDEPATH += $$ROOT_PROJECT_SRC_DIR
 
 ROOT_PROJECT_HEADERS = \
-    $$ROOT_PROJECT_SRC_DIR/storage/imagestorage.h \
-    $$ROOT_PROJECT_SRC_DIR/ui/displaycontrolwidget.h \
-    $$ROOT_PROJECT_SRC_DIR/ui/displayoptionswidget.h \
-    $$ROOT_PROJECT_SRC_DIR/ui/subwindow.h
+    # storage
+    $$ROOT_PROJECT_SRC_DIR/storage/imagestorage.h
 
 HEADERS = \
     $$ROOT_PROJECT_HEADERS
@@ -48,15 +45,8 @@ HEADERS = \
 SOURCES = \
     # root project
     $$ROOT_PROJECT_SRC_DIR/storage/imagestorage.cpp \
-    $$ROOT_PROJECT_SRC_DIR/ui/displaycontrolwidget.cpp \
-    $$ROOT_PROJECT_SRC_DIR/ui/displayoptionswidget.cpp \
-    $$ROOT_PROJECT_SRC_DIR/ui/subwindow.cpp \
     # main
     $$PWD/src/main.cpp
-
-FORMS = \
-    $$ROOT_PROJECT_SRC_DIR/ui/displaycontrol.ui \
-    $$ROOT_PROJECT_SRC_DIR/ui/displayoptions.ui
 
 RESOURCES = \
     $$PWD/src/resources.qrc

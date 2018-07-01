@@ -3,7 +3,12 @@
 
 #include <ui/subwindow.h>
 
-class QString;
+class QLabel;
+
+namespace storage
+{
+class ImageStorage;
+} // storage
 
 namespace Ui
 {
@@ -15,13 +20,14 @@ class DisplayOptionsWidget : public SubWindow
     Q_OBJECT
 
 public:
-    explicit DisplayOptionsWidget(QWidget* parent = nullptr);
+    explicit DisplayOptionsWidget(const storage::ImageStorage* const storage,
+                                  QWidget* parent = nullptr);
     ~DisplayOptionsWidget();
 
-    void setFirstImage(const QString& pixmapFileName);
+    void setFirstImage(int imageIndex);
     void setFirstImageEnabled(bool enabled);
 
-    void setSecondImage(const QString& pixmapFileName);
+    void setSecondImage(int imageIndex);
     void setSecondImageEnabled(bool enabled);
 
     void setBlinkingEnabled(bool enabled);
@@ -41,11 +47,25 @@ signals:
 
     void brightChanged(int level);
 
+    void imageFirstSelected();
+    void imageSecondSelected();
+
+public slots:
+    void reloadImages();
+
 private slots:
     void slotChangeBrightness(int level);
 
 private:
+    void reloadImage(int imageIndex, QLabel* dest);
+
+private:
     Ui::DisplayOptions* m_ui = nullptr;
+
+    const storage::ImageStorage* const m_imgStorage;
+
+    int m_firstImageIndex;
+    int m_secondImageIndex;
 
 };
 

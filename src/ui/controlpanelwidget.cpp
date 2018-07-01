@@ -14,6 +14,7 @@
 #include <QMovie>
 #include <QScrollBar>
 #include <QSharedPointer>
+#include <QTemporaryFile>
 #include <QThread>
 #include <QTimer>
 
@@ -24,6 +25,7 @@
 #include "protocol/protocol.h"
 #include "protocol/types.h"
 #include "settings/settings.h"
+#include "storage/imagestorage.h"
 #include "ui/connectionoptionsdialog.h"
 #include "ui/displaycontrolwidget.h"
 #include "ui/displayoptionswidget.h"
@@ -32,6 +34,12 @@ namespace
 {
 
 int firmwareVersion() { return 0x02; }
+const QSize& buttonImageSize()
+{
+    static const QSize size(64, 48);
+    return size;
+}
+
 int controlsGridColumnCount() { return 3; } // TODO
 quint8 debugControlsCount() { return 9; }
 
@@ -52,7 +60,8 @@ ControlPanelWidget::ControlPanelWidget(bool isDebugMode,
     SubWindow(parent),
     m_ui(new Ui::ControlPanel()),
     m_isDebugMode(isDebugMode),
-    m_recvThread(new QThread())
+    m_recvThread(new QThread()),
+    m_imgStorage(new storage::ImageStorage())
 {
     m_ui->setupUi(this);
 
@@ -83,6 +92,8 @@ ControlPanelWidget::ControlPanelWidget(bool isDebugMode,
                      this, &ControlPanelWidget::slotSendDeviceIdentity);
     QObject::connect(m_ui->deviceAddressButton, &QPushButton::clicked,
                      this, &ControlPanelWidget::slotChangeDeviceAddress);
+    QObject::connect(m_imgStorage.get(), &storage::ImageStorage::imagesChanged,
+                     this, &ControlPanelWidget::slotSendImagesData);
 }
 
 ControlPanelWidget::~ControlPanelWidget()
@@ -369,7 +380,8 @@ void ControlPanelWidget::createControl(quint8 controlId, int row, int column)
 {
     if (!m_controlWidgets.contains(controlId))
     {
-        DisplayControlWidget* wgt = new DisplayControlWidget(m_isDebugMode);
+        DisplayControlWidget* wgt = new DisplayControlWidget(m_imgStorage.get(),
+                                                             m_isDebugMode);
         m_controlWidgets.insert(controlId, wgt);
         initConnectionsForControl(wgt);
 
@@ -384,6 +396,9 @@ void ControlPanelWidget::createControl(quint8 controlId, int row, int column)
 void ControlPanelWidget::initConnectionsForControl(DisplayControlWidget* control)
 {
     Q_CHECK_PTR(control);
+
+    QObject::connect(m_imgStorage.get(), &storage::ImageStorage::imagesChanged,
+                     control, &DisplayControlWidget::reloadImages);
 
     if (m_isDebugMode)
     {
@@ -416,7 +431,7 @@ void ControlPanelWidget::slotChangeActiveControl(bool enabled)
     {
         if (m_optionsWidget == nullptr)
         {
-            m_optionsWidget = new DisplayOptionsWidget();
+            m_optionsWidget = new DisplayOptionsWidget(m_imgStorage.get());
             emit subwindowCreated(m_optionsWidget);
 
             QObject::connect(m_optionsWidget, &DisplayOptionsWidget::closed,
@@ -435,9 +450,9 @@ void ControlPanelWidget::slotChangeActiveControl(bool enabled)
                              this, &ControlPanelWidget::slotActiveControlBrightChange);
         }
 
-        m_optionsWidget->setFirstImage(m_activeControl->firstImage());
+        m_optionsWidget->setFirstImage(m_activeControl->firstImageIndex());
         m_optionsWidget->setFirstImageEnabled(m_activeControl->isFirstImageEnabled());
-        m_optionsWidget->setSecondImage(m_activeControl->secondImage());
+        m_optionsWidget->setSecondImage(m_activeControl->secondImageIndex());
         m_optionsWidget->setSecondImageEnabled(m_activeControl->isSecondImageEnabled());
         m_optionsWidget->setBlinkingEnabled(m_activeControl->isBlinkingEnabled());
         m_optionsWidget->setTimeOn(m_activeControl->timeOn());
@@ -482,21 +497,47 @@ void ControlPanelWidget::slotChangeButtonsState(bool enabled)
         states.append(control->isActive() ? ButtonState::On
                                           : ButtonState::Off);
     }
-    ButtonsStateMessage* msg = new ButtonsStateMessage();
-    msg->setButtonsStates(std::move(states));
+    ButtonsStateMessage* message = new ButtonsStateMessage();
+    message->setButtonsStates(std::move(states));
 
-    slotSendMessage(QSharedPointer<protocol::AbstractMessage>(msg));
+    slotSendMessage(QSharedPointer<protocol::AbstractMessage>(message));
 }
 
 void ControlPanelWidget::slotSendDeviceIdentity()
 {
     using protocol::incoming::DeviceIdentityMessage;
 
-    DeviceIdentityMessage* msg = new DeviceIdentityMessage();
-    msg->setFirmwareVersion(static_cast<quint8>(::firmwareVersion()));
-    msg->setButtonsNumbers(m_controlIds);
+    DeviceIdentityMessage* message = new DeviceIdentityMessage();
+    message->setFirmwareVersion(static_cast<quint8>(::firmwareVersion()));
+    message->setButtonsNumbers(m_controlIds);
 
-    slotSendMessage(QSharedPointer<protocol::AbstractMessage>(msg));
+    slotSendMessage(QSharedPointer<protocol::AbstractMessage>(message));
+}
+
+void ControlPanelWidget::slotSendImagesData()
+{
+    using protocol::outcoming::ImageDataMessage;
+
+    QVector<QSharedPointer<protocol::AbstractMessage>> forSend;
+    forSend.reserve(m_imgStorage->availableImages().size());
+
+    QMapIterator<quint8, QString> it(m_imgStorage->availableImages());
+    while (it.hasNext())
+    {
+        const quint8 imageNumber = it.peekNext().key();
+        const QString& imageFileName = it.next().value();
+
+        ImageDataMessage* message = new ImageDataMessage();
+        message->setImageNumber(imageNumber);
+        message->setImageColors(storage::ImageStorage::pixmapToColors(QPixmap(imageFileName)));
+
+        forSend.append(QSharedPointer<protocol::AbstractMessage>(message));
+    }
+
+    for (const QSharedPointer<protocol::AbstractMessage>& each : forSend)
+    {
+        slotSendMessage(each);
+    }
 }
 
 void ControlPanelWidget::slotOnDisconnect()
@@ -581,7 +622,8 @@ void ControlPanelWidget::slotOnBytesSend(const QByteArray& bytes)
 
 void ControlPanelWidget::slotSendMessage(const QSharedPointer<protocol::AbstractMessage>& message)
 {
-    if (message != nullptr)
+    if (   m_outCtrl != nullptr
+        && message != nullptr)
     {
         m_outCtrl->slotSend(*message);
     }
@@ -674,7 +716,14 @@ void ControlPanelWidget::processMessage(const protocol::outcoming::Message& mess
         break;
     case MessageType::DisplayImages:
         {
-        // TODO: image num -> image filename
+            const DisplayImagesMessage& dimsg = dynamic_cast<const DisplayImagesMessage&>(message);
+            QVector<quint8>::const_iterator founded = std::find(m_controlIds.cbegin(), m_controlIds.cend(), dimsg.displayNumber());
+            if (founded != m_controlIds.cend())
+            {
+                DisplayControlWidget* control = m_controlWidgets[*founded];
+                control->setFirstImage(dimsg.firstImageNumber());
+                control->setSecondImage(dimsg.secondImageNumber());
+            }
         }
         break;
     case MessageType::DisplayOptions:
@@ -688,20 +737,20 @@ void ControlPanelWidget::processMessage(const protocol::outcoming::Message& mess
                 switch (domsg.imageSelection())
                 {
                 case protocol::ImageSelection::Nothing:
-                    control->resetFirstImage();
-                    control->resetSecondImage();
+                    control->setFirstImageEnable(false);
+                    control->setSecondImage(false);
                     break;
                 case protocol::ImageSelection::First:
-                    control->setFirstImage(control->firstImage());
-                    control->resetSecondImage();
+                    control->setFirstImageEnable(true);
+                    control->setSecondImageEnable(false);
                     break;
                 case protocol::ImageSelection::Second:
-                    control->resetFirstImage();
-                    control->setSecondImage(control->secondImage());
+                    control->setFirstImageEnable(false);
+                    control->setSecondImageEnable(true);
                     break;
                 case protocol::ImageSelection::Both:
-                    control->setFirstImage(control->firstImage());
-                    control->setSecondImage(control->secondImage());
+                    control->setFirstImageEnable(true);
+                    control->setSecondImageEnable(true);
                     break;
                 default:
                     break;
@@ -715,8 +764,35 @@ void ControlPanelWidget::processMessage(const protocol::outcoming::Message& mess
             qInfo().noquote() << tr("Receive request to change device address to %1:%2").arg(damsg.address()).arg(damsg.port());
         }
         break;
-    case MessageType::ImagesData:
-        qDebug().noquote() << "TODO: process message type" << static_cast<quint8>(message.type());
+    case MessageType::ImageData:
+        {
+            const ImageDataMessage& idmsg = dynamic_cast<const ImageDataMessage&>(message);
+            QString errorString;
+            QTemporaryFile* tmp = new QTemporaryFile(this);
+            if (tmp->open())
+            {
+                tmp->close();
+                const QPixmap image = storage::ImageStorage::pixmapFromColors(idmsg.imageColors(), ::buttonImageSize());
+                if (image.save(tmp->fileName(), "BMP"))
+                {
+                    m_imgStorage->addImage(idmsg.imageNumber(), tmp->fileName());
+                }
+                else
+                {
+                    errorString = tr("Pixmap saving failed");
+                }
+            }
+            else
+            {
+                errorString = tmp->errorString();
+            }
+
+            if (!errorString.isEmpty())
+            {
+                qWarning().noquote() << tr("Can not save image: %1").arg(errorString);
+                tmp->deleteLater();
+            }
+        }
         break;
     default:
         Q_ASSERT_X(false, "ControlPanelWidget::processMessage", "Unexpected outcoming MessageType");
@@ -728,24 +804,22 @@ void ControlPanelWidget::slotActiveControlImageFirstChange(bool enabled)
 {
     Q_CHECK_PTR(m_activeControl);
 
-    if (enabled)
-        m_activeControl->setFirstImage(m_activeControl->firstImage());
-    else
-        m_activeControl->resetFirstImage();
-
-    createDisplayOptionsMessage(); // TODO
+    if (m_activeControl->isFirstImageEnabled() != enabled)
+    {
+        m_activeControl->setFirstImageEnable(enabled);
+        createDisplayOptionsMessage();
+    }
 }
 
 void ControlPanelWidget::slotActiveControlImageSecondChange(bool enabled)
 {
     Q_CHECK_PTR(m_activeControl);
 
-    if (enabled)
-        m_activeControl->setSecondImage(m_activeControl->secondImage());
-    else
-        m_activeControl->resetSecondImage();
-
-    createDisplayOptionsMessage(); // TODO
+    if (m_activeControl->isSecondImageEnabled() != enabled)
+    {
+        m_activeControl->setSecondImageEnable(enabled);
+        createDisplayOptionsMessage();
+    }
 }
 
 void ControlPanelWidget::slotActiveControlBlinkingChange(bool enabled)

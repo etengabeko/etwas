@@ -3,4 +3,5 @@ TEMPLATE = subdirs
 SUBDIRS = \
     serialization \
     retranslate-srv \
-    display-control
+    display-control \
+    convert-pixmap

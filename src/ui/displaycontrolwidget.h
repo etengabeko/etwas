@@ -8,6 +8,11 @@
 class QLabel;
 class QTimer;
 
+namespace storage
+{
+class ImageStorage;
+} // storage
+
 namespace Ui
 {
 class DisplayControl;
@@ -24,19 +29,24 @@ class DisplayControlWidget : public QWidget
     Q_OBJECT
 
 public:
-    explicit DisplayControlWidget(bool isDebugMode = false, QWidget* parent = nullptr);
+    explicit DisplayControlWidget(const storage::ImageStorage* const storage,
+                                  bool isDebugMode,
+                                  QWidget* parent = nullptr);
     ~DisplayControlWidget();
 
     bool isFirstImageEnabled() const;
-    const QString& firstImage() const;
-    void setFirstImage(const QString& pixmapFileName);
+    void setFirstImageEnable(bool enabled);
 
     bool isSecondImageEnabled() const;
-    const QString& secondImage() const;
-    void setSecondImage(const QString& pixmapFileName);
+    void setSecondImageEnable(bool enabled);
 
     void resetFirstImage();
+    void setFirstImage(quint8 imageIndex);
+    int firstImageIndex() const;
+
     void resetSecondImage();
+    void setSecondImage(quint8 imageIndex);
+    int secondImageIndex() const;
 
     int brightLevel() const;
     void setBrightLevel(int level);
@@ -55,6 +65,7 @@ public:
 public slots:
     void highlight(bool enabled);
     void setActive(bool enabled);
+    void reloadImages();
 
 signals:
     void activated(bool enabled);
@@ -64,6 +75,7 @@ private slots:
     void slotTimeoutSecond();
 
 private:
+    void reloadImage(ImageNumber num);
     void setImage(ImageNumber num, const QPixmap& img);
     void resetImage(ImageNumber num);
     void setCurrentImage(ImageNumber num);
@@ -73,6 +85,8 @@ private:
 
 private:
     Ui::DisplayControl* m_ui = nullptr;
+
+    const storage::ImageStorage* const m_imgStorage;
     const bool m_isDebugMode;
 
     int m_brightLevel = 0;
@@ -80,8 +94,8 @@ private:
     int m_timeOffMsec = 0;
     bool m_blinkingEnabled = false;
 
-    QString m_firstImage;
-    QString m_secondImage;
+    int m_firstImageIndex;
+    int m_secondImageIndex;
 
     QPixmap m_firstImagePixmap;
     QPixmap m_secondImagePixmap;

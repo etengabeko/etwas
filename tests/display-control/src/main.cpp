@@ -1,6 +1,6 @@
 #include <QApplication>
 
-#include "logger/logger.h"
+#include "storage/imagestorage.h"
 #include "ui/displaycontrolwidget.h"
 #include "ui/displayoptionswidget.h"
 
@@ -8,56 +8,48 @@ int main(int argc, char* argv[])
 {
     QApplication app(argc, argv);
 
-    const QString img1st(":/on.bmp");
-    const QString img2nd(":/off.bmp");
+    enum
+    {
+        First  = 1,
+        Second = 2
+    };
 
-    DisplayOptionsWidget opt;
-    DisplayControlWidget* ctrl = new DisplayControlWidget(true);
-    QObject::connect(&opt, &DisplayOptionsWidget::destroyed,
-                     ctrl, &DisplayControlWidget::deleteLater);
+    storage::ImageStorage storage;
+    storage.addImage(First,  ":/on.bmp");
+    storage.addImage(Second, ":/off.bmp");
 
-    opt.setFirstImage(img1st);
-    opt.setSecondImage(img2nd);
+    DisplayOptionsWidget* opt = new DisplayOptionsWidget(&storage);
+    DisplayControlWidget* ctrl = new DisplayControlWidget(&storage, true);
 
-    QObject::connect(&opt, &DisplayOptionsWidget::imageFirstEnabled,
-                     [ctrl, &img1st](bool enabled)
-                     {
-                         if (enabled)
-                             ctrl->setFirstImage(img1st);
-                         else
-                             ctrl->resetFirstImage();
-                     });
-    QObject::connect(&opt, &DisplayOptionsWidget::imageSecondEnabled,
-                     [ctrl, &img2nd](bool enabled)
-                     {
-                         if (enabled)
-                             ctrl->setSecondImage(img2nd);
-                         else
-                             ctrl->resetSecondImage();
-                     });
-    QObject::connect(&opt, &DisplayOptionsWidget::blinkingEnabled,
-                     [ctrl](bool enabled)
-                     {
-                         ctrl->setBlinkingEnabled(enabled);
-                     });
-    QObject::connect(&opt, &DisplayOptionsWidget::timeOnChanged,
-                     [ctrl](int msec)
-                     {
-                         ctrl->setTimeOn(msec);
-                     });
-    QObject::connect(&opt, &DisplayOptionsWidget::timeOffChanged,
-                     [ctrl](int msec)
-                     {
-                         ctrl->setTimeOff(msec);
-                     });
-    QObject::connect(&opt, &DisplayOptionsWidget::brightChanged,
-                     [ctrl](int level)
-                     {
-                         ctrl->setBrightLevel(level);
-                     });
+    opt->setFirstImage(First);
+    ctrl->setFirstImage(First);
 
-    opt.show();
+    opt->setSecondImage(Second);
+    ctrl->setSecondImage(Second);
+
+    ctrl->setFirstImageEnable(false);
+    ctrl->setSecondImageEnable(false);
+
+    QObject::connect(opt, &DisplayOptionsWidget::imageFirstEnabled,
+                     ctrl, &DisplayControlWidget::setFirstImageEnable);
+    QObject::connect(opt, &DisplayOptionsWidget::imageSecondEnabled,
+                     ctrl, &DisplayControlWidget::setSecondImageEnable);
+    QObject::connect(opt, &DisplayOptionsWidget::blinkingEnabled,
+                     ctrl, &DisplayControlWidget::setBlinkingEnabled);
+    QObject::connect(opt, &DisplayOptionsWidget::timeOnChanged,
+                     ctrl, &DisplayControlWidget::setTimeOn);
+    QObject::connect(opt, &DisplayOptionsWidget::timeOffChanged,
+                     ctrl, &DisplayControlWidget::setTimeOff);
+    QObject::connect(opt, &DisplayOptionsWidget::brightChanged,
+                     ctrl, &DisplayControlWidget::setBrightLevel);
+
+    opt->show();
     ctrl->show();
 
-    return app.exec();
+    int res = app.exec();
+
+    delete opt;
+    delete ctrl;
+
+    return res;
 }

@@ -394,8 +394,8 @@ const QString typeToString(MessageType type)
                     .arg(::typeToHex(MessageType::BlinkOptions)) },
         { MessageType::BrightOptions,  qApp->tr("BrightOptions = %1")
                     .arg(::typeToHex(MessageType::BrightOptions)) },
-        { MessageType::ImagesData,     qApp->tr("ImagesData = %1")
-                    .arg(::typeToHex(MessageType::ImagesData)) }
+        { MessageType::ImageData,     qApp->tr("ImagesData = %1")
+                    .arg(::typeToHex(MessageType::ImageData)) }
     };
 
     auto founded = types.find(type);
@@ -452,7 +452,7 @@ std::unique_ptr<Message> Message::deserialize(const QByteArray& content)
         case MessageType::BrightOptions:
             result.reset(new BrightOptionsMessage());
             break;
-        case MessageType::ImagesData:
+        case MessageType::ImageData:
             result.reset(new ImageDataMessage());
             break;
         case MessageType::Unknown:
@@ -1006,7 +1006,7 @@ void BrightOptionsMessage::setBrightLevel(quint8 bright) NOEXCEPT
 }
 
 ImageDataMessage::ImageDataMessage() :
-    Message(MessageType::ImagesData),
+    Message(MessageType::ImageData),
     m_pimpl(new details::ImageDataMessagePrivate())
 {
 

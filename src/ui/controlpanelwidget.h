@@ -30,9 +30,15 @@ namespace incoming  { class Message; }
 namespace outcoming { class Message; }
 } // protocol
 
+namespace storage
+{
+class ImageStorage;
+} // storage
+
 class Logger;
 class DisplayControlWidget;
 class DisplayOptionsWidget;
+class ImageStorageWidget;
 
 namespace Ui
 {
@@ -72,6 +78,7 @@ private slots:
     void slotOptionsClose();
 
     void slotSendDeviceIdentity();
+    void slotSendImagesData();
     void slotChangeDeviceAddress();
     void slotChangeButtonsState(bool enabled);
 
@@ -120,11 +127,14 @@ private:
     std::unique_ptr<ioservice::InputController> m_inCtrl;
     std::unique_ptr<ioservice::OutputController> m_outCtrl;
 
+    std::unique_ptr<storage::ImageStorage> m_imgStorage;
+
     QVector<quint8> m_controlIds;
     QHash<int, DisplayControlWidget*> m_controlWidgets;
 
     DisplayOptionsWidget* m_optionsWidget = nullptr;
     DisplayControlWidget* m_activeControl = nullptr;
+    ImageStorageWidget*   m_imagesWidget  = nullptr;
 
 };
 
