@@ -57,12 +57,12 @@
      </column>
      <column>
       <property name="text">
-       <string>Filename</string>
+       <string>Image</string>
       </property>
      </column>
      <column>
       <property name="text">
-       <string>Image</string>
+       <string>FileName</string>
       </property>
      </column>
     </widget>

@@ -1,6 +1,7 @@
 #include "imagestorage.h"
 
 #include <QColor>
+#include <QDebug>
 #include <QImage>
 #include <QPixmap>
 #include <QTimer>
@@ -9,7 +10,7 @@
 namespace
 {
 
-int notificationDelayMsec() { return 1000 / 4; }
+int notificationDelayMsec() { return 1000; }
 
 }
 
@@ -77,6 +78,7 @@ void ImageStorage::addImage(quint8 imageIndex, const QString& imageName)
     if (value != imageName)
     {
         value = imageName;
+        m_timer->stop();
         m_timer->start();
     }
 }
@@ -85,12 +87,15 @@ void ImageStorage::removeImage(quint8 imageIndex)
 {
     if (m_images.remove(imageIndex) > 0)
     {
+        m_timer->stop();
         m_timer->start();
     }
 }
 
 void ImageStorage::slotTimeout()
 {
+    qDebug() << "emit imagesChanged()";
+    m_timer->stop();
     emit imagesChanged();
 }
 

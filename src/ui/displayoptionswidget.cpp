@@ -64,6 +64,16 @@ DisplayOptionsWidget::~DisplayOptionsWidget()
     m_ui = nullptr;
 }
 
+bool DisplayOptionsWidget::isFirstImageEnable() const
+{
+    return m_ui->imageFirstCheckBox->isChecked();
+}
+
+bool DisplayOptionsWidget::isSecondImageEnable() const
+{
+    return m_ui->imageSecondCheckBox->isChecked();
+}
+
 void DisplayOptionsWidget::reloadImages()
 {
     reloadImage(m_firstImageIndex, m_ui->imageFirstLabel);
@@ -74,12 +84,14 @@ void DisplayOptionsWidget::setFirstImage(int imageIndex)
 {
     m_firstImageIndex = imageIndex;
     reloadImage(m_firstImageIndex, m_ui->imageFirstLabel);
+    emit imageFirstChanged(m_firstImageIndex);
 }
 
 void DisplayOptionsWidget::setSecondImage(int imageIndex)
 {
     m_secondImageIndex = imageIndex;
     reloadImage(m_secondImageIndex, m_ui->imageSecondLabel);
+    emit imageSecondChanged(m_secondImageIndex);
 }
 
 void DisplayOptionsWidget::reloadImage(int imageIndex, QLabel* dest)

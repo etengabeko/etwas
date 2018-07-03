@@ -93,8 +93,12 @@ ControlPanelWidget::ControlPanelWidget(bool isDebugMode,
                      this, &ControlPanelWidget::slotSendDeviceIdentity);
     QObject::connect(m_ui->deviceAddressButton, &QPushButton::clicked,
                      this, &ControlPanelWidget::slotChangeDeviceAddress);
-    QObject::connect(m_imgStorage.get(), &storage::ImageStorage::imagesChanged,
-                     this, &ControlPanelWidget::slotSendImagesData);
+
+    if (!m_isDebugMode)
+    {
+        QObject::connect(m_imgStorage.get(), &storage::ImageStorage::imagesChanged,
+                         this, &ControlPanelWidget::slotSendImagesData);
+    }
 }
 
 ControlPanelWidget::~ControlPanelWidget()
@@ -444,6 +448,10 @@ void ControlPanelWidget::slotChangeActiveControl(bool enabled)
                              this, static_cast<void(ControlPanelWidget::*)(bool)>(&ControlPanelWidget::slotActiveControlImageFirstChange));
             QObject::connect(m_optionsWidget, &DisplayOptionsWidget::imageSecondEnabled,
                              this, static_cast<void(ControlPanelWidget::*)(bool)>(&ControlPanelWidget::slotActiveControlImageSecondChange));
+            QObject::connect(m_optionsWidget, &DisplayOptionsWidget::imageFirstChanged,
+                             this, static_cast<void(ControlPanelWidget::*)(int)>(&ControlPanelWidget::slotActiveControlImageFirstChange));
+            QObject::connect(m_optionsWidget, &DisplayOptionsWidget::imageSecondChanged,
+                             this, static_cast<void(ControlPanelWidget::*)(int)>(&ControlPanelWidget::slotActiveControlImageSecondChange));
             QObject::connect(m_optionsWidget, &DisplayOptionsWidget::blinkingEnabled,
                              this, &ControlPanelWidget::slotActiveControlBlinkingChange);
             QObject::connect(m_optionsWidget, &DisplayOptionsWidget::timeOnChanged,
@@ -482,21 +490,6 @@ void ControlPanelWidget::slotChangeActiveControl(bool enabled)
 
 void ControlPanelWidget::slotApplySelectedImage(quint8 imageIndex)
 {
-    if (m_activeControl != nullptr)
-    {
-        switch (m_lastSelected)
-        {
-        case SelectedImage::First:
-            m_activeControl->setFirstImage(imageIndex);
-            break;
-        case SelectedImage::Second:
-            m_activeControl->setSecondImage(imageIndex);
-            break;
-        default:
-            break;
-        }
-    }
-
     if (m_optionsWidget != nullptr)
     {
         switch (m_lastSelected)
@@ -510,9 +503,13 @@ void ControlPanelWidget::slotApplySelectedImage(quint8 imageIndex)
         default:
             break;
         }
+        m_optionsWidget->adjustSize();
     }
 
-    createDisplayImagesMessage();
+    if (!m_isDebugMode)
+    {
+       createDisplayImagesMessage();
+    }
 
     m_imagesWidget->close();
 }
@@ -869,6 +866,52 @@ void ControlPanelWidget::slotActiveControlImageSecondChange(bool enabled)
     if (m_activeControl->isSecondImageEnabled() != enabled)
     {
         m_activeControl->setSecondImageEnable(enabled);
+        createDisplayOptionsMessage();
+    }
+}
+
+void ControlPanelWidget::slotActiveControlImageFirstChange(int imageIndex)
+{
+    Q_CHECK_PTR(m_activeControl);
+
+    if (m_activeControl->firstImageIndex() != imageIndex)
+    {
+        DisplayOptionsWidget* options = qobject_cast<DisplayOptionsWidget*>(sender());
+        if (imageIndex != storage::ImageStorage::kInvalidIndex)
+        {
+            m_activeControl->setFirstImage(static_cast<quint8>(imageIndex));
+            if (options != nullptr)
+            {
+                m_activeControl->setFirstImageEnable(options->isFirstImageEnable());
+            }
+        }
+        else
+        {
+            m_activeControl->resetFirstImage();
+        }
+        createDisplayOptionsMessage();
+    }
+}
+
+void ControlPanelWidget::slotActiveControlImageSecondChange(int imageIndex)
+{
+    Q_CHECK_PTR(m_activeControl);
+
+    if (m_activeControl->secondImageIndex() != imageIndex)
+    {
+        DisplayOptionsWidget* options = qobject_cast<DisplayOptionsWidget*>(sender());
+        if (imageIndex != storage::ImageStorage::kInvalidIndex)
+        {
+            m_activeControl->setSecondImage(static_cast<quint8>(imageIndex));
+            if (options != nullptr)
+            {
+                m_activeControl->setSecondImageEnable(options->isSecondImageEnable());
+            }
+        }
+        else
+        {
+            m_activeControl->resetSecondImage();
+        }
         createDisplayOptionsMessage();
     }
 }

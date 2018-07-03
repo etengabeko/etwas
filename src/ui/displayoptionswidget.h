@@ -24,6 +24,9 @@ public:
                                   QWidget* parent = nullptr);
     ~DisplayOptionsWidget();
 
+    bool isFirstImageEnable() const;
+    bool isSecondImageEnable() const;
+
     void setFirstImage(int imageIndex);
     void setFirstImageEnabled(bool enabled);
 
@@ -46,6 +49,9 @@ signals:
     void timeOffChanged(int msec);
 
     void brightChanged(int level);
+
+    void imageFirstChanged(int index);
+    void imageSecondChanged(int index);
 
     void imageFirstSelected();
     void imageSecondSelected();

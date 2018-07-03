@@ -29,9 +29,11 @@ private slots:
     void slotSelect();
     void slotAddImages();
     void slotRemoveImages();
+    void slotChangeSelection();
 
 private:
     void loadAllImages();
+    void addRow(quint8 imageIndex, const QString& fileName);
     void syncStorage();
 
 private:

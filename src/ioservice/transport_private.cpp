@@ -96,6 +96,7 @@ void TransportPrivate::send(const QByteArray& data)
     }
 
     m_socket->write(data);
+    m_socket->waitForBytesWritten();
     emit sent(data);
 }
 

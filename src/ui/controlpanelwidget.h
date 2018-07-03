@@ -87,6 +87,8 @@ private slots:
 
     void slotActiveControlImageFirstChange(bool enabled);
     void slotActiveControlImageSecondChange(bool enabled);
+    void slotActiveControlImageFirstChange(int imageIndex);
+    void slotActiveControlImageSecondChange(int imageIndex);
     void slotActiveControlBlinkingChange(bool enabled);
     void slotActiveControlTimeOnChange(int msec);
     void slotActiveControlTimeOffChange(int msec);

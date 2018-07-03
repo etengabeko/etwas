@@ -41,7 +41,7 @@ DisplayControlWidget::DisplayControlWidget(const storage::ImageStorage* const st
     m_displayLabel->setAlignment(Qt::AlignCenter);
 
     QGraphicsOpacityEffect* effect = new QGraphicsOpacityEffect();
-    effect->setOpacity(::opaqueLevel());
+    effect->setOpacity(::transparentLevel());
     m_displayLabel->setGraphicsEffect(effect);
 
     QObject::connect(m_timer, &QTimer::timeout,
