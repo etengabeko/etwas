@@ -31,6 +31,6 @@ private slots:
 
 };
 
-QTEST_MAIN(ConvertPixmapTest);
+QTEST_MAIN(ConvertPixmapTest)
 
 #include "main.moc"

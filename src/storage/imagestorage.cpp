@@ -1,7 +1,6 @@
 #include "imagestorage.h"
 
 #include <QColor>
-#include <QDebug>
 #include <QImage>
 #include <QPixmap>
 #include <QTimer>
@@ -45,7 +44,7 @@ QVector<QRgb> ImageStorage::pixmapToColors(const QPixmap& image)
     {
         for (int x = 0, w = img.width(); x < w; ++x)
         {
-            result.append(img.pixelColor(x, y).rgb());
+            result.append(img.pixel(x, y));
         }
     }
 
@@ -60,7 +59,7 @@ QPixmap ImageStorage::pixmapFromColors(const QVector<QRgb>& colors, const QSize&
     int y = 0;
     for (const QRgb& each : colors)
     {
-        result.setPixelColor(x, y, QColor(each));
+        result.setPixel(x, y, each);
 
         if (++x >= size.width())
         {
@@ -94,7 +93,6 @@ void ImageStorage::removeImage(quint8 imageIndex)
 
 void ImageStorage::slotTimeout()
 {
-    qDebug() << "emit imagesChanged()";
     m_timer->stop();
     emit imagesChanged();
 }
