@@ -761,14 +761,14 @@ bool DisplayOptionsMessage::parse(const QByteArray& src)
         setDisplayNumber(tmp);
 
         in >> tmp;
-        ok = (tmp < static_cast<quint8>(ImageSelection::End)) && ok;
+        ok = (tmp <= static_cast<quint8>(ImageSelection::Both)) && ok;
         if (ok)
         {
             setImageSelection(static_cast<ImageSelection>(tmp));
         }
 
         in >> tmp;
-        ok = (tmp < static_cast<quint8>(BlinkState::End)) && ok;
+        ok = (tmp <= static_cast<quint8>(BlinkState::On)) && ok;
         if (ok)
         {
             setBlinkState(static_cast<BlinkState>(tmp));
@@ -976,7 +976,7 @@ bool BrightOptionsMessage::parse(const QByteArray& src)
         setDisplayNumber(tmp);
 
         in >> tmp;
-        ok = (tmp < static_cast<quint8>(BrightLevel::End)) && ok;
+        ok = (tmp <= static_cast<quint8>(BrightLevel::Max)) && ok;
         if (ok)
         {
             setBrightLevel(tmp);

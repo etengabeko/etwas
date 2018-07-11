@@ -4,9 +4,13 @@
 #include <memory>
 
 class QString;
+class QStringList;
+template <typename T> class QVector;
 
 namespace settings
 {
+class DisplaySettings;
+
 namespace details
 {
 class SettingsPrivate;
@@ -17,7 +21,17 @@ class Settings
 public:
     explicit Settings(const QString& fileName);
     ~Settings() NOEXCEPT;
-    // TODO
+
+    void load();
+    void save() const;
+
+    const QVector<DisplaySettings>& displaysOptions() const NOEXCEPT;
+    void setDisplaysOptions(const QVector<DisplaySettings>& options);
+    void setDisplaysOptions(QVector<DisplaySettings>&& options) NOEXCEPT;
+
+    const QStringList& imagesFileNames() const NOEXCEPT;
+    void setImagesFileNames(const QStringList& fileNames);
+    void setImagesFileNames(QStringList&& fileNames) NOEXCEPT;
 
 private:
     std::unique_ptr<details::SettingsPrivate> m_pimpl;
