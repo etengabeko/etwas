@@ -2,19 +2,17 @@
 #include "transport_private.h"
 
 #include <QByteArray>
+#include <QHostAddress>
 #include <QString>
-
-#include "settings/settings.h"
 
 namespace ioservice
 {
 
-Transport::Transport(const settings::Settings& settings,
+Transport::Transport(const QHostAddress& address,
+                     quint16 port,
                      QObject* parent) :
     QObject(parent),
-    m_pimpl(new details::TransportPrivate(settings.address(),
-                                          settings.port(),
-                                          this))
+    m_pimpl(new details::TransportPrivate(address, port, this))
 {
     QObject::connect(m_pimpl, &details::TransportPrivate::connected,
                      this, &Transport::connected);
@@ -34,13 +32,14 @@ Transport::~Transport() NOEXCEPT
     m_pimpl = nullptr;
 }
 
-const settings::Settings& Transport::currentSettings() const
+const QHostAddress& Transport::currentAddress() const NOEXCEPT
 {
-    static settings::Settings conf;
-    conf.setAddress(m_pimpl->address());
-    conf.setPort(m_pimpl->port());
+    return m_pimpl->address();
+}
 
-    return conf;;
+quint16 Transport::currentPort() const NOEXCEPT
+{
+    return m_pimpl->port();
 }
 
 const QString Transport::errorString() const
@@ -58,12 +57,12 @@ void Transport::stop()
     m_pimpl->stop();
 }
 
-void Transport::slotSend(const QByteArray& data)
+void Transport::send(const QByteArray& data)
 {
     m_pimpl->send(data);
 }
 
-void Transport::slotSend(QByteArray&& data)
+void Transport::send(QByteArray&& data)
 {
     m_pimpl->send(std::forward<QByteArray>(data));
 }

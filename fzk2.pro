@@ -29,18 +29,13 @@ DESTDIR = $$BUILD_DIR/bin
 
 isEmpty(PREFIX) {
     PREFIX = $$PWD
-    CONFIG_PATH = $$PREFIX/config
-}
-else {
-    CONFIG_PATH = $$PREFIX/etc/$$PROJECT
-    DEFINES += CONFIG_PATH=\\\"$$CONFIG_PATH\\\"
 }
 
 # installs
 target.path = $$PREFIX/bin
 
 # config
-OTHER_FILES += $$PWD/config/settings.xml
+OTHER_FILES += $$PWD/config/settings.ini
 config.path = $$PREFIX/etc/$$PROJECT
 config.files += $$OTHER_FILES
 
@@ -54,6 +49,7 @@ HEADERS = \
     $$PWD/src/protocol/protocol_private.h \
     $$PWD/src/protocol/types.h \
     # settings
+    $$PWD/src/settings/displaysettings.h \
     $$PWD/src/settings/settings.h \
     $$PWD/src/settings/settings_private.h \
     # ioservice
@@ -81,6 +77,7 @@ SOURCES = \
     $$PWD/src/protocol/protocol.cpp \
     $$PWD/src/protocol/protocol_private.cpp \
     # settings
+    $$PWD/src/settings/displaysettings.cpp \
     $$PWD/src/settings/settings.cpp \
     $$PWD/src/settings/settings_private.cpp \
     # ioservice

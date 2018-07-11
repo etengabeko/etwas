@@ -198,10 +198,6 @@ void ControlPanelWidget::initialize()
     m_currentAddress = dlg.address().toString();
     m_currentPort = dlg.port();
 
-    settings::Settings conf;
-    conf.setAddress(dlg.address());
-    conf.setPort(dlg.port());
-
     logFileName = dlg.logFileName();
     m_ui->logFileNameLineEdit->setText(logFileName);
     if (!logFileName.isEmpty())
@@ -219,7 +215,7 @@ void ControlPanelWidget::initialize()
         m_ui->logFileNameLabel->hide();
     }
 
-    m_transport = new Transport(conf);
+    m_transport = new Transport(dlg.address(), dlg.port());
     m_transport->moveToThread(m_recvThread);
 
     m_outCtrl.reset(new OutputController(m_transport));

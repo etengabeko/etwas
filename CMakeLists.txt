@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 2.8.12)
 project(fzk2)
 
+if (NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose the type of build" FORCE)
+endif (NOT CMAKE_BUILD_TYPE)
+
 if (CMAKE_COMPILER_IS_GNUCXX)
     add_definitions(-DNOEXCEPT=noexcept)
     add_compile_options(-std=c++11)
@@ -22,18 +26,25 @@ find_package(Qt5Widgets CONFIG REQUIRED)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 set(SOURCES
+    # logger
     src/logger/logger.cpp
+    # protocol
     src/protocol/protocol.cpp
     src/protocol/protocol_private.cpp
+    # settings
+    src/settings/displaysettings.cpp
     src/settings/settings.cpp
     src/settings/settings_private.cpp
+    # ioservice
     src/ioservice/transport.cpp
     src/ioservice/transport_private.cpp
     src/ioservice/inputcontroller.cpp
     src/ioservice/inputcontroller_private.cpp
     src/ioservice/outputcontroller.cpp
     src/ioservice/outputcontroller_private.cpp
+    # storage
     src/storage/imagestorage.cpp
+    # ui
     src/ui/connectionoptionsdialog.cpp
     src/ui/controlpanelwidget.cpp
     src/ui/displaycontrolwidget.cpp
@@ -41,23 +52,31 @@ set(SOURCES
     src/ui/imagestoragewidget.cpp
     src/ui/mainwindow.cpp
     src/ui/subwindow.cpp
+    # main
     src/main.cpp
 )
 
 set(HEADERS
+    # logger
     src/logger/logger.h
+    # protocol
     src/protocol/protocol.h
     src/protocol/protocol_private.h
     src/protocol/types.h
+    # settings
+    src/settings/displaysettings.h
     src/settings/settings.h
     src/settings/settings_private.h
+    # ioservice
     src/ioservice/transport.h
     src/ioservice/transport_private.h
     src/ioservice/inputcontroller.h
     src/ioservice/inputcontroller_private.h
     src/ioservice/outputcontroller.h
     src/ioservice/outputcontroller_private.h
+    # storage
     src/storage/imagestorage.h
+    # ui
     src/ui/connectionoptionsdialog.h
     src/ui/controlpanelwidget.h
     src/ui/displaycontrolwidget.h

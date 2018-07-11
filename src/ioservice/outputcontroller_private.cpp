@@ -19,7 +19,7 @@ OutputControllerPrivate::OutputControllerPrivate(Transport* transport,
     Q_CHECK_PTR(transport);
 
     QObject::connect(this, &OutputControllerPrivate::sent,
-                     m_transport, static_cast<void(Transport::*)(const QByteArray&)>(&Transport::slotSend));
+                     m_transport, static_cast<void(Transport::*)(const QByteArray&)>(&Transport::send));
 }
 
 OutputControllerPrivate::~OutputControllerPrivate() NOEXCEPT

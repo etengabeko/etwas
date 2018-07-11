@@ -27,8 +27,8 @@ public:
     void send(const QByteArray& data);
     void send(QByteArray&& data);
 
-    const QHostAddress& address() const;
-    quint16 port() const;
+    const QHostAddress& address() const NOEXCEPT;
+    quint16 port() const NOEXCEPT;
 
     const QString errorString() const;
 

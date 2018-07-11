@@ -5,34 +5,15 @@ namespace settings
 namespace details
 {
 
+SettingsPrivate::SettingsPrivate(const QString& fileName) :
+    m_fileName(fileName)
+{
+    Q_ASSERT_X(!fileName.isEmpty(), "SettingsPrivate::SettingsPrivate()", "Empty settings filename");
+}
+
 SettingsPrivate::~SettingsPrivate() NOEXCEPT
 {
 
-}
-
-const QHostAddress& SettingsPrivate::address() const NOEXCEPT
-{
-    return m_address;
-}
-
-void SettingsPrivate::setAddress(const QHostAddress& addr)
-{
-    m_address = addr;
-}
-
-void SettingsPrivate::setAddress(QHostAddress&& addr) NOEXCEPT
-{
-    std::swap(m_address, addr);
-}
-
-quint16 SettingsPrivate::port() const NOEXCEPT
-{
-    return m_port;
-}
-
-void SettingsPrivate::setPort(quint16 port) NOEXCEPT
-{
-    m_port = port;
 }
 
 } // details

@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 2.8.12)
 project(tests)
 
+if (NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose the type of build" FORCE)
+endif (NOT CMAKE_BUILD_TYPE)
+
 if (CMAKE_COMPILER_IS_GNUCXX)
     add_definitions(-DNOEXCEPT=noexcept)
     add_compile_options(-std=c++11)

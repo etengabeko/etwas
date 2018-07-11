@@ -27,12 +27,12 @@ TransportPrivate::~TransportPrivate() NOEXCEPT
     }
 }
 
-const QHostAddress& TransportPrivate::address() const
+const QHostAddress& TransportPrivate::address() const NOEXCEPT
 {
     return m_address;
 }
 
-quint16 TransportPrivate::port() const
+quint16 TransportPrivate::port() const NOEXCEPT
 {
     return m_port;
 }

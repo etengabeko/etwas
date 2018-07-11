@@ -4,12 +4,8 @@
 #include <QObject>
 
 class QByteArray;
+class QHostAddress;
 class QString;
-
-namespace settings
-{
-class Settings;
-} // settings
 
 namespace ioservice
 {
@@ -23,11 +19,14 @@ class Transport : public QObject
     Q_OBJECT
 
 public:
-    explicit Transport(const settings::Settings& settings,
+    explicit Transport(const QHostAddress& address,
+                       quint16 port,
                        QObject* parent = nullptr);
     ~Transport() NOEXCEPT;
 
-    const settings::Settings& currentSettings() const;
+    const QHostAddress& currentAddress() const NOEXCEPT;
+    quint16 currentPort() const NOEXCEPT;
+
     const QString errorString() const;
 
 signals:
@@ -42,8 +41,8 @@ public slots:
     void start();
     void stop();
 
-    void slotSend(const QByteArray& data);
-    void slotSend(QByteArray&& data);
+    void send(const QByteArray& data);
+    void send(QByteArray&& data);
 
 private:
     details::TransportPrivate* m_pimpl;
