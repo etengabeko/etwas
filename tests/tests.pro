@@ -4,4 +4,5 @@ SUBDIRS = \
     serialization \
     retranslate-srv \
     display-control \
-    convert-pixmap
+    convert-pixmap \
+    rw-settings

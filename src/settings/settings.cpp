@@ -26,9 +26,9 @@ void Settings::load()
     m_pimpl->load();
 }
 
-void Settings::save() const
+bool Settings::save() const
 {
-    m_pimpl->save();
+    return m_pimpl->save();
 }
 
 const QVector<DisplaySettings>& Settings::displaysOptions() const NOEXCEPT

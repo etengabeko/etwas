@@ -57,6 +57,8 @@ public:
     static const QString blinkStateToString(protocol::BlinkState state);
     static protocol::BlinkState blinkStateFromString(const QString& str, bool* ok = nullptr);
 
+    bool operator== (const DisplaySettings& rhs) const NOEXCEPT;
+
 private:
     static const int kInvalidValue;
 

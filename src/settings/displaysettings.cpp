@@ -240,4 +240,16 @@ BlinkState DisplaySettings::blinkStateFromString(const QString& str, bool* ok)
     return ::blinkStatesMap().key(str.toLower(), BlinkState::Off);
 }
 
+bool DisplaySettings::operator== (const DisplaySettings& rhs) const NOEXCEPT
+{
+    return (   m_displayNumber == rhs.m_displayNumber
+            && m_firstImageNumber == rhs.m_firstImageNumber
+            && m_secondImageNumber == rhs.m_secondImageNumber
+            && m_imageSelection == rhs.m_imageSelection
+            && m_blinkState == rhs.m_blinkState
+            && m_timeOnMsec == rhs.m_timeOnMsec
+            && m_timeOffMsec == rhs.m_timeOffMsec
+            && m_brightLevel == rhs.m_brightLevel);
+}
+
 } // settings

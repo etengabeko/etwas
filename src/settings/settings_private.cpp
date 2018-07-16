@@ -140,12 +140,14 @@ DisplaySettings SettingsPrivate::readOneDisplayOptions(QSettings& settings, int 
     return result;
 }
 
-void SettingsPrivate::save() const
+bool SettingsPrivate::save() const
 {
     QSettings config(m_fileName, QSettings::IniFormat);
     writeImagesFileNames(config);
     writeDisplaysOptions(config);
     config.sync();
+
+    return (config.status() == QSettings::Status::NoError);
 }
 
 void SettingsPrivate::writeImagesFileNames(QSettings& settings) const

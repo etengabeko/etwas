@@ -20,7 +20,7 @@ public:
     ~SettingsPrivate() NOEXCEPT;
 
     void load();
-    void save() const;
+    bool save() const;
 
     const QVector<DisplaySettings>& displaysOptions() const NOEXCEPT;
     void setDisplaysOptions(const QVector<DisplaySettings>& options);

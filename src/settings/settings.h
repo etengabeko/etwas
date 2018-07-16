@@ -23,7 +23,7 @@ public:
     ~Settings() NOEXCEPT;
 
     void load();
-    void save() const;
+    bool save() const;
 
     const QVector<DisplaySettings>& displaysOptions() const NOEXCEPT;
     void setDisplaysOptions(const QVector<DisplaySettings>& options);
@@ -37,6 +37,7 @@ private:
     std::unique_ptr<details::SettingsPrivate> m_pimpl;
 
 };
+
 
 } // settings
 
