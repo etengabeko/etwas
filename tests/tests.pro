@@ -5,4 +5,5 @@ SUBDIRS = \
     retranslate-srv \
     display-control \
     convert-pixmap \
-    rw-settings
+    rw-settings \
+    msg-debugger
