@@ -99,6 +99,7 @@ private:
 
     QPixmap m_firstImagePixmap;
     QPixmap m_secondImagePixmap;
+    QString m_withoutPixmapLabel;
 
     QTimer* m_timer = nullptr;
     QLabel* m_displayLabel = nullptr;

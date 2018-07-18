@@ -3,14 +3,18 @@
 
 #include <algorithm>
 
+#include <QAction>
 #include <QByteArray>
 #include <QCloseEvent>
 #include <QDateTime>
-#include <QDebug>
 #include <QDir>
+#include <QFileDialog>
 #include <QFileInfo>
 #include <QGridLayout>
+#include <QHBoxLayout>
 #include <QHostAddress>
+#include <QMenu>
+#include <QMenuBar>
 #include <QMovie>
 #include <QScrollBar>
 #include <QSharedPointer>
@@ -24,6 +28,7 @@
 #include "logger/logger.h"
 #include "protocol/protocol.h"
 #include "protocol/types.h"
+#include "settings/displaysettings.h"
 #include "settings/settings.h"
 #include "storage/imagestorage.h"
 #include "ui/connectionoptionsdialog.h"
@@ -41,7 +46,6 @@ const QSize& buttonImageSize()
     return size;
 }
 
-int controlsGridColumnCount() { return 3; } // TODO
 quint8 debugControlsCount() { return 9; }
 
 QString titleString() { return qApp->tr("Device"); }
@@ -93,11 +97,29 @@ ControlPanelWidget::ControlPanelWidget(bool isDebugMode,
                      this, &ControlPanelWidget::slotSendDeviceIdentity);
     QObject::connect(m_ui->deviceAddressButton, &QPushButton::clicked,
                      this, &ControlPanelWidget::slotChangeDeviceAddress);
+    QObject::connect(m_ui->columnCountSpinBox, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged),
+                     this, &ControlPanelWidget::slotChangeControlsColumnsCount);
 
     if (!m_isDebugMode)
     {
         QObject::connect(m_imgStorage.get(), &storage::ImageStorage::imagesChanged,
                          this, &ControlPanelWidget::slotSendImagesData);
+
+        QMenuBar* menubar = new QMenuBar(this);
+        layout()->setMenuBar(menubar);
+
+        QMenu* fileMenu = menubar->addMenu(tr("File"));
+        Q_UNUSED(fileMenu);
+        //TODO
+
+        QMenu* editMenu = menubar->addMenu(tr("Edit"));
+
+        QAction* loadAction = editMenu->addAction(tr("Load configuration"));
+        QObject::connect(loadAction, &QAction::triggered,
+                         this, &ControlPanelWidget::slotLoadConfiguration);
+        QAction* saveAction = editMenu->addAction(tr("Save configuration"));
+        QObject::connect(saveAction, &QAction::triggered,
+                         this, &ControlPanelWidget::slotSaveConfiguration);
     }
 }
 
@@ -152,6 +174,7 @@ void ControlPanelWidget::removeAllContols()
         DisplayControlWidget* each = it.next().value();
         delete each;
     }
+    delete m_ui->controlsContentsWidget->layout();
 
     m_controlWidgets.clear();
     m_controlIds.clear();
@@ -297,7 +320,10 @@ void ControlPanelWidget::slotOnError()
     if (m_logger != nullptr)
     {
         const QString errorString = m_transport->errorString();
-        m_logger->error(errorString);
+        m_logger->error(tr("%1:%2 : %3")
+                        .arg(m_currentAddress)
+                        .arg(m_currentPort)
+                        .arg(errorString));
         m_ui->statusLabel->setText(tr("Error connection: %1").arg(errorString));
     }
 
@@ -337,7 +363,7 @@ void ControlPanelWidget::makeDebugConfiguration(int buttonsCount)
     m_controlIds.reserve(buttonsCount);
     for (quint8 i = 0; i < buttonsCount; ++i)
     {
-        m_controlIds.append(i);
+        m_controlIds.append(i+1);
     }
 
     createControls();
@@ -359,26 +385,84 @@ void ControlPanelWidget::makeConfiguration(const protocol::incoming::Message& me
     createControls();
 }
 
-void ControlPanelWidget::createControls()
+void ControlPanelWidget::makeConfiguration(const QVector<settings::DisplaySettings>& displays)
 {
-    int row = 0;
-    int column = 0;
+    using protocol::BlinkState;
+    using protocol::ImageSelection;
+    using settings::DisplaySettings;
 
-    for (auto it = m_controlIds.cbegin(), end = m_controlIds.cend(); it != end; ++it)
+    m_controlIds.reserve(displays.size());
+
+    for (const DisplaySettings& each : displays)
     {
-        createControl(*it, row, column);
+        m_controlIds.append(each.displayNumber());
+    }
 
-        if (++column >= ::controlsGridColumnCount())
+    createControls();
+
+    for (const DisplaySettings& each : displays)
+    {
+        DisplayControlWidget* control = m_controlWidgets[each.displayNumber()];
+        if (control != nullptr)
         {
-            ++row;
-            column = 0;
+            if (each.isSetFirstImageNumber())
+            {
+                control->setFirstImage(each.firstImageNumber());
+            }
+            if (each.isSetSecondImageNumber())
+            {
+                control->setSecondImage(each.secondImageNumber());
+            }
+            if (each.isSetTimeOn())
+            {
+                control->setTimeOn(each.timeOn());
+            }
+            if (each.isSetTimeOff())
+            {
+                control->setTimeOff(each.timeOff());
+            }
+            if (each.isSetBrightLevel())
+            {
+                control->setBrightLevel(each.brightLevel());
+            }
+
+            control->setBlinkingEnabled(each.blinkState() == BlinkState::On);
+
+            switch (each.imageSelection())
+            {
+            case ImageSelection::First:
+                control->resetSecondImage();
+                break;
+            case ImageSelection::Second:
+                control->resetFirstImage();
+                break;
+            case ImageSelection::Nothing:
+                control->resetFirstImage();
+                control->resetSecondImage();
+                break;
+            case ImageSelection::Both:
+            default:
+                qt_noop();
+                break;
+            }
         }
     }
+}
+
+void ControlPanelWidget::createControls()
+{
+    for (auto it = m_controlIds.cbegin(), end = m_controlIds.cend(); it != end; ++it)
+    {
+        createControl(*it);
+    }
+
+    slotChangeControlsColumnsCount(m_ui->columnCountSpinBox->value());
+
     m_ui->stackedWidget->setCurrentWidget(m_ui->workingPage);
 }
 
 
-void ControlPanelWidget::createControl(quint8 controlId, int row, int column)
+void ControlPanelWidget::createControl(quint8 controlId)
 {
     if (!m_controlWidgets.contains(controlId))
     {
@@ -386,12 +470,6 @@ void ControlPanelWidget::createControl(quint8 controlId, int row, int column)
                                                              m_isDebugMode);
         m_controlWidgets.insert(controlId, wgt);
         initConnectionsForControl(wgt);
-
-        QGridLayout* lout = qobject_cast<QGridLayout*>(m_ui->workingPage->layout());
-        if (lout != nullptr)
-        {
-            lout->addWidget(wgt, row, column);
-        }
     }
 }
 
@@ -499,7 +577,6 @@ void ControlPanelWidget::slotApplySelectedImage(quint8 imageIndex)
         default:
             break;
         }
-        m_optionsWidget->adjustSize();
     }
 
     if (!m_isDebugMode)
@@ -632,8 +709,10 @@ void ControlPanelWidget::setNotConnectedState()
 
 void ControlPanelWidget::slotOnBytesReceive(const QByteArray& bytes)
 {
-    const QString str = tr("Received bytes (size %1): %2")
+    const QString str = tr("Received bytes (size %1) from %2:%3 : %4")
             .arg(bytes.size())
+            .arg(m_currentAddress)
+            .arg(m_currentPort)
             .arg(QString::fromLatin1(bytes.toHex()).toUpper());
     m_logger->info(str);
 
@@ -649,8 +728,10 @@ void ControlPanelWidget::slotOnBytesReceive(const QByteArray& bytes)
 
 void ControlPanelWidget::slotOnBytesSend(const QByteArray& bytes)
 {
-    const QString str = tr("Sent bytes (size %1): %2")
+    const QString str = tr("Sent bytes (size %1) to %2:%3 : %4")
             .arg(bytes.size())
+            .arg(m_currentAddress)
+            .arg(m_currentPort)
             .arg(QString::fromLatin1(bytes.toHex()).toUpper());
     m_logger->info(str);
 
@@ -1097,5 +1178,134 @@ void ControlPanelWidget::createBrightOptionsMessage()
         message->setBrightLevel(static_cast<quint8>(m_activeControl->brightLevel()));
 
         slotSendMessage(QSharedPointer<protocol::AbstractMessage>(message));
+    }
+}
+
+void ControlPanelWidget::slotChangeControlsColumnsCount(int count)
+{
+    QGridLayout* oldLayout = qobject_cast<QGridLayout*>(m_ui->controlsContentsWidget->layout());
+    if (   oldLayout == nullptr
+        || oldLayout->columnCount()-1 != count)
+    {
+        QGridLayout* newLayout = new QGridLayout();
+        int row = 0;
+        int col = 0;
+        for (const quint8 id : m_controlIds)
+        {
+            DisplayControlWidget* each = m_controlWidgets[static_cast<int>(id)];
+            if (each != nullptr)
+            {
+                newLayout->addWidget(each, row, col);
+                if (++col >= count)
+                {
+                    newLayout->addItem(new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Minimum), row, col);
+                    col = 0;
+                    ++row;
+                }
+            }
+        }
+        newLayout->addItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding), (col > 0 ? row+1 : row), 0);
+
+        delete oldLayout;
+        m_ui->controlsContentsWidget->setLayout(newLayout);
+    }
+}
+
+void ControlPanelWidget::slotLoadConfiguration()
+{
+    using protocol::BlinkState;
+    using protocol::ImageSelection;
+    using settings::DisplaySettings;
+    using settings::Settings;
+    using storage::ImageStorage;
+
+    const QString fileName = QFileDialog::getOpenFileName(nullptr,
+                                                          tr("Select file to load configuration"),
+                                                          QCoreApplication::applicationDirPath(),
+                                                          tr("INI Files: *.ini;;All Files: *"));
+    if (!fileName.isEmpty())
+    {
+        Settings current(fileName);
+        current.load();
+
+        for (quint8 index : m_imgStorage->availableImages().keys())
+        {
+            m_imgStorage->removeImage(index);
+        }
+        quint8 index = 0;
+        for (const QString& each : current.imagesFileNames())
+        {
+            m_imgStorage->addImage(++index, each);
+        }
+
+        removeAllContols();
+        makeConfiguration(current.displaysOptions());
+    }
+}
+
+void ControlPanelWidget::slotSaveConfiguration()
+{
+    using protocol::BlinkState;
+    using protocol::ImageSelection;
+    using settings::DisplaySettings;
+    using settings::Settings;
+    using storage::ImageStorage;
+
+    const QString fileName = QFileDialog::getSaveFileName(nullptr,
+                                                          tr("Select file to save configuration"),
+                                                          QCoreApplication::applicationDirPath());
+    if (!fileName.isEmpty())
+    {
+        Settings current(fileName);
+        current.setImagesFileNames(m_imgStorage->availableImages().values());
+
+        QVector<DisplaySettings> displays;
+        displays.reserve(m_controlIds.size());
+
+        for (const quint8 index : m_controlIds)
+        {
+            const DisplayControlWidget* control = m_controlWidgets[index];
+            if (control != nullptr)
+            {
+                DisplaySettings each;
+                each.setDisplayNumber(index);
+
+                if (control->firstImageIndex() > ImageStorage::kInvalidIndex)
+                {
+                    each.setFirstImageNumber(static_cast<quint8>(control->firstImageIndex()));
+                }
+                if (control->secondImageIndex() > ImageStorage::kInvalidIndex)
+                {
+                    each.setSecondImageNumber(static_cast<quint8>(control->secondImageIndex()));
+                }
+
+                if (control->isFirstImageEnabled() && control->isSecondImageEnabled())
+                {
+                    each.setImageSelection(ImageSelection::Both);
+                }
+                else if (control->isFirstImageEnabled())
+                {
+                    each.setImageSelection(ImageSelection::First);
+                }
+                else if (control->isSecondImageEnabled())
+                {
+                    each.setImageSelection(ImageSelection::Second);
+                }
+                else
+                {
+                    each.setImageSelection(ImageSelection::Nothing);
+                }
+
+                each.setBlinkState(control->isBlinkingEnabled() ? BlinkState::On : BlinkState::Off);
+                each.setBrightLevel(static_cast<quint8>(control->brightLevel()));
+                each.setTimeOn(static_cast<quint16>(control->timeOn()));
+                each.setTimeOff(static_cast<quint16>(control->timeOff()));
+
+                displays.append(each);
+            }
+        }
+        current.setDisplaysOptions(displays);
+
+        current.save();
     }
 }

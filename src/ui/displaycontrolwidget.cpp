@@ -32,6 +32,7 @@ DisplayControlWidget::DisplayControlWidget(const storage::ImageStorage* const st
     Q_ASSERT(m_imgStorage);
 
     m_ui->setupUi(this);
+    m_withoutPixmapLabel = m_ui->displayButton->text();
 
     if (m_ui->displayButton->layout() == nullptr)
     {
@@ -120,6 +121,14 @@ void DisplayControlWidget::setCurrentImage(ImageNumber num)
         return;
     }
 
+    if (currentPixmap->isNull())
+    {
+        m_ui->displayButton->setText(m_withoutPixmapLabel);
+    }
+    else
+    {
+        m_ui->displayButton->setText(QString::null);
+    }
     m_displayLabel->setPixmap(*currentPixmap);
 }
 

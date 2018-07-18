@@ -83,8 +83,10 @@ void ImageStorageWidget::addRow(quint8 imageIndex, const QString& fileName)
     m_ui->imagesTableWidget->setItem(row, Column::FileName, item);
 
     QLabel* label = new QLabel(this);
-    label->setPixmap(QPixmap(fileName));
+    const QPixmap pxmap(fileName);
+    label->setPixmap(pxmap);
     m_ui->imagesTableWidget->setCellWidget(row, Column::Image, label);
+    m_ui->imagesTableWidget->setRowHeight(row, pxmap.height());
 }
 
 void ImageStorageWidget::slotChangeSelection()
@@ -107,7 +109,9 @@ void ImageStorageWidget::slotAddImages()
                                                                 tr("Select Images files"),
                                                                 QApplication::applicationDirPath(),
                                                                 tr("Images (*.bmp);;All files (*)"));
-    int index = m_ui->imagesTableWidget->rowCount();
+    const int kCount = m_ui->imagesTableWidget->rowCount();
+    int index = kCount > 0 ? m_ui->imagesTableWidget->item(kCount-1, Column::Number)->text().toInt()
+                           : kCount;
     for (const QString& each : fileNames)
     {
         addRow(static_cast<quint8>(++index), each);
@@ -133,7 +137,7 @@ void ImageStorageWidget::syncStorage()
 
     for (int row = 0; row < count; ++row)
     {
-        m_storage->addImage(static_cast<quint8>(row),
+        m_storage->addImage(static_cast<quint8>(row + 1),
                             m_ui->imagesTableWidget->item(row, Column::FileName)->text());
     }
 }
@@ -143,7 +147,7 @@ void ImageStorageWidget::slotRemoveImages()
     if (m_ui->imagesTableWidget->selectionModel()->hasSelection())
     {
         const int row = m_ui->imagesTableWidget->selectedItems().first()->row();
+        m_storage->removeImage(static_cast<quint8>(m_ui->imagesTableWidget->item(row, Column::Number)->text().toUShort()));
         m_ui->imagesTableWidget->removeRow(row);
-        m_storage->removeImage(static_cast<quint8>(row));
     }
 }

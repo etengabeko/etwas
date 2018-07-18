@@ -30,6 +30,11 @@ namespace incoming  { class Message; }
 namespace outcoming { class Message; }
 } // protocol
 
+namespace settings
+{
+class DisplaySettings;
+} // settings
+
 namespace storage
 {
 class ImageStorage;
@@ -96,12 +101,18 @@ private slots:
     void slotActiveControlImageFirstSelect();
     void slotActiveControlImageSecondSelect();
 
+    void slotChangeControlsColumnsCount(int count);
+
+    void slotLoadConfiguration();
+    void slotSaveConfiguration();
+
 private:
     void makeDebugConfiguration(int buttonsCount);
     void makeConfiguration(const protocol::incoming::Message& message);
+    void makeConfiguration(const QVector<settings::DisplaySettings>& displays);
 
     void createControls();
-    void createControl(quint8 controlId, int row, int column);
+    void createControl(quint8 controlId);
     void initConnectionsForControl(DisplayControlWidget* control);
     void removeAllContols();
 
