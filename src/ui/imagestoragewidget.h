@@ -24,12 +24,14 @@ public:
 
 signals:
     void imageSelected(quint8 imageIndex);
+    void uploadNeeded();
 
 private slots:
     void slotSelect();
     void slotAddImages();
     void slotRemoveImages();
     void slotChangeSelection();
+    void slotShowContextMenu(const QPoint& pos);
 
 private:
     void loadAllImages();

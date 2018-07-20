@@ -17,14 +17,14 @@
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout_2">
      <item>
-      <widget class="QToolButton" name="addButton">
+      <widget class="QPushButton" name="addButton">
        <property name="text">
         <string>Add</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QToolButton" name="removeButton">
+      <widget class="QPushButton" name="removeButton">
        <property name="enabled">
         <bool>false</bool>
        </property>
@@ -46,13 +46,20 @@
        </property>
       </spacer>
      </item>
+     <item>
+      <widget class="QPushButton" name="uploadButton">
+       <property name="text">
+        <string>Upload</string>
+       </property>
+      </widget>
+     </item>
     </layout>
    </item>
    <item>
     <widget class="QTableWidget" name="imagesTableWidget">
      <column>
       <property name="text">
-       <string>Number</string>
+       <string>Num</string>
       </property>
      </column>
      <column>
@@ -84,6 +91,9 @@
      </item>
      <item>
       <widget class="QPushButton" name="selectButton">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
        <property name="text">
         <string>Select</string>
        </property>

@@ -102,9 +102,6 @@ ControlPanelWidget::ControlPanelWidget(bool isDebugMode,
 
     if (!m_isDebugMode)
     {
-        QObject::connect(m_imgStorage.get(), &storage::ImageStorage::imagesChanged,
-                         this, &ControlPanelWidget::slotSendImagesData);
-
         QMenuBar* menubar = new QMenuBar(this);
         layout()->setMenuBar(menubar);
 
@@ -640,6 +637,8 @@ void ControlPanelWidget::slotSendImagesData()
 {
     using protocol::outcoming::ImageDataMessage;
 
+    QApplication::setOverrideCursor(QCursor(Qt::WaitCursor));
+
     QVector<QSharedPointer<protocol::AbstractMessage>> forSend;
     forSend.reserve(m_imgStorage->availableImages().size());
 
@@ -660,6 +659,8 @@ void ControlPanelWidget::slotSendImagesData()
     {
         slotSendMessage(each);
     }
+
+    QApplication::restoreOverrideCursor();
 }
 
 void ControlPanelWidget::slotOnDisconnect()
@@ -1017,6 +1018,8 @@ void ControlPanelWidget::showImagesWidget()
                          this, &ControlPanelWidget::slotImagesClose);
         QObject::connect(m_imagesWidget, &ImageStorageWidget::imageSelected,
                          this, &ControlPanelWidget::slotApplySelectedImage);
+        QObject::connect(m_imagesWidget, &ImageStorageWidget::uploadNeeded,
+                         this, &ControlPanelWidget::slotSendImagesData);
 
         m_imagesWidget->show();
     }

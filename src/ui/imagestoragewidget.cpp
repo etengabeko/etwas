@@ -1,8 +1,10 @@
 #include "imagestoragewidget.h"
 #include "ui_imagestorage.h"
 
+#include <QAction>
 #include <QFileDialog>
 #include <QLabel>
+#include <QMenu>
 #include <QMessageBox>
 #include <QPixmap>
 #include <QTableWidgetItem>
@@ -33,14 +35,19 @@ ImageStorageWidget::ImageStorageWidget(storage::ImageStorage* storage,
 
     m_ui->imagesTableWidget->setSelectionBehavior(QTableWidget::SelectionBehavior::SelectRows);
     m_ui->imagesTableWidget->setSelectionMode(QTableWidget::SingleSelection);
+    m_ui->imagesTableWidget->setContextMenuPolicy(Qt::CustomContextMenu);
 
     QObject::connect(m_ui->imagesTableWidget->selectionModel(), &QItemSelectionModel::selectionChanged,
                      this, &ImageStorageWidget::slotChangeSelection);
+    QObject::connect(m_ui->imagesTableWidget, &QTableWidget::customContextMenuRequested,
+                     this, &ImageStorageWidget::slotShowContextMenu);
 
-    QObject::connect(m_ui->addButton, &QToolButton::clicked,
+    QObject::connect(m_ui->addButton, &QPushButton::clicked,
                      this, &ImageStorageWidget::slotAddImages);
-    QObject::connect(m_ui->removeButton, &QToolButton::clicked,
+    QObject::connect(m_ui->removeButton, &QPushButton::clicked,
                      this, &ImageStorageWidget::slotRemoveImages);
+    QObject::connect(m_ui->uploadButton, &QPushButton::clicked,
+                     this, &ImageStorageWidget::uploadNeeded);
     QObject::connect(m_ui->selectButton, &QPushButton::clicked,
                      this, &ImageStorageWidget::slotSelect);
     QObject::connect(m_ui->cancelButton, &QPushButton::clicked,
@@ -91,7 +98,9 @@ void ImageStorageWidget::addRow(quint8 imageIndex, const QString& fileName)
 
 void ImageStorageWidget::slotChangeSelection()
 {
-    m_ui->removeButton->setEnabled(m_ui->imagesTableWidget->selectionModel()->hasSelection());
+    const bool enabled = m_ui->imagesTableWidget->selectionModel()->hasSelection();
+    m_ui->removeButton->setEnabled(enabled);
+    m_ui->selectButton->setEnabled(enabled);
 }
 
 void ImageStorageWidget::slotSelect()
@@ -149,5 +158,39 @@ void ImageStorageWidget::slotRemoveImages()
         const int row = m_ui->imagesTableWidget->selectedItems().first()->row();
         m_storage->removeImage(static_cast<quint8>(m_ui->imagesTableWidget->item(row, Column::Number)->text().toUShort()));
         m_ui->imagesTableWidget->removeRow(row);
+    }
+}
+
+void ImageStorageWidget::slotShowContextMenu(const QPoint& pos)
+{
+    QMenu menu;
+
+    QAction* addAction = menu.addAction(tr("Add"));
+    QAction* removeAction = menu.addAction(tr("Remove"));
+    QAction* selectAction = nullptr;
+
+    QTableWidgetItem* item = m_ui->imagesTableWidget->itemAt(pos);
+    if (item != nullptr)
+    {
+        menu.addSeparator();
+        selectAction = menu.addAction(tr("Select"));
+    }
+    else
+    {
+        removeAction->setEnabled(false);
+    }
+
+    QAction* answer = menu.exec(m_ui->imagesTableWidget->viewport()->mapToGlobal(pos));
+    if (answer == addAction)
+    {
+        slotAddImages();
+    }
+    else if (answer == removeAction)
+    {
+        slotRemoveImages();
+    }
+    else if (answer == selectAction)
+    {
+        slotSelect();
     }
 }
