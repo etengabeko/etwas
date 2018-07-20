@@ -41,6 +41,8 @@ private slots:
     void slotStart();
     void slotStop();
 
+    void slotClearImages();
+
     void slotConnect();
     void slotDisconnect();
 

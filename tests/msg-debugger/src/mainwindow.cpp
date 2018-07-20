@@ -44,7 +44,7 @@ MainWindow::MainWindow(QWidget *parent) :
     QObject::connect(m_ui->disconnectButton, &QPushButton::clicked,
                      this, &MainWindow::slotStop);
     QObject::connect(m_ui->clearImagesButton, &QPushButton::clicked,
-                     m_ui->imagesTableWidget, &QTableWidget::clearContents);
+                     this, &MainWindow::slotClearImages);
     QObject::connect(m_ui->clearLogButton, &QPushButton::clicked,
                      m_ui->logTextEdit, &QPlainTextEdit::clear);
 }
@@ -86,6 +86,12 @@ void MainWindow::slotStart()
 void MainWindow::slotStop()
 {
     m_transport->stop();
+}
+
+void MainWindow::slotClearImages()
+{
+    m_ui->imagesTableWidget->clearContents();
+    m_ui->imagesTableWidget->setRowCount(0);
 }
 
 void MainWindow::slotConnect()
@@ -140,7 +146,7 @@ void MainWindow::slotParseIncoming(const QSharedPointer<protocol::AbstractMessag
 
     const Message& parsed = dynamic_cast<const Message&>(*msg);
 
-    addLogMessage(tr("Parsed message type = %1:\n%2")
+    addLogMessage(tr("Parsed message type = %1: %2")
                   .arg(typeToString(parsed.type()))
                   .arg(messageToString(parsed)));
 }
@@ -151,7 +157,7 @@ void MainWindow::slotParseOutcoming(const QSharedPointer<protocol::AbstractMessa
 
     const Message& parsed = dynamic_cast<const Message&>(*msg);
 
-    addLogMessage(tr("Parsed message type = %1:\n%2")
+    addLogMessage(tr("Parsed message type = %1: %2")
                   .arg(typeToString(parsed.type()))
                   .arg(messageToString(parsed)));
 
