@@ -2,6 +2,7 @@
 #define PROTOCOL_PROTOCOL_PRIVATE_H
 
 #include <QtGlobal>
+#include <QPair>
 #include <QRgb>
 #include <QString>
 #include <QVector>
@@ -144,8 +145,8 @@ public:
     void setImageColors(const QVector<QRgb>& colors);
     void setImageColors(QVector<QRgb>&& colors) NOEXCEPT;
 
-    quint16 rgbTo16bit(const QRgb& color) const NOEXCEPT;
-    QRgb rgbFrom16bit(quint16 bits) const NOEXCEPT;
+    QPair<quint8, quint8> rgbTo16bit(const QRgb& color) const;
+    QRgb rgbFrom16bit(const QPair<quint8, quint8>& bits) const;
 
 private:
     quint8 m_imageNum = 0;

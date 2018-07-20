@@ -2,24 +2,9 @@
 
 namespace
 {
-namespace details
-{
-quint16 maskFive() NOEXCEPT { return 0xF8; }
-quint16 maskSix()  NOEXCEPT { return 0xFC; }
-
-} // details
-
-quint16 maskRed()   NOEXCEPT { return details::maskFive(); }
-quint16 maskGreen() NOEXCEPT { return details::maskSix();  }
-quint16 maskBlue()  NOEXCEPT { return details::maskFive(); }
-
-quint16 shiftRed(quint16 val)   NOEXCEPT { return val >> 3; }
-quint16 shiftGreen(quint16 val) NOEXCEPT { return val << 3; }
-quint16 shiftBlue(quint16 val)  NOEXCEPT { return val << 8; }
-
-quint16 backShiftRed(quint16 val)   NOEXCEPT { return val << 3; }
-quint16 backShiftGreen(quint16 val) NOEXCEPT { return val >> 3; }
-quint16 backShiftBlue(quint16 val)  NOEXCEPT { return val >> 8; }
+quint8 maskThree() NOEXCEPT { return 0xE0; }
+quint8 maskFive()  NOEXCEPT { return 0xF8; }
+quint8 maskSix()   NOEXCEPT { return 0xFC; }
 
 }
 
@@ -238,26 +223,23 @@ void ImageDataMessagePrivate::setImageColors(QVector<QRgb>&& colors) NOEXCEPT
     m_imageColors.swap(colors);
 }
 
-quint16 ImageDataMessagePrivate::rgbTo16bit(const QRgb& color) const NOEXCEPT
+QPair<quint8, quint8> ImageDataMessagePrivate::rgbTo16bit(const QRgb& color) const
 {
-    quint16 red   = static_cast<quint16>(qRed(color))   & ::maskRed();
-    quint16 green = static_cast<quint16>(qGreen(color)) & ::maskGreen();
-    quint16 blue  = static_cast<quint16>(qBlue(color))  & ::maskBlue();
-    red   = ::shiftRed(red);
-    green = ::shiftGreen(green);
-    blue  = ::shiftBlue(blue);
+    const quint8 red   = static_cast<quint8>(qRed(color))   & ::maskFive();
+    const quint8 green = static_cast<quint8>(qGreen(color)) & ::maskSix();
+    const quint8 blue  = static_cast<quint8>(qBlue(color))  & ::maskFive();
 
-    return static_cast<quint16>(red | green | blue);
+    const quint8 firstByte  = blue | (green >> 5);
+    const quint8 secondByte = (green << 3) | (red >> 3);
+
+    return qMakePair<quint8, quint8>(firstByte, secondByte);
 }
 
-QRgb ImageDataMessagePrivate::rgbFrom16bit(quint16 bits) const NOEXCEPT
+QRgb ImageDataMessagePrivate::rgbFrom16bit(const QPair<quint8, quint8>& bits) const
 {
-    quint16 red   = bits & (::shiftRed(::maskRed()));
-    quint16 green = bits & (::shiftGreen(::maskGreen()));
-    quint16 blue  = bits & (::shiftBlue(::maskBlue()));
-    red   = ::backShiftRed(red);
-    green = ::backShiftGreen(green);
-    blue  = ::backShiftBlue(blue);
+    quint8 red   = (bits.second & (~::maskThree())) << 3;
+    quint8 green = ((bits.first & (~::maskFive())) << 5) | ((bits.second & ::maskThree()) >> 3);
+    quint8 blue  = bits.first & ::maskFive();
 
     return qRgb(red, green, blue);
 }

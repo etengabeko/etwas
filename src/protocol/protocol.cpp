@@ -147,7 +147,7 @@ std::unique_ptr<Message> Message::deserialize(const QByteArray& content)
             break;
         case MessageType::Unknown:
         default:
-            Q_ASSERT_X(false, "incoming::Message::deserialize", "Unknown message type");
+//            Q_ASSERT_X(false, "incoming::Message::deserialize", "Unknown message type");
             break;
         }
     }
@@ -457,7 +457,7 @@ std::unique_ptr<Message> Message::deserialize(const QByteArray& content)
             break;
         case MessageType::Unknown:
         default:
-            Q_ASSERT_X(false, "outcoming::Message::deserialize", "Unknown message type");
+//            Q_ASSERT_X(false, "outcoming::Message::deserialize", "Unknown message type");
             break;
         }
     }
@@ -1053,7 +1053,8 @@ const QByteArray ImageDataMessage::serialize() const
         << static_cast<quint8>(imageNumber());
     for (const QRgb& each : imageColors())
     {
-        out << static_cast<quint16>(m_pimpl->rgbTo16bit(each));
+        const QPair<quint8, quint8> color16bit = m_pimpl->rgbTo16bit(each);
+        out << color16bit.first << color16bit.second;
     }
     return result;
 }
@@ -1072,11 +1073,11 @@ bool ImageDataMessage::parse(const QByteArray& src)
         setImageNumber(tmp);
         QVector<QRgb> colors;
         colors.reserve(src.size()/2 - 1);
-        quint16 eachColor = 0;
+        QPair<quint8, quint8> color16bit { 0, 0 };
         while (!in.atEnd())
         {
-            in >> eachColor;
-            colors.append(m_pimpl->rgbFrom16bit(eachColor));
+            in >> color16bit.first >> color16bit.second;
+            colors.append(m_pimpl->rgbFrom16bit(color16bit));
         }
         setImageColors(std::move(colors));
     }

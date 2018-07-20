@@ -57,9 +57,9 @@ void ImageData::makeTestData()
     {
         QDataStream stream(&content, QIODevice::WriteOnly);
         stream.setByteOrder(QDataStream::LittleEndian);
-        stream << quint8(0x06)     // type
-               << quint8(55)       // image number
-               << quint16(0x0020); // color
+        stream << quint8(0x06)                  // type
+               << quint8(55)                    // image number
+               << quint8(0x00) << quint8(0x20); // color
     }
     QTest::newRow("image number & one color")
             << QSharedPointer<AbstractMessage>(new ImageDataMessage(message))
@@ -84,14 +84,14 @@ void ImageData::makeTestData()
         stream << quint8(0x06)     // type
                << quint8(255);     // image number
         // colors
-        stream << quint16(0x0000)
-               << quint16(0x0000)
-               << quint16(0x1082)
-               << quint16(0x18E3)
-               << quint16(0x2104)
-               << quint16(0x21E4)
-               << quint16(0x39E7)
-               << quint16(0xFFFF);
+        stream << quint8(0x00) << quint8(0x00)
+               << quint8(0x00) << quint8(0x00)
+               << quint8(0x10) << quint8(0x82)
+               << quint8(0x18) << quint8(0xE3)
+               << quint8(0x21) << quint8(0x04)
+               << quint8(0x21) << quint8(0xE4)
+               << quint8(0x39) << quint8(0xE7)
+               << quint8(0xFF) << quint8(0xFF);
     }
     QTest::newRow("image number & many colors")
             << QSharedPointer<AbstractMessage>(new ImageDataMessage(message))
