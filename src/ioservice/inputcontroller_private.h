@@ -1,8 +1,6 @@
 #ifndef IOSERVICE_INPUT_CONTROLLER_PRIVATE_H
 #define IOSERVICE_INPUT_CONTROLLER_PRIVATE_H
 
-#include <functional>
-
 #include <QObject>
 
 template <typename T>
@@ -27,9 +25,11 @@ class InputControllerPrivate : public QObject
 public:
     explicit InputControllerPrivate(Transport* transport,
                                     protocol::MessageDirection direction,
-                                    std::function<void(const QSharedPointer<protocol::AbstractMessage>&)> onReceive,
                                     QObject* parent = nullptr);
     ~InputControllerPrivate() NOEXCEPT;
+
+signals:
+    void messageReceived(const QSharedPointer<protocol::AbstractMessage>& message);
 
 private slots:
     void slotReceive(const QByteArray& data);
@@ -40,7 +40,6 @@ private:
 private:
     Transport* m_transport = nullptr;
     const protocol::MessageDirection m_direction;
-    std::function<void(const QSharedPointer<protocol::AbstractMessage>&)> m_onReceive;
 
     QByteArray m_buffer;
 

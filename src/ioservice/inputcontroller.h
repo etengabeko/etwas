@@ -37,9 +37,6 @@ signals:
     void messageReceived(const QSharedPointer<protocol::AbstractMessage>& message);
 
 private:
-    void onMessageReceived(const QSharedPointer<protocol::AbstractMessage>& message);
-
-private:
     std::unique_ptr<details::InputControllerPrivate> m_pimpl;
 
 };
