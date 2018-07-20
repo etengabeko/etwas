@@ -109,8 +109,9 @@ ControlPanelWidget::ControlPanelWidget(bool isDebugMode,
         layout()->setMenuBar(menubar);
 
         QMenu* fileMenu = menubar->addMenu(tr("File"));
-        Q_UNUSED(fileMenu);
-        //TODO
+        QAction* disconnectAction = fileMenu->addAction(tr("Disconnect"));
+        QObject::connect(disconnectAction, &QAction::triggered,
+                         this, &ControlPanelWidget::slotCloseConnection);
 
         QMenu* editMenu = menubar->addMenu(tr("Edit"));
 
@@ -1209,6 +1210,11 @@ void ControlPanelWidget::slotChangeControlsColumnsCount(int count)
         delete oldLayout;
         m_ui->controlsContentsWidget->setLayout(newLayout);
     }
+}
+
+void ControlPanelWidget::slotCloseConnection()
+{
+    stopTransport();
 }
 
 void ControlPanelWidget::slotLoadConfiguration()

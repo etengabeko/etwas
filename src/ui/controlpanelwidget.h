@@ -103,6 +103,8 @@ private slots:
 
     void slotChangeControlsColumnsCount(int count);
 
+    void slotCloseConnection();
+
     void slotLoadConfiguration();
     void slotSaveConfiguration();
 
