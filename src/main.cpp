@@ -8,7 +8,7 @@ int main(int argc, char* argv[])
     QApplication app(argc, argv);
 
     QCommandLineParser parser;
-    QCommandLineOption debugOption("debug", app.tr("Enable Debug tools"));
+    QCommandLineOption debugOption("debug", app.translate("main", "Enable Debug tools"));
     parser.addOption(debugOption);
     parser.process(app);
 

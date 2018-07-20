@@ -48,7 +48,7 @@ const QSize& buttonImageSize()
 
 quint8 debugControlsCount() { return 9; }
 
-QString titleString() { return qApp->tr("Device"); }
+QString titleString() { return QApplication::translate("ControlPanelWidget", "Device"); }
 
 Logger::Level customLogLevel() { return Logger::Level::Trace; }
 const QString customLogFileName()
@@ -1231,7 +1231,7 @@ void ControlPanelWidget::slotLoadConfiguration()
     const QString fileName = QFileDialog::getOpenFileName(nullptr,
                                                           tr("Select file to load configuration"),
                                                           QCoreApplication::applicationDirPath(),
-                                                          tr("INI Files: *.ini;;All Files: *"));
+                                                          tr("INI Files (*.ini);;All Files (*)"));
     if (!fileName.isEmpty())
     {
         Settings current(fileName);

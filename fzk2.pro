@@ -110,6 +110,9 @@ FORMS = \
 RESOURCES = \
     $$PWD/src/resources.qrc
 
+TRANSLATIONS = \
+    $$PWD/src/tr_ru.ts
+
 INSTALLS += \
     target \
     config

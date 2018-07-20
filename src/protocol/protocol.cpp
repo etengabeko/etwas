@@ -94,15 +94,15 @@ const QString typeToString(MessageType type)
 {
     static const QMap<MessageType, QString> types
     {
-        { MessageType::DeviceIdentity, qApp->tr("DeviceIdentity = %1")
+        { MessageType::DeviceIdentity, QCoreApplication::translate("protocol", "DeviceIdentity = %1")
                     .arg(::typeToHex(MessageType::DeviceIdentity)) },
-        { MessageType::ButtonsState,   qApp->tr("ButtonsState = %1")
+        { MessageType::ButtonsState,   QCoreApplication::translate("protocol", "ButtonsState = %1")
                     .arg(::typeToHex(MessageType::ButtonsState)) }
     };
 
     auto founded = types.find(type);
     return (founded != types.cend() ? founded.value()
-                                    : qApp->tr("Unknown incoming type = %1").arg(::typeToHex(type)));
+                                    : QCoreApplication::translate("protocol", "Unknown incoming type = %1").arg(::typeToHex(type)));
 }
 
 Message::Message(MessageType type) NOEXCEPT :
@@ -383,23 +383,23 @@ const QString typeToString(MessageType type)
 {
     static const QMap<MessageType, QString> types
     {
-        { MessageType::DeviceAddress,  qApp->tr("DeviceAddress = %1")
+        { MessageType::DeviceAddress,  QCoreApplication::translate("protocol", "DeviceAddress = %1")
                     .arg(::typeToHex(MessageType::DeviceAddress)) },
-        { MessageType::DisplayImages,  qApp->tr("DisplayImages = %1")
+        { MessageType::DisplayImages,  QCoreApplication::translate("protocol", "DisplayImages = %1")
                     .arg(::typeToHex(MessageType::DisplayImages)) },
-        { MessageType::DisplayOptions, qApp->tr("DisplayOptions = %1")
+        { MessageType::DisplayOptions, QCoreApplication::translate("protocol", "DisplayOptions = %1")
                     .arg(::typeToHex(MessageType::DisplayOptions)) },
-        { MessageType::BlinkOptions,   qApp->tr("BlinkOptions = %1")
+        { MessageType::BlinkOptions,   QCoreApplication::translate("protocol", "BlinkOptions = %1")
                     .arg(::typeToHex(MessageType::BlinkOptions)) },
-        { MessageType::BrightOptions,  qApp->tr("BrightOptions = %1")
+        { MessageType::BrightOptions,  QCoreApplication::translate("protocol", "BrightOptions = %1")
                     .arg(::typeToHex(MessageType::BrightOptions)) },
-        { MessageType::ImageData,     qApp->tr("ImagesData = %1")
+        { MessageType::ImageData,      QCoreApplication::translate("protocol", "ImagesData = %1")
                     .arg(::typeToHex(MessageType::ImageData)) }
     };
 
     auto founded = types.find(type);
     return (founded != types.cend() ? founded.value()
-                                    : qApp->tr("Unknown outcoming type = %1").arg(::typeToHex(type)));
+                                    : QCoreApplication::translate("protocol", "Unknown outcoming type = %1").arg(::typeToHex(type)));
 }
 
 Message::Message(MessageType type) NOEXCEPT :
