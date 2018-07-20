@@ -5,6 +5,7 @@ TARGET = $$PROJECT
 QT = \
     core \
     gui \
+    widgets \
     network
 
 CONFIG += warn_on
@@ -22,6 +23,7 @@ else {
 BUILD_DIR = $$PWD/build
 OBJECTS_DIR = $$BUILD_DIR/obj
 MOC_DIR = $$BUILD_DIR/moc
+UI_DIR = $$BUILD_DIR/ui
 DESTDIR = $$BUILD_DIR/sbin
 
 isEmpty(PREFIX) {
@@ -41,10 +43,12 @@ ROOT_PROJECT_HEADERS = \
     $$ROOT_PROJECT_SRC_DIR/ioservice/inputcontroller.h \
     $$ROOT_PROJECT_SRC_DIR/ioservice/inputcontroller_private.h \
     $$ROOT_PROJECT_SRC_DIR/ioservice/transport.h \
-    $$ROOT_PROJECT_SRC_DIR/ioservice/transport_private.h
+    $$ROOT_PROJECT_SRC_DIR/ioservice/transport_private.h \
+    $$ROOT_PROJECT_SRC_DIR/storage/imagestorage.h
 
 HEADERS = \
-    $$ROOT_PROJECT_HEADERS
+    $$ROOT_PROJECT_HEADERS \
+    $$PWD/src/mainwindow.h
 
 SOURCES = \
     # root project
@@ -54,8 +58,13 @@ SOURCES = \
     $$ROOT_PROJECT_SRC_DIR/ioservice/inputcontroller_private.cpp \
     $$ROOT_PROJECT_SRC_DIR/ioservice/transport.cpp \
     $$ROOT_PROJECT_SRC_DIR/ioservice/transport_private.cpp \
+    $$ROOT_PROJECT_SRC_DIR/storage/imagestorage.cpp \
     # main
+    $$PWD/src/mainwindow.cpp \
     $$PWD/src/main.cpp
+
+FORMS = \
+    $$PWD/src/mainwindow.ui
 
 INSTALLS += \
     target

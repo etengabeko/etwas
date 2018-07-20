@@ -12,10 +12,12 @@ set(ROOT_PROJECT_HEADERS
     ${ROOT_PROJECT_SRC_DIR}/ioservice/inputcontroller_private.h
     ${ROOT_PROJECT_SRC_DIR}/ioservice/transport.h
     ${ROOT_PROJECT_SRC_DIR}/ioservice/transport_private.h
+    ${ROOT_PROJECT_SRC_DIR}/storage/imagestorage.h
 )
 
 set(HEADERS
     ${ROOT_PROJECT_HEADERS}
+    src/mainwindow.h
 )
 
 set(SOURCES
@@ -25,14 +27,18 @@ set(SOURCES
     ${ROOT_PROJECT_SRC_DIR}/ioservice/inputcontroller_private.cpp
     ${ROOT_PROJECT_SRC_DIR}/ioservice/transport.cpp
     ${ROOT_PROJECT_SRC_DIR}/ioservice/transport_private.cpp
+    ${ROOT_PROJECT_SRC_DIR}/storage/imagestorage.cpp
+    src/mainwindow.cpp
     src/main.cpp
 )
 
+qt5_wrap_ui(FORMS src/mainwindow.ui)
+
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
-add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS})
+add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS} ${FORMS})
 
-target_link_libraries(${PROJECT_NAME} Qt5::Network Qt5::Gui Qt5::Core)
+target_link_libraries(${PROJECT_NAME} Qt5::Network Qt5::Widgets)
 
 install(TARGETS ${PROJECT_NAME} EXPORT ${PROJECT_NAME}
         ARCHIVE DESTINATION "${CMAKE_INSTALL_PREFIX}/lib"
