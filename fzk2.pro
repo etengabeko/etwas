@@ -34,12 +34,15 @@ isEmpty(PREFIX) {
 # installs
 target.path = $$PREFIX/bin
 
-# config
-OTHER_FILES += $$PWD/config/settings.ini
-config.path = $$PREFIX/etc/$$PROJECT
-config.files += $$OTHER_FILES
-
 INCLUDEPATH += $$PWD/src
+
+# translation
+translation.target = tr_ru.qm
+translation.depends = $$PWD/src/tr_ru.ts
+translation.commands += lrelease $$PWD/src/tr_ru.ts -qm $$PWD/src/resources/tr_ru.qm
+
+QMAKE_EXTRA_TARGETS += translation
+PRE_TARGETDEPS = tr_ru.qm
 
 HEADERS = \
     # logger
@@ -114,5 +117,4 @@ TRANSLATIONS = \
     $$PWD/src/tr_ru.ts
 
 INSTALLS += \
-    target \
-    config
+    target

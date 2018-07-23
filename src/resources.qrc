@@ -1,5 +1,6 @@
 <RCC>
     <qresource prefix="/">
         <file alias="preload.gif">resources/preload.gif</file>
+        <file alias="tr_ru">resources/tr_ru.qm</file>
     </qresource>
 </RCC>

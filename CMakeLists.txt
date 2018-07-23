@@ -98,9 +98,12 @@ qt5_add_resources(RESOURCES
     src/resources.qrc
 )
 
+add_custom_target(QM_FILES COMMAND lrelease ${CMAKE_CURRENT_SOURCE_DIR}/src/tr_ru.ts -qm ${CMAKE_CURRENT_SOURCE_DIR}/src/resources/tr_ru.qm)
+
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS} ${FORMS} ${RESOURCES})
+add_dependencies(${PROJECT_NAME} QM_FILES)
 
 target_link_libraries(${PROJECT_NAME} Qt5::Widgets Qt5::Network)
 
@@ -109,7 +112,3 @@ install(TARGETS ${PROJECT_NAME} EXPORT ${PROJECT_NAME}
         LIBRARY DESTINATION "${CMAKE_INSTALL_PREFIX}/lib"
         RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}/bin"
 )
-
-# install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/config/settings.ini
-# 	DESTINATION ${CMAKE_INSTALL_PREFIX}/etc
-# )

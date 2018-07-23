@@ -5,3 +5,4 @@ docs
 Makefile*
 *.Debug
 *.Release
+*.qm
