@@ -41,6 +41,7 @@ enum class BlinkState;
  */
 namespace details
 {
+class PingMessagePrivate;
 class DeviceIdentityMessagePrivate;
 class ButtonsStateMessagePrivate;
 class DeviceAddressMessagePrivate;
@@ -125,9 +126,10 @@ namespace incoming
  */
 enum class MessageType
 {
-    Unknown        = 0x00, //!< Тип не определён
+    Ping           = 0x00, //!< Сообщение о наличии соединения
     DeviceIdentity = 0x01, //!< Идентификация устройства
-    ButtonsState   = 0x02  //!< Изменение состояния клавиш
+    ButtonsState   = 0x02, //!< Изменение состояния клавиш
+    Unknown        = 0xFF  //!< Тип не определён
 };
 
 /**
@@ -165,6 +167,37 @@ public:
 
 protected:
     const MessageType m_type = MessageType::Unknown; //!< Тип входящего сообщения
+
+};
+
+/**
+ * @class PingMessage
+ * @brief Реализация сообщений о наличии соединения
+ */
+class PingMessage final : public Message
+{
+public:
+    PingMessage();
+    ~PingMessage() NOEXCEPT override;
+
+    PingMessage(PingMessage&& other) NOEXCEPT;
+    PingMessage& operator =(PingMessage&& other) NOEXCEPT;
+
+    PingMessage(const PingMessage& other);
+    PingMessage& operator =(const PingMessage& other);
+
+    /**
+     * @brief serialize [override]
+     */
+    const QByteArray serialize() const override;
+
+    /**
+     * @brief parse [override]
+     */
+    bool parse(const QByteArray& src) override;
+
+private:
+    std::unique_ptr<details::PingMessagePrivate> m_pimpl;
 
 };
 
@@ -282,13 +315,14 @@ namespace outcoming
  */
 enum class MessageType
 {
-    Unknown        = 0x00, //!< Тип не определён
+    Ping           = 0x00, //!< Сообщение о наличии соединения
     DeviceAddress  = 0x01, //!< Установка адреса и порта устройства
     DisplayImages  = 0x02, //!< Назначение изображений дисплеям
     DisplayOptions = 0x03, //!< Управление избражениями дисплея
     BlinkOptions   = 0x04, //!< Управление параметрами мигания дисплея
     BrightOptions  = 0x05, //!< Управление яркостью дисплея
-    ImageData     = 0x06  //!< Загрузка изображений в память устройства
+    ImageData      = 0x06, //!< Загрузка изображений в память устройства
+    Unknown        = 0xFF  //!< Тип не определён
 };
 
 /**
@@ -326,6 +360,37 @@ public:
 
 protected:
     const MessageType m_type = MessageType::Unknown; //!< Тип исходящего сообщения
+
+};
+
+/**
+ * @class PingMessage
+ * @brief Реализация сообщений о наличии соединения
+ */
+class PingMessage final : public Message
+{
+public:
+    PingMessage();
+    ~PingMessage() NOEXCEPT override;
+
+    PingMessage(PingMessage&& other) NOEXCEPT;
+    PingMessage& operator =(PingMessage&& other) NOEXCEPT;
+
+    PingMessage(const PingMessage& other);
+    PingMessage& operator =(const PingMessage& other);
+
+    /**
+     * @brief serialize [override]
+     */
+    const QByteArray serialize() const override;
+
+    /**
+     * @brief parse [override]
+     */
+    bool parse(const QByteArray& src) override;
+
+private:
+    std::unique_ptr<details::PingMessagePrivate> m_pimpl;
 
 };
 

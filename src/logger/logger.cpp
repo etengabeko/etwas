@@ -80,6 +80,11 @@ public:
         }
     }
 
+    Logger::Level level() const NOEXCEPT
+    {
+        return m_level;
+    }
+
     void info(const std::string& message)
     {
         static const std::string levelLabel("INFO");
@@ -185,6 +190,11 @@ Logger& Logger::operator =(Logger&& other) NOEXCEPT
 {
     m_pimpl.swap(other.m_pimpl);
     return *this;
+}
+
+Logger::Level Logger::level() const NOEXCEPT
+{
+    return m_pimpl->level();
 }
 
 void Logger::info(const QString& message)

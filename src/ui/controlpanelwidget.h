@@ -11,7 +11,9 @@
 
 class QByteArray;
 class QCloseEvent;
+class QStatusBar;
 class QThread;
+class QTimer;
 template <typename T> class QSharedPointer;
 
 namespace ioservice
@@ -25,6 +27,7 @@ namespace protocol
 {
 class AbstractMessage;
 enum class ButtonState;
+enum class MessageDirection;
 
 namespace incoming  { class Message; }
 namespace outcoming { class Message; }
@@ -85,6 +88,7 @@ private slots:
     void slotOptionsClose();
     void slotImagesClose();
 
+    void slotSendPing();
     void slotSendDeviceIdentity();
     void slotSendImagesData();
     void slotChangeDeviceAddress();
@@ -100,6 +104,8 @@ private slots:
     void slotActiveControlBrightChange(int level);
     void slotActiveControlImageFirstSelect();
     void slotActiveControlImageSecondSelect();
+
+    void slotLoadImages();
 
     void slotChangeControlsColumnsCount(int count);
 
@@ -123,6 +129,11 @@ private:
     void processMessage(const protocol::incoming::Message& message);
     void processMessage(const protocol::outcoming::Message& message);
 
+    QString createReceivedBytesLogMessage(const QByteArray& bytes) const;
+    QString createSentBytesLogMessage(const QByteArray& bytes) const;
+
+    void logMessage(const QString& message, protocol::MessageDirection direction);
+
     void applyButtonsStates(const QVector<protocol::ButtonState>& states);
 
     void createDisplayOptionsMessage();
@@ -133,6 +144,8 @@ private:
 
     void stopTransport();
     void setNotConnectedState();
+
+    void showPingCounterMessage();
 
     void closeEvent(QCloseEvent* event);
 
@@ -161,11 +174,16 @@ private:
 
     enum class SelectedImage
     {
+        Unset,
         First,
         Second
     };
 
-    SelectedImage m_lastSelected = SelectedImage::First;
+    SelectedImage m_lastSelected = SelectedImage::Unset;
+
+    quint64 m_pingCounter = 0;
+    QTimer* m_pingTimer = nullptr;
+    QStatusBar* m_statusBar = nullptr;
 
 };
 

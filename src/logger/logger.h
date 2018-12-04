@@ -24,7 +24,6 @@ public:
         Both    = Console | File
     };
 
-
 public:
     Logger(Level level,
            Device device = Device::Console,
@@ -36,6 +35,8 @@ public:
 
     Logger(Logger&& other) NOEXCEPT;
     Logger& operator= (Logger&& other) NOEXCEPT;
+
+    Level level() const NOEXCEPT;
 
     void info(const QString& message);
     void warning(const QString& message);

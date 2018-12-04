@@ -4,6 +4,7 @@
 #include <QGraphicsOpacityEffect>
 #include <QHBoxLayout>
 #include <QLabel>
+#include <QMouseEvent>
 #include <QTimer>
 
 #include "protocol/types.h"
@@ -41,6 +42,8 @@ DisplayControlWidget::DisplayControlWidget(const storage::ImageStorage* const st
     m_ui->displayButton->layout()->addWidget(m_displayLabel);
     m_displayLabel->setAlignment(Qt::AlignCenter);
 
+    m_ui->displayButton->installEventFilter(this);
+
     QGraphicsOpacityEffect* effect = new QGraphicsOpacityEffect();
     effect->setOpacity(::transparentLevel());
     m_displayLabel->setGraphicsEffect(effect);
@@ -60,8 +63,6 @@ DisplayControlWidget::DisplayControlWidget(const storage::ImageStorage* const st
     else
     {
         m_ui->displayButton->setCheckable(true);
-        QObject::connect(m_ui->displayButton, &QToolButton::toggled,
-                         this, &DisplayControlWidget::activated);
     }
 }
 
@@ -69,6 +70,31 @@ DisplayControlWidget::~DisplayControlWidget()
 {
     delete m_ui;
     m_ui = nullptr;
+}
+
+bool DisplayControlWidget::eventFilter(QObject* watched, QEvent* event)
+{
+    if (   watched == m_ui->displayButton
+        && m_isDebugMode == false)
+    {
+       QEvent::Type eventType = event->type();
+        if (   eventType == QEvent::MouseButtonRelease
+            && static_cast<QMouseEvent*>(event)->button() == Qt::MouseButton::RightButton)
+        {
+            const bool actived = !m_ui->displayButton->isChecked();
+            m_ui->displayButton->setChecked(actived);
+            emit activated(actived);
+        }
+        else if (   (   eventType == QEvent::MouseButtonPress
+                     || eventType == QEvent::MouseButtonRelease
+                     || eventType == QEvent::MouseButtonDblClick)
+                 && static_cast<QMouseEvent*>(event)->button() == Qt::MouseButton::LeftButton)
+        {
+            event->accept();
+            return true;
+        }
+    }
+    return QWidget::eventFilter(watched, event);
 }
 
 bool DisplayControlWidget::isFirstImageEnabled() const

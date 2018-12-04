@@ -37,7 +37,13 @@ void ConnectionOptionsDialog::slotApply()
 {
     QApplication::setOverrideCursor(QCursor(Qt::WaitCursor));
 
-    QHostInfo info = QHostInfo::fromName(m_ui->addressLineEdit->text());
+    QString address = m_ui->addressLineEdit->text();
+    if (address.isEmpty())
+    {
+        address = m_ui->addressLineEdit->placeholderText();
+    }
+
+    QHostInfo info = QHostInfo::fromName(address);
     if (!info.addresses().isEmpty())
     {
         m_address = info.addresses().first();

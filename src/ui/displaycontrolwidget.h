@@ -75,6 +75,8 @@ private slots:
     void slotTimeoutSecond();
 
 private:
+    bool eventFilter(QObject* watched, QEvent* event);
+
     void reloadImage(ImageNumber num);
     void setImage(ImageNumber num, const QPixmap& img);
     void resetImage(ImageNumber num);

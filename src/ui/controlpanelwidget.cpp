@@ -18,6 +18,7 @@
 #include <QMovie>
 #include <QScrollBar>
 #include <QSharedPointer>
+#include <QStatusBar>
 #include <QTemporaryFile>
 #include <QThread>
 #include <QTimer>
@@ -39,6 +40,13 @@
 namespace
 {
 
+QString defaultHostAddress() { return "192.168.0.10"; }
+quint16 defaultPort() { return 7; }
+quint8 defaultBrightLevel() { return 15; }
+quint16 defaultTimeout() { return 1000; }
+
+int defaultPingTimeoutMsecs() { return 1000; }
+
 int firmwareVersion() { return 0x02; }
 const QSize& buttonImageSize()
 {
@@ -46,11 +54,12 @@ const QSize& buttonImageSize()
     return size;
 }
 
-quint8 debugControlsCount() { return 9; }
+quint8 commonControlsCount() { return 16; }
+quint8 debugControlsCount()  { return 19; }
 
 QString titleString() { return QApplication::translate("ControlPanelWidget", "Device"); }
 
-Logger::Level customLogLevel() { return Logger::Level::Trace; }
+Logger::Level customLogLevel() { return Logger::Level::Debug; }
 const QString customLogFileName()
 {
     return QFileInfo(QDir::temp(),
@@ -66,19 +75,22 @@ ControlPanelWidget::ControlPanelWidget(bool isDebugMode,
     m_ui(new Ui::ControlPanel()),
     m_isDebugMode(isDebugMode),
     m_recvThread(new QThread()),
-    m_imgStorage(new storage::ImageStorage())
+    m_currentAddress(::defaultHostAddress()),
+    m_currentPort(::defaultPort()),
+    m_imgStorage(new storage::ImageStorage()),
+    m_statusBar(new QStatusBar())
 {
     m_ui->setupUi(this);
+
+    layout()->addWidget(m_statusBar);
+    showPingCounterMessage();
 
     m_ui->deviceAddressButton->hide();
     m_ui->deviceIdentityButton->hide();
     m_ui->logFileNameLineEdit->hide();
     m_ui->logFileNameLabel->hide();
-
-    if (m_ui->workingPage->layout() == nullptr)
-    {
-        m_ui->workingPage->setLayout(new QGridLayout());
-    }
+    m_ui->columnCountLabel->hide();
+    m_ui->columnCountSpinBox->hide();
 
     QMovie* preloadMovie = new QMovie(this);
     preloadMovie->setFileName(":/preload.gif");
@@ -118,11 +130,30 @@ ControlPanelWidget::ControlPanelWidget(bool isDebugMode,
         QAction* saveAction = editMenu->addAction(tr("Save configuration"));
         QObject::connect(saveAction, &QAction::triggered,
                          this, &ControlPanelWidget::slotSaveConfiguration);
+
+        QMenu* optionsMenu = menubar->addMenu(tr("Options"));
+
+        QAction* optionsAction = optionsMenu->addAction(tr("Connection options"));
+        QObject::connect(optionsAction, &QAction::triggered,
+                         this, &ControlPanelWidget::slotChangeDeviceAddress);
+        QAction* imagesAction = optionsMenu->addAction(tr("Load images"));
+        QObject::connect(imagesAction, &QAction::triggered,
+                         this, &ControlPanelWidget::slotLoadImages);
+    }
+    else
+    {
+        m_pingTimer = new QTimer(this);
+        QObject::connect(m_pingTimer, &QTimer::timeout,
+                         this, &ControlPanelWidget::slotSendPing);
+        m_pingTimer->setInterval(::defaultPingTimeoutMsecs());
     }
 }
 
 ControlPanelWidget::~ControlPanelWidget()
 {
+    delete m_pingTimer;
+    m_pingTimer = nullptr;
+
     emit subwindowClosed(m_optionsWidget);
     emit subwindowClosed(m_imagesWidget);
 
@@ -137,6 +168,9 @@ ControlPanelWidget::~ControlPanelWidget()
     m_outCtrl.reset();
 
     removeAllContols();
+
+    delete m_statusBar;
+    m_statusBar = nullptr;
 
     delete m_ui;
     m_ui = nullptr;
@@ -172,7 +206,8 @@ void ControlPanelWidget::removeAllContols()
         DisplayControlWidget* each = it.next().value();
         delete each;
     }
-    delete m_ui->controlsContentsWidget->layout();
+    delete m_ui->commonGroupBox->layout();
+    delete m_ui->additionalGroupBox->layout();
 
     m_controlWidgets.clear();
     m_controlIds.clear();
@@ -365,6 +400,14 @@ void ControlPanelWidget::makeDebugConfiguration(int buttonsCount)
     }
 
     createControls();
+
+    if (m_pingCounter > 0)
+    {
+        m_pingCounter = 0;
+        showPingCounterMessage();
+    }
+
+    m_pingTimer->start();
 }
 
 void ControlPanelWidget::makeConfiguration(const protocol::incoming::Message& message)
@@ -468,6 +511,15 @@ void ControlPanelWidget::createControl(quint8 controlId)
                                                              m_isDebugMode);
         m_controlWidgets.insert(controlId, wgt);
         initConnectionsForControl(wgt);
+
+        wgt->setBrightLevel(::defaultBrightLevel());
+        wgt->setFirstImage(controlId);
+        wgt->setFirstImageEnable(true);
+        wgt->setSecondImage(controlId);
+        wgt->setSecondImageEnable(false);
+        wgt->setTimeOn(::defaultTimeout());
+        wgt->setTimeOff(::defaultTimeout());
+        wgt->setBlinkingEnabled(false);
     }
 }
 
@@ -572,6 +624,7 @@ void ControlPanelWidget::slotApplySelectedImage(quint8 imageIndex)
         case SelectedImage::Second:
             m_optionsWidget->setSecondImage(imageIndex);
             break;
+        case SelectedImage::Unset:
         default:
             break;
         }
@@ -620,6 +673,16 @@ void ControlPanelWidget::slotChangeButtonsState(bool enabled)
     message->setButtonsStates(std::move(states));
 
     slotSendMessage(QSharedPointer<protocol::AbstractMessage>(message));
+}
+
+void ControlPanelWidget::slotSendPing()
+{
+    using protocol::incoming::PingMessage;
+
+    slotSendMessage(QSharedPointer<protocol::AbstractMessage>(new PingMessage()));
+
+    ++m_pingCounter;
+    showPingCounterMessage();
 }
 
 void ControlPanelWidget::slotSendDeviceIdentity()
@@ -694,6 +757,8 @@ void ControlPanelWidget::setNotConnectedState()
 
     if (m_isDebugMode)
     {
+        m_pingTimer->stop();
+
         m_ui->deviceIdentityButton->hide();
     }
     else
@@ -709,50 +774,105 @@ void ControlPanelWidget::setNotConnectedState()
     m_ui->retryButton->show();
 }
 
+void ControlPanelWidget::showPingCounterMessage()
+{
+    m_statusBar->showMessage(tr("%1 Null-messages count: %2")
+                             .arg(m_isDebugMode ? tr("Sent") : tr("Received"))
+                             .arg(m_pingCounter));
+}
+
 void ControlPanelWidget::slotOnBytesReceive(const QByteArray& bytes)
 {
-    const QString str = tr("Received bytes (size %1) from %2:%3 : %4")
-            .arg(bytes.size())
-            .arg(m_currentAddress)
-            .arg(m_currentPort)
-            .arg(QString::fromLatin1(bytes.toHex()).toUpper());
-    m_logger->info(str);
+    const QString str = createReceivedBytesLogMessage(bytes);
+    m_logger->trace(str);
 
-    QString log = m_ui->incomingLogTextEdit->toPlainText();
-    if (!log.isEmpty())
+    if (m_logger->level() >= Logger::Level::Trace)
     {
-        log += "\n";
+        logMessage(str, protocol::MessageDirection::Incoming);
     }
-    log += str;
-    m_ui->incomingLogTextEdit->setPlainText(log);
-    m_ui->incomingLogTextEdit->verticalScrollBar()->setValue(m_ui->incomingLogTextEdit->verticalScrollBar()->maximum());
+}
+
+QString ControlPanelWidget::createReceivedBytesLogMessage(const QByteArray& bytes) const
+{
+    return tr("Received bytes (size %1) from %2:%3 : %4")
+           .arg(bytes.size())
+           .arg(m_currentAddress)
+           .arg(m_currentPort)
+           .arg(QString::fromLatin1(bytes.toHex()).toUpper());
 }
 
 void ControlPanelWidget::slotOnBytesSend(const QByteArray& bytes)
 {
-    const QString str = tr("Sent bytes (size %1) to %2:%3 : %4")
-            .arg(bytes.size())
-            .arg(m_currentAddress)
-            .arg(m_currentPort)
-            .arg(QString::fromLatin1(bytes.toHex()).toUpper());
-    m_logger->info(str);
+    const QString str = createSentBytesLogMessage(bytes);
+    m_logger->trace(str);
 
-    QString log = m_ui->outcomingLogTextEdit->toPlainText();
+    if (m_logger->level() >= Logger::Level::Trace)
+    {
+        logMessage(str, protocol::MessageDirection::Outcoming);
+    }
+}
+
+QString ControlPanelWidget::createSentBytesLogMessage(const QByteArray& bytes) const
+{
+    return tr("Sent bytes (size %1) to %2:%3 : %4")
+           .arg(bytes.size())
+           .arg(m_currentAddress)
+           .arg(m_currentPort)
+           .arg(QString::fromLatin1(bytes.toHex()).toUpper());
+}
+
+void ControlPanelWidget::logMessage(const QString& message, protocol::MessageDirection direction)
+{
+    using protocol::MessageDirection;
+
+    QPlainTextEdit* target = nullptr;
+    switch (direction)
+    {
+    case MessageDirection::Incoming:
+        target = m_ui->incomingLogTextEdit;
+        break;
+    case MessageDirection::Outcoming:
+        target = m_ui->outcomingLogTextEdit;
+        break;
+    default:
+        return;
+    }
+
+    QString log = target->toPlainText();
     if (!log.isEmpty())
     {
         log += "\n";
     }
-    log += str;
-    m_ui->outcomingLogTextEdit->setPlainText(log);
-    m_ui->outcomingLogTextEdit->verticalScrollBar()->setValue(m_ui->outcomingLogTextEdit->verticalScrollBar()->maximum());
+    log += message;
+    target->setPlainText(log);
+    target->verticalScrollBar()->setValue(target->verticalScrollBar()->maximum());
 }
 
 void ControlPanelWidget::slotSendMessage(const QSharedPointer<protocol::AbstractMessage>& message)
 {
+    using namespace protocol;
+
     if (   m_outCtrl != nullptr
         && message != nullptr)
     {
         m_outCtrl->slotSend(*message);
+
+        const bool isIncomingPing =    message->direction() == MessageDirection::Incoming
+                                    && dynamic_cast<const incoming::Message&>(*message).type() == incoming::MessageType::Ping;
+        const bool isOutcomingPing =    message->direction() == MessageDirection::Outcoming
+                                     && dynamic_cast<const outcoming::Message&>(*message).type() == outcoming::MessageType::Ping;
+        if (!isIncomingPing && !isOutcomingPing)
+        {
+            QByteArray ba;
+            {
+                QDataStream out(&ba, QIODevice::WriteOnly);
+                out.setByteOrder(QDataStream::LittleEndian);
+                out << *message;
+            }
+            const QString str = createSentBytesLogMessage(ba);
+            m_logger->info(str);
+            logMessage(str, MessageDirection::Outcoming);
+        }
     }
 }
 
@@ -788,6 +908,10 @@ void ControlPanelWidget::processMessage(const protocol::incoming::Message& messa
 
     switch (message.type())
     {
+    case MessageType::Ping:
+        ++m_pingCounter;
+        showPingCounterMessage();
+        break;
     case MessageType::DeviceIdentity:
         removeAllContols();
         makeConfiguration(message);
@@ -798,6 +922,19 @@ void ControlPanelWidget::processMessage(const protocol::incoming::Message& messa
     default:
         Q_ASSERT_X(false, "ControlPanelWidget::processMessage", "Unexpected incoming MessageType");
         break;
+    }
+
+    if (message.type() != MessageType::Ping)
+    {
+        QByteArray ba;
+        {
+            QDataStream out(&ba, QIODevice::WriteOnly);
+            out.setByteOrder(QDataStream::LittleEndian);
+            out << message;
+        }
+        const QString str = createReceivedBytesLogMessage(ba);
+        m_logger->info(str);
+        logMessage(str, protocol::MessageDirection::Incoming);
     }
 }
 
@@ -818,6 +955,10 @@ void ControlPanelWidget::processMessage(const protocol::outcoming::Message& mess
 
     switch (message.type())
     {
+    case MessageType::Ping:
+        ++m_pingCounter;
+        showPingCounterMessage();
+        break;
     case MessageType::BlinkOptions:
         {
             const BlinkOptionsMessage& blomsg = dynamic_cast<const BlinkOptionsMessage&>(message);
@@ -925,6 +1066,19 @@ void ControlPanelWidget::processMessage(const protocol::outcoming::Message& mess
         Q_ASSERT_X(false, "ControlPanelWidget::processMessage", "Unexpected outcoming MessageType");
         break;
     }
+
+    if (message.type() != MessageType::Ping)
+    {
+        QByteArray ba;
+        {
+            QDataStream out(&ba, QIODevice::WriteOnly);
+            out.setByteOrder(QDataStream::LittleEndian);
+            out << message;
+        }
+        const QString str = createReceivedBytesLogMessage(ba);
+        m_logger->info(str);
+        logMessage(str, protocol::MessageDirection::Incoming);
+    }
 }
 
 void ControlPanelWidget::slotActiveControlImageFirstChange(bool enabled)
@@ -993,6 +1147,12 @@ void ControlPanelWidget::slotActiveControlImageSecondChange(int imageIndex)
         }
         createDisplayOptionsMessage();
     }
+}
+
+void ControlPanelWidget::slotLoadImages()
+{
+    m_lastSelected = SelectedImage::Unset;
+    showImagesWidget();
 }
 
 void ControlPanelWidget::slotActiveControlImageFirstSelect()
@@ -1187,31 +1347,53 @@ void ControlPanelWidget::createBrightOptionsMessage()
 
 void ControlPanelWidget::slotChangeControlsColumnsCount(int count)
 {
-    QGridLayout* oldLayout = qobject_cast<QGridLayout*>(m_ui->controlsContentsWidget->layout());
-    if (   oldLayout == nullptr
-        || oldLayout->columnCount()-1 != count)
+    QGridLayout* oldCommonLayout = qobject_cast<QGridLayout*>(m_ui->commonGroupBox->layout());
+    QGridLayout* oldAdditionalLayout = qobject_cast<QGridLayout*>(m_ui->additionalGroupBox->layout());
+
+    if (   oldCommonLayout == nullptr
+        || oldCommonLayout->columnCount()-1 != count)
     {
-        QGridLayout* newLayout = new QGridLayout();
+        QGridLayout* newCommonLayout = new QGridLayout();
+        QGridLayout* newAdditionalLayout = new QGridLayout();
+
         int row = 0;
         int col = 0;
+
+        int rowAdd = 0;
+
+        quint8 completedCount = 0;
+
         for (const quint8 id : m_controlIds)
         {
             DisplayControlWidget* each = m_controlWidgets[static_cast<int>(id)];
             if (each != nullptr)
             {
-                newLayout->addWidget(each, row, col);
-                if (++col >= count)
+                if (completedCount++ < ::commonControlsCount())
                 {
-                    newLayout->addItem(new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Minimum), row, col);
-                    col = 0;
-                    ++row;
+                    newCommonLayout->addWidget(each, row, col);
+                    if (++col >= count)
+                    {
+                        newCommonLayout->addItem(new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Minimum), row, col);
+                        col = 0;
+                        ++row;
+                    }
+                }
+                else
+                {
+                    newAdditionalLayout->addWidget(each, rowAdd++, 0);
                 }
             }
         }
-        newLayout->addItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding), (col > 0 ? row+1 : row), 0);
+        newCommonLayout->addItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding), (col > 0 ? row+1 : row), 0);
+        newAdditionalLayout->addItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding), rowAdd, 0);
 
-        delete oldLayout;
-        m_ui->controlsContentsWidget->setLayout(newLayout);
+        delete oldCommonLayout;
+        delete oldAdditionalLayout;
+
+        m_ui->commonGroupBox->setLayout(newCommonLayout);
+        m_ui->additionalGroupBox->setLayout(newAdditionalLayout);
+
+        m_ui->additionalGroupBox->setVisible(completedCount > ::commonControlsCount());
     }
 }
 

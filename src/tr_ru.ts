@@ -57,7 +57,7 @@
 <context>
     <name>ConnectionOptionsDialog</name>
     <message>
-        <location filename="ui/connectionoptionsdialog.cpp" line="89"/>
+        <location filename="ui/connectionoptionsdialog.cpp" line="95"/>
         <source>Select Log filename</source>
         <translation>Выбрать имя файла для сохранения</translation>
     </message>
@@ -100,29 +100,39 @@
         <translation>Повтор</translation>
     </message>
     <message>
-        <location filename="ui/controlpanel.ui" line="212"/>
+        <location filename="ui/controlpanel.ui" line="211"/>
+        <source>Device FZK-2</source>
+        <translation>ФЗК-2</translation>
+    </message>
+    <message>
+        <location filename="ui/controlpanel.ui" line="218"/>
+        <source>Device FZK-2B</source>
+        <translation>ФЗК-2В</translation>
+    </message>
+    <message>
+        <location filename="ui/controlpanel.ui" line="247"/>
         <source>Messages Log</source>
         <translation>Журнал сообщений</translation>
     </message>
     <message>
-        <location filename="ui/controlpanel.ui" line="226"/>
+        <location filename="ui/controlpanel.ui" line="261"/>
         <source>Log is being saved to:</source>
         <translation>Файл для сохранения:</translation>
     </message>
     <message>
-        <location filename="ui/controlpanel.ui" line="263"/>
+        <location filename="ui/controlpanel.ui" line="298"/>
         <source>Incoming</source>
         <translation>Входящие сообщения</translation>
     </message>
     <message>
-        <location filename="ui/controlpanel.ui" line="270"/>
-        <location filename="ui/controlpanel.ui" line="301"/>
+        <location filename="ui/controlpanel.ui" line="305"/>
+        <location filename="ui/controlpanel.ui" line="336"/>
         <source>Clear</source>
         <oldsource> Clear</oldsource>
         <translation>Очистить</translation>
     </message>
     <message>
-        <location filename="ui/controlpanel.ui" line="294"/>
+        <location filename="ui/controlpanel.ui" line="329"/>
         <source>Outcoming</source>
         <translation>Исходящие</translation>
     </message>
@@ -130,133 +140,167 @@
 <context>
     <name>ControlPanelWidget</name>
     <message>
-        <location filename="ui/controlpanelwidget.cpp" line="51"/>
+        <location filename="ui/controlpanelwidget.cpp" line="60"/>
         <source>Device</source>
         <translation>Устройство</translation>
     </message>
     <message>
-        <location filename="ui/controlpanelwidget.cpp" line="108"/>
+        <location filename="ui/controlpanelwidget.cpp" line="120"/>
         <source>File</source>
         <translation>Файл</translation>
     </message>
     <message>
-        <location filename="ui/controlpanelwidget.cpp" line="109"/>
+        <location filename="ui/controlpanelwidget.cpp" line="121"/>
         <source>Disconnect</source>
         <translation>Отключить</translation>
     </message>
     <message>
-        <location filename="ui/controlpanelwidget.cpp" line="113"/>
+        <location filename="ui/controlpanelwidget.cpp" line="125"/>
         <source>Edit</source>
         <translation>Правка</translation>
     </message>
     <message>
-        <location filename="ui/controlpanelwidget.cpp" line="115"/>
+        <location filename="ui/controlpanelwidget.cpp" line="127"/>
         <source>Load configuration</source>
         <translation>Загрузить конфигурацию</translation>
     </message>
     <message>
-        <location filename="ui/controlpanelwidget.cpp" line="118"/>
+        <location filename="ui/controlpanelwidget.cpp" line="130"/>
         <source>Save configuration</source>
         <translation>Сохранить конфигурацию</translation>
     </message>
     <message>
-        <location filename="ui/controlpanelwidget.cpp" line="207"/>
+        <location filename="ui/controlpanelwidget.cpp" line="134"/>
+        <source>Options</source>
+        <translation>Параметры</translation>
+    </message>
+    <message>
+        <location filename="ui/controlpanelwidget.cpp" line="136"/>
+        <source>Connection options</source>
+        <translation>Параметры подключения</translation>
+    </message>
+    <message>
+        <location filename="ui/controlpanelwidget.cpp" line="139"/>
+        <source>Load images</source>
+        <translation>Загрузка изображений</translation>
+    </message>
+    <message>
+        <location filename="ui/controlpanelwidget.cpp" line="242"/>
         <source>Connection is not initialized</source>
         <translation>Соединение не установлено</translation>
     </message>
     <message>
-        <location filename="ui/controlpanelwidget.cpp" line="270"/>
+        <location filename="ui/controlpanelwidget.cpp" line="305"/>
         <source>Connecting to host %1</source>
         <translation>Подключение к устройству %1</translation>
     </message>
     <message>
-        <location filename="ui/controlpanelwidget.cpp" line="271"/>
+        <location filename="ui/controlpanelwidget.cpp" line="306"/>
         <source>Try connect to %1</source>
         <translation>Попытка подключения к %1</translation>
     </message>
     <message>
-        <location filename="ui/controlpanelwidget.cpp" line="280"/>
+        <location filename="ui/controlpanelwidget.cpp" line="315"/>
         <source>Connection was interrupted</source>
         <translation>Соединение прервано</translation>
     </message>
     <message>
-        <location filename="ui/controlpanelwidget.cpp" line="321"/>
+        <location filename="ui/controlpanelwidget.cpp" line="356"/>
         <source>%1:%2 : %3</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="ui/controlpanelwidget.cpp" line="325"/>
+        <location filename="ui/controlpanelwidget.cpp" line="360"/>
         <source>Error connection: %1</source>
         <translation>Ошибка подключения: %1</translation>
     </message>
     <message>
-        <location filename="ui/controlpanelwidget.cpp" line="336"/>
+        <location filename="ui/controlpanelwidget.cpp" line="371"/>
         <source>Connected to %1</source>
         <translation>Подключено к %1</translation>
     </message>
     <message>
-        <location filename="ui/controlpanelwidget.cpp" line="337"/>
+        <location filename="ui/controlpanelwidget.cpp" line="372"/>
         <source>[Connected] %1 - %2</source>
         <translation>[Подключено] %1 - %2</translation>
     </message>
     <message>
-        <location filename="ui/controlpanelwidget.cpp" line="340"/>
+        <location filename="ui/controlpanelwidget.cpp" line="375"/>
         <source>Waiting device&apos;s configuration</source>
         <translation>Ожидание идентификации устройства</translation>
     </message>
     <message>
-        <location filename="ui/controlpanelwidget.cpp" line="671"/>
+        <location filename="ui/controlpanelwidget.cpp" line="731"/>
         <source>Disconnected from %1</source>
         <translation>Не подключено к %1</translation>
     </message>
     <message>
-        <location filename="ui/controlpanelwidget.cpp" line="672"/>
+        <location filename="ui/controlpanelwidget.cpp" line="732"/>
         <source>[Disconnected] %1 - %2</source>
         <translation>[Не подключено] %1 - %2</translation>
     </message>
     <message>
-        <location filename="ui/controlpanelwidget.cpp" line="677"/>
+        <location filename="ui/controlpanelwidget.cpp" line="737"/>
         <source>Connection was cancelled</source>
         <translation>Попытка соединения отменена</translation>
     </message>
     <message>
-        <location filename="ui/controlpanelwidget.cpp" line="714"/>
+        <location filename="ui/controlpanelwidget.cpp" line="776"/>
+        <source>%1 Null-messages count: %2</source>
+        <translation>Количество %1 нулевых сообщений: %2</translation>
+    </message>
+    <message>
+        <location filename="ui/controlpanelwidget.cpp" line="777"/>
+        <source>Sent</source>
+        <translation>отправленных</translation>
+    </message>
+    <message>
+        <location filename="ui/controlpanelwidget.cpp" line="777"/>
+        <source>Received</source>
+        <translation>принятых</translation>
+    </message>
+    <message>
+        <source>Received Null-messages count: %1</source>
+        <translation type="vanished">Количество принятых нулевых сообщений: %1</translation>
+    </message>
+    <message>
+        <location filename="ui/controlpanelwidget.cpp" line="783"/>
         <source>Received bytes (size %1) from %2:%3 : %4</source>
         <translation>Принято (%1 байт) от %2:%3 : %4</translation>
     </message>
     <message>
-        <location filename="ui/controlpanelwidget.cpp" line="733"/>
+        <location filename="ui/controlpanelwidget.cpp" line="805"/>
         <source>Sent bytes (size %1) to %2:%3 : %4</source>
         <translation>Отправлено (%1 байт) на %2:%3 : %4</translation>
     </message>
     <message>
-        <location filename="ui/controlpanelwidget.cpp" line="891"/>
+        <location filename="ui/controlpanelwidget.cpp" line="974"/>
         <source>Receive request to change device address to %1:%2</source>
         <translation>Принят запрос на изменение параметров подключения на %1:%2</translation>
     </message>
     <message>
-        <location filename="ui/controlpanelwidget.cpp" line="909"/>
+        <location filename="ui/controlpanelwidget.cpp" line="992"/>
         <source>Pixmap saving failed</source>
         <translation>Ошибка сохранения изображения</translation>
     </message>
     <message>
-        <location filename="ui/controlpanelwidget.cpp" line="919"/>
+        <location filename="ui/controlpanelwidget.cpp" line="1002"/>
         <source>Can not save image: %1</source>
         <translation>Не удалось сохранить изображение: %1</translation>
     </message>
     <message>
-        <location filename="ui/controlpanelwidget.cpp" line="1232"/>
+        <location filename="ui/controlpanelwidget.cpp" line="1343"/>
         <source>Select file to load configuration</source>
         <translation>Выбрать файл для загрузки конфигурации</translation>
     </message>
     <message>
-        <location filename="ui/controlpanelwidget.cpp" line="1234"/>
+        <location filename="ui/controlpanelwidget.cpp" line="1345"/>
         <source>INI Files (*.ini);;All Files (*)</source>
         <oldsource>INI Files: *.ini;;All Files: *</oldsource>
         <translation>INI файлы (*.ini);;Все файлы (*)</translation>
     </message>
     <message>
-        <location filename="ui/controlpanelwidget.cpp" line="1264"/>
+        <location filename="ui/controlpanelwidget.cpp" line="1375"/>
         <source>Select file to save configuration</source>
         <translation>Выбрать файл для сохранения конфигурации</translation>
     </message>
@@ -455,7 +499,7 @@
 <context>
     <name>main</name>
     <message>
-        <location filename="main.cpp" line="11"/>
+        <location filename="main.cpp" line="16"/>
         <source>Enable Debug tools</source>
         <translation></translation>
     </message>
@@ -464,51 +508,57 @@
     <name>protocol</name>
     <message>
         <location filename="protocol/protocol.cpp" line="97"/>
-        <source>DeviceIdentity = %1</source>
+        <location filename="protocol/protocol.cpp" line="448"/>
+        <source>Ping = %1</source>
         <translation></translation>
     </message>
     <message>
         <location filename="protocol/protocol.cpp" line="99"/>
+        <source>DeviceIdentity = %1</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="protocol/protocol.cpp" line="101"/>
         <source>ButtonsState = %1</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="protocol/protocol.cpp" line="105"/>
+        <location filename="protocol/protocol.cpp" line="107"/>
         <source>Unknown incoming type = %1</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="protocol/protocol.cpp" line="386"/>
+        <location filename="protocol/protocol.cpp" line="450"/>
         <source>DeviceAddress = %1</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="protocol/protocol.cpp" line="388"/>
+        <location filename="protocol/protocol.cpp" line="452"/>
         <source>DisplayImages = %1</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="protocol/protocol.cpp" line="390"/>
+        <location filename="protocol/protocol.cpp" line="454"/>
         <source>DisplayOptions = %1</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="protocol/protocol.cpp" line="392"/>
+        <location filename="protocol/protocol.cpp" line="456"/>
         <source>BlinkOptions = %1</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="protocol/protocol.cpp" line="394"/>
+        <location filename="protocol/protocol.cpp" line="458"/>
         <source>BrightOptions = %1</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="protocol/protocol.cpp" line="396"/>
+        <location filename="protocol/protocol.cpp" line="460"/>
         <source>ImagesData = %1</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="protocol/protocol.cpp" line="402"/>
+        <location filename="protocol/protocol.cpp" line="466"/>
         <source>Unknown outcoming type = %1</source>
         <translation></translation>
     </message>

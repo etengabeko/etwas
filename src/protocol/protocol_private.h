@@ -14,6 +14,14 @@ namespace protocol
 namespace details
 {
 
+class PingMessagePrivate
+{
+public:
+
+private:
+
+};
+
 class DeviceIdentityMessagePrivate
 {
 public:

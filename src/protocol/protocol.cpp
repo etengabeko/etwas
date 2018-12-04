@@ -94,6 +94,8 @@ const QString typeToString(MessageType type)
 {
     static const QMap<MessageType, QString> types
     {
+        { MessageType::Ping, QCoreApplication::translate("protocol", "Ping = %1")
+                    .arg(::typeToHex(MessageType::Ping)) },
         { MessageType::DeviceIdentity, QCoreApplication::translate("protocol", "DeviceIdentity = %1")
                     .arg(::typeToHex(MessageType::DeviceIdentity)) },
         { MessageType::ButtonsState,   QCoreApplication::translate("protocol", "ButtonsState = %1")
@@ -139,6 +141,9 @@ std::unique_ptr<Message> Message::deserialize(const QByteArray& content)
 
         switch (static_cast<MessageType>(type))
         {
+        case MessageType::Ping:
+            result.reset(new PingMessage());
+            break;
         case MessageType::DeviceIdentity:
             result.reset(new DeviceIdentityMessage());
             break;
@@ -161,6 +166,64 @@ std::unique_ptr<Message> Message::deserialize(const QByteArray& content)
 MessageType Message::type() const NOEXCEPT
 {
     return m_type;
+}
+
+PingMessage::PingMessage() :
+    Message(MessageType::Ping),
+    m_pimpl(new details::PingMessagePrivate())
+{
+
+}
+
+PingMessage::~PingMessage() NOEXCEPT
+{
+    m_pimpl.reset();
+}
+
+PingMessage::PingMessage(const PingMessage& other) :
+    Message(other),
+    m_pimpl(new details::PingMessagePrivate(*other.m_pimpl))
+{
+
+}
+
+PingMessage& PingMessage::operator =(const PingMessage& other)
+{
+    *m_pimpl = *other.m_pimpl;
+    return *this;
+}
+
+PingMessage::PingMessage(PingMessage&& other) NOEXCEPT :
+    Message(other),
+    m_pimpl(std::move(other.m_pimpl))
+{
+
+}
+
+PingMessage& PingMessage::operator =(PingMessage&& other) NOEXCEPT
+{
+    m_pimpl.swap(other.m_pimpl);
+    return *this;
+}
+
+const QByteArray PingMessage::serialize() const
+{
+    QByteArray result;
+
+    QDataStream out(&result, QIODevice::WriteOnly);
+    out.setByteOrder(QDataStream::LittleEndian);
+    out << static_cast<quint8>(m_type);
+    return result;
+}
+
+bool PingMessage::parse(const QByteArray& src)
+{
+    QDataStream in(src);
+    in.setByteOrder(QDataStream::LittleEndian);
+    quint8 tmp = 0;
+    in >> tmp;
+
+    return (tmp == static_cast<quint8>(type()));
 }
 
 DeviceIdentityMessage::DeviceIdentityMessage() :
@@ -383,6 +446,8 @@ const QString typeToString(MessageType type)
 {
     static const QMap<MessageType, QString> types
     {
+        { MessageType::Ping, QCoreApplication::translate("protocol", "Ping = %1")
+                    .arg(::typeToHex(MessageType::Ping)) },
         { MessageType::DeviceAddress,  QCoreApplication::translate("protocol", "DeviceAddress = %1")
                     .arg(::typeToHex(MessageType::DeviceAddress)) },
         { MessageType::DisplayImages,  QCoreApplication::translate("protocol", "DisplayImages = %1")
@@ -470,6 +535,64 @@ std::unique_ptr<Message> Message::deserialize(const QByteArray& content)
 MessageType Message::type() const NOEXCEPT
 {
     return m_type;
+}
+
+PingMessage::PingMessage() :
+    Message(MessageType::Ping),
+    m_pimpl(new details::PingMessagePrivate())
+{
+
+}
+
+PingMessage::~PingMessage() NOEXCEPT
+{
+    m_pimpl.reset();
+}
+
+PingMessage::PingMessage(const PingMessage& other) :
+    Message(other),
+    m_pimpl(new details::PingMessagePrivate(*other.m_pimpl))
+{
+
+}
+
+PingMessage& PingMessage::operator =(const PingMessage& other)
+{
+    *m_pimpl = *other.m_pimpl;
+    return *this;
+}
+
+PingMessage::PingMessage(PingMessage&& other) NOEXCEPT :
+    Message(other),
+    m_pimpl(std::move(other.m_pimpl))
+{
+
+}
+
+PingMessage& PingMessage::operator =(PingMessage&& other) NOEXCEPT
+{
+    m_pimpl.swap(other.m_pimpl);
+    return *this;
+}
+
+const QByteArray PingMessage::serialize() const
+{
+    QByteArray result;
+
+    QDataStream out(&result, QIODevice::WriteOnly);
+    out.setByteOrder(QDataStream::LittleEndian);
+    out << static_cast<quint8>(m_type);
+    return result;
+}
+
+bool PingMessage::parse(const QByteArray& src)
+{
+    QDataStream in(src);
+    in.setByteOrder(QDataStream::LittleEndian);
+    quint8 tmp = 0;
+    in >> tmp;
+
+    return (tmp == static_cast<quint8>(type()));
 }
 
 DeviceAddressMessage::DeviceAddressMessage() :
