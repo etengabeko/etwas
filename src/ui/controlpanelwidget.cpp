@@ -552,10 +552,6 @@ void ControlPanelWidget::slotChangeActiveControl(bool enabled)
         }
         m_activeControl = qobject_cast<DisplayControlWidget*>(sender());
     }
-    else
-    {
-        m_activeControl = nullptr;
-    }
 
     if (enabled && m_activeControl != nullptr)
     {
@@ -644,6 +640,8 @@ void ControlPanelWidget::slotOptionsClose()
     {
         m_activeControl->setActive(false);
         m_activeControl = nullptr;
+        emit subwindowClosed(m_optionsWidget);
+        m_optionsWidget = nullptr;
     }
 }
 
