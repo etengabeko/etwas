@@ -123,7 +123,7 @@ void ImageStorageWidget::slotAddImages()
                            : kCount;
     for (const QString& each : fileNames)
     {
-        addRow(static_cast<quint8>(++index), each);
+        addRow(static_cast<quint8>(index++), each);
     }
 
     m_ui->imagesTableWidget->resizeColumnsToContents();
@@ -146,7 +146,7 @@ void ImageStorageWidget::syncStorage()
 
     for (int row = 0; row < count; ++row)
     {
-        m_storage->addImage(static_cast<quint8>(row + 1),
+        m_storage->addImage(static_cast<quint8>(row),
                             m_ui->imagesTableWidget->item(row, Column::FileName)->text());
     }
 }

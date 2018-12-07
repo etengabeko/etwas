@@ -396,7 +396,7 @@ void ControlPanelWidget::makeDebugConfiguration(int buttonsCount)
     m_controlIds.reserve(buttonsCount);
     for (quint8 i = 0; i < buttonsCount; ++i)
     {
-        m_controlIds.append(i+1);
+        m_controlIds.append(i);
     }
 
     createControls();
@@ -1424,7 +1424,7 @@ void ControlPanelWidget::slotLoadConfiguration()
         quint8 index = 0;
         for (const QString& each : current.imagesFileNames())
         {
-            m_imgStorage->addImage(++index, each);
+            m_imgStorage->addImage(index++, each);
         }
 
         removeAllContols();
@@ -1442,7 +1442,8 @@ void ControlPanelWidget::slotSaveConfiguration()
 
     const QString fileName = QFileDialog::getSaveFileName(nullptr,
                                                           tr("Select file to save configuration"),
-                                                          QCoreApplication::applicationDirPath());
+                                                          QCoreApplication::applicationDirPath(),
+                                                          tr("INI Files (*.ini);;All Files (*)"));
     if (!fileName.isEmpty())
     {
         Settings current(fileName);
