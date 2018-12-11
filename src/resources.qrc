@@ -4,6 +4,6 @@
         <file alias="tr_ru">resources/tr_ru.qm</file>
         <file alias="app_name.txt">resources/app_name.txt</file>
         <file alias="app_version.txt">resources/app_version.txt</file>
-        <file alias="app_about.txt">resources/app_about.html</file>
+        <file alias="app_about.html">resources/app_about.html</file>
     </qresource>
 </RCC>

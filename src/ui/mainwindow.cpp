@@ -19,6 +19,21 @@
 #include "ui/controlpanelwidget.h"
 #include "ui/subwindow.h"
 
+namespace
+{
+
+QString customAboutApp()
+{
+    QFile f(":/app_about.html");
+    const bool ok = f.open(QFile::ReadOnly);
+    Q_ASSERT(ok);
+
+    return (ok ? QString::fromUtf8(f.readAll())
+               : QString::null);
+}
+
+}
+
 MainWindow::MainWindow(Mode mode, QWidget* parent) :
     QMainWindow(parent),
     m_central(new QMdiArea(this))
@@ -101,13 +116,17 @@ void MainWindow::slotShowAbout()
 {
     QDialog dlg;
 
-    QLabel* appNameLabel = new QLabel(QApplication::applicationName(), &dlg);
-    QLabel* appVersionLabel = new QLabel(QApplication::applicationVersion(), &dlg);
+    QLabel* appNameLabel = new QLabel(tr("Application: %1")
+                                      .arg(QApplication::applicationName()),
+                                      &dlg);
+    QLabel* appVersionLabel = new QLabel(tr("Version: %1")
+                                         .arg(QApplication::applicationVersion()),
+                                         &dlg);
     QTextEdit* appAboutTextEdit = new QTextEdit(&dlg);
     appAboutTextEdit->setReadOnly(true);
-    appAboutTextEdit->setHtml(QString::fromUtf8(QFile(":/app_about.html").readAll()));
+    appAboutTextEdit->setHtml(::customAboutApp());
 
-    dlg.setLayout(new QHBoxLayout(&dlg));
+    dlg.setLayout(new QVBoxLayout(&dlg));
     dlg.layout()->addWidget(appNameLabel);
     dlg.layout()->addWidget(appVersionLabel);
     dlg.layout()->addWidget(appAboutTextEdit);

@@ -370,9 +370,19 @@ ButtonsStateMessage& ButtonsStateMessage::operator =(ButtonsStateMessage&& other
     return *this;
 }
 
+quint8 ButtonsStateMessage::maxButtonsStatesCount() NOEXCEPT
+{
+    return details::ButtonsStateMessagePrivate::maxButtonsStatesCount();
+}
+
+void ButtonsStateMessage::setMaxButtonsStatesCount(quint8 count) NOEXCEPT
+{
+    details::ButtonsStateMessagePrivate::setMaxButtonsStatesCount(count);
+}
+
 const QByteArray ButtonsStateMessage::serialize() const
 {
-    QByteArray states(m_pimpl->maxButtonsStatesCount(), '\0');
+    QByteArray states(static_cast<int>(m_pimpl->maxButtonsStatesCount()), '\0');
     for (uint i = 0, sz = buttonsStates().size(); i < sz; ++i)
     {
         quint8 eachState = static_cast<quint8>(buttonsStates().at(i));

@@ -3,6 +3,7 @@
 
 #include <algorithm>
 
+#include <QtMath>
 #include <QAction>
 #include <QByteArray>
 #include <QCloseEvent>
@@ -401,6 +402,8 @@ void ControlPanelWidget::makeDebugConfiguration(int buttonsCount)
 {
     Q_ASSERT(buttonsCount > 0);
 
+    protocol::incoming::ButtonsStateMessage::setMaxButtonsStatesCount(qCeil(buttonsCount/8.0));
+
     m_ui->deviceIdentityButton->show();
 
     m_controlIds.reserve(buttonsCount);
@@ -426,7 +429,9 @@ void ControlPanelWidget::makeConfiguration(const protocol::incoming::Message& me
 
     const DeviceIdentityMessage& dimsg = dynamic_cast<const DeviceIdentityMessage&>(message);
 
-    m_controlIds.reserve(dimsg.buttonsNumbers().size());
+    const quint8 kButtonsCount = dimsg.buttonsNumbers().size();
+    protocol::incoming::ButtonsStateMessage::setMaxButtonsStatesCount(qCeil(kButtonsCount/8.0));
+    m_controlIds.reserve(kButtonsCount);
 
     for (const quint8 each : dimsg.buttonsNumbers())
     {
@@ -442,7 +447,9 @@ void ControlPanelWidget::makeConfiguration(const QVector<settings::DisplaySettin
     using protocol::ImageSelection;
     using settings::DisplaySettings;
 
-    m_controlIds.reserve(displays.size());
+    const quint8 kDisplaysCount = displays.size();
+    protocol::incoming::ButtonsStateMessage::setMaxButtonsStatesCount(qCeil(kDisplaysCount/8.0));
+    m_controlIds.reserve(kDisplaysCount);
 
     for (const DisplaySettings& each : displays)
     {

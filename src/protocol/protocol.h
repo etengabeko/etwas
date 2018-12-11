@@ -296,6 +296,19 @@ public:
     void setButtonsStates(const QVector<ButtonState>& states);
     void setButtonsStates(QVector<ButtonState>&& states) NOEXCEPT;
 
+    /**
+     * @brief maxBytesCount - Возвращает установленное ранее количество байт для сериализации состояний клавиш
+     * @note Зависит от количества клавиш панели: от 1 до 32 байт (Каждый байт отвечает за состояние 8 клавиш - по 1 биту на клавишу)
+     * @return Размер данных сериализованного сообщения в байтах
+     */
+    static quint8 maxButtonsStatesCount() NOEXCEPT;
+
+    /**
+     * @brief setMaxButtonsStatesCount - Устанавливает количество байт для сериализации состояний клавиш
+     * @param count - Размер данных сериализованного сообщения в байтах
+     */
+    static void setMaxButtonsStatesCount(quint8 count) NOEXCEPT;
+
 private:
     std::unique_ptr<details::ButtonsStateMessagePrivate> m_pimpl;
 

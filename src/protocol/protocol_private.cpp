@@ -13,6 +13,8 @@ namespace protocol
 namespace details
 {
 
+quint8 ButtonsStateMessagePrivate::m_maxButtonsCount = 32;
+
 quint8 DeviceIdentityMessagePrivate::firmwareVersion() const NOEXCEPT
 {
     return m_firmwareVersion;
@@ -63,9 +65,14 @@ quint8 ButtonsStateMessagePrivate::bitByteShift(quint8 bitNumber) const NOEXCEPT
     return (MaxBitNumber - (bitNumber % BitsCount));
 }
 
-int ButtonsStateMessagePrivate::maxButtonsStatesCount() const NOEXCEPT
+quint8 ButtonsStateMessagePrivate::maxButtonsStatesCount() NOEXCEPT
 {
-    return 32;
+    return m_maxButtonsCount;
+}
+
+void ButtonsStateMessagePrivate::setMaxButtonsStatesCount(quint8 count) NOEXCEPT
+{
+    m_maxButtonsCount = count;
 }
 
 const QString DeviceAddressMessagePrivate::address() const

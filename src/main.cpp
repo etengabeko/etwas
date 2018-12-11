@@ -5,11 +5,36 @@
 
 #include "ui/mainwindow.h"
 
+namespace
+{
+
+QString readFileFromResources(const QString& fileName)
+{
+    QFile f(fileName);
+    const bool ok = f.open(QFile::ReadOnly);
+    Q_ASSERT(ok);
+
+    return (ok ? QString::fromUtf8(f.readAll()).trimmed()
+               : QString::null);
+}
+
+QString customAppName()
+{
+    return readFileFromResources(":/app_name.txt");
+}
+
+QString customAppVersion()
+{
+    return readFileFromResources(":/app_version.txt");
+}
+
+}
+
 int main(int argc, char* argv[])
 {
     QApplication app(argc, argv);
-    app.setApplicationName(QString::fromUtf8(QFile(":/app_name.txt").readAll()));
-    app.setApplicationVersion(QString::fromUtf8(QFile(":/app_version.txt").readAll()));
+    app.setApplicationName(::customAppName());
+    app.setApplicationVersion(::customAppVersion());
 
     QTranslator translator;
     translator.load(":/tr_ru");

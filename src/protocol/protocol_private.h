@@ -46,10 +46,13 @@ public:
     void setButtonsStates(QVector<ButtonState>&& states) NOEXCEPT;
 
     quint8 bitByteShift(quint8 bitNumber) const NOEXCEPT;
-    int maxButtonsStatesCount() const NOEXCEPT;
+
+    static quint8 maxButtonsStatesCount() NOEXCEPT;
+    static void setMaxButtonsStatesCount(quint8 count) NOEXCEPT;
 
 private:
     QVector<ButtonState> m_states;
+    static quint8 m_maxButtonsCount;
 
 };
 
