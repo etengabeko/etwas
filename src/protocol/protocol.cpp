@@ -382,7 +382,7 @@ void ButtonsStateMessage::setMaxButtonsStatesCount(quint8 count) NOEXCEPT
 
 const QByteArray ButtonsStateMessage::serialize() const
 {
-    QByteArray states(static_cast<int>(m_pimpl->maxButtonsStatesCount()), '\0');
+    QByteArray states(m_pimpl->maxButtonsStatesCount(), '\0');
     for (uint i = 0, sz = buttonsStates().size(); i < sz; ++i)
     {
         quint8 eachState = static_cast<quint8>(buttonsStates().at(i));
@@ -395,8 +395,12 @@ const QByteArray ButtonsStateMessage::serialize() const
         QDataStream out(&result, QIODevice::WriteOnly);
         out.setByteOrder(QDataStream::LittleEndian);
         out << static_cast<quint8>(m_type);
+        for (uint i = 0, sz = states.size(); i < sz; ++i)
+        {
+            quint8 eachByte = states[i];
+            out << eachByte;
+        }
     }
-    result += states;
 
     return result;
 }
@@ -412,11 +416,11 @@ bool ButtonsStateMessage::parse(const QByteArray& src)
                && src.size() >= static_cast<int>(m_pimpl->maxButtonsStatesCount() + sizeof(tmp)));
     if (ok)
     {
-        QVector<quint8> bytes(m_pimpl->maxButtonsStatesCount(),'\0');
+        QVector<quint8> bytes(m_pimpl->maxButtonsStatesCount(), 0);
+        for (uint i = 0, sz = bytes.size(); i < sz; ++i)
         {
-            QByteArray ba(bytes.size(), '\0');
-            in.readRawData(ba.data(), bytes.size());
-            std::copy(ba.begin(), ba.end(), bytes.begin());
+            in >> tmp;
+            bytes[i] = tmp;
         }
 
         QVector<ButtonState> states(8 * m_pimpl->maxButtonsStatesCount(), ButtonState::Off);
