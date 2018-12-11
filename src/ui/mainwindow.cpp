@@ -32,6 +32,11 @@ MainWindow::~MainWindow()
     }
 }
 
+void MainWindow::enableVerboseMode()
+{
+    m_verboseMode = true;
+}
+
 void MainWindow::initMenu(Mode mode)
 {
     QMenu* fileMenu = menuBar()->addMenu(tr("File"));
@@ -65,6 +70,7 @@ void MainWindow::slotNewControlPanelDebug()
 void MainWindow::createNewControlPanel(MainWindow::Mode mode)
 {
     ControlPanelWidget* control = new ControlPanelWidget((mode == Mode::Debug), this);
+    control->setVerbose(m_verboseMode);
     slotAddSubWindow(control);
 
     QObject::connect(control, &SubWindow::closed,

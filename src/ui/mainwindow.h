@@ -26,6 +26,8 @@ public:
                         QWidget* parent = nullptr);
     ~MainWindow();
 
+    void enableVerboseMode();
+
 private slots:
     void slotNewControlPanel();
     void slotNewControlPanelDebug();
@@ -42,6 +44,7 @@ private:
 private:
     QMdiArea* m_central = nullptr;
     QHash<SubWindow*, QMdiSubWindow*> m_subwindows;
+    bool m_verboseMode = false;
 
 };
 

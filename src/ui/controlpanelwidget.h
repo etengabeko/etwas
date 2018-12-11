@@ -64,6 +64,8 @@ public:
 
     void initialize();
 
+    void setVerbose(bool enabled);
+
 signals:
     void subwindowCreated(SubWindow* child);
     void subwindowRaised(SubWindow* child);
@@ -129,8 +131,10 @@ private:
     void processMessage(const protocol::incoming::Message& message);
     void processMessage(const protocol::outcoming::Message& message);
 
-    QString createReceivedBytesLogMessage(const QByteArray& bytes) const;
-    QString createSentBytesLogMessage(const QByteArray& bytes) const;
+    QString createReceivedBytesLogMessage(const QByteArray& bytes,
+                                          bool isPartial = false) const;
+    QString createSentBytesLogMessage(const QByteArray& bytes,
+                                      bool isPartial = false) const;
 
     void logMessage(const QString& message, protocol::MessageDirection direction);
 
@@ -152,6 +156,7 @@ private:
 private:
     Ui::ControlPanel* m_ui = nullptr;
     const bool m_isDebugMode;
+    bool m_isVerbose = false;
 
     QThread* m_recvThread = nullptr;
     std::unique_ptr<Logger> m_logger;

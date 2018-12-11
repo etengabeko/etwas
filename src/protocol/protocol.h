@@ -756,6 +756,12 @@ public:
     void setImageColors(const QVector<QRgb>& colors);
     void setImageColors(QVector<QRgb>&& colors) NOEXCEPT;
 
+    /**
+     * @brief serializeWithoutData - Возвращает только заголовок сообщения (не включая данные)
+     * @return Заголовок сообщения в виде массива байт
+     */
+    const QByteArray serializeWithoutData() const;
+
 private:
     std::unique_ptr<details::ImageDataMessagePrivate> m_pimpl;
 

@@ -1230,5 +1230,16 @@ void ImageDataMessage::setImageColors(QVector<QRgb>&& colors) NOEXCEPT
     m_pimpl->setImageColors(std::forward<QVector<QRgb>>(colors));
 }
 
+const QByteArray ImageDataMessage::serializeWithoutData() const
+{
+    QByteArray result;
+
+    QDataStream out(&result, QIODevice::WriteOnly);
+    out.setByteOrder(QDataStream::LittleEndian);
+    out << static_cast<quint8>(m_type)
+        << static_cast<quint8>(imageNumber());
+    return result;
+}
+
 } // outcoming
 } // protocol

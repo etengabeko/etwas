@@ -58,8 +58,11 @@ quint8 commonControlsCount() { return 16; }
 quint8 debugControlsCount()  { return 19; }
 
 QString titleString() { return QApplication::translate("ControlPanelWidget", "Device"); }
+QString partialString() { return QApplication::translate("ControlPanelWidget", "partial"); }
 
 Logger::Level customLogLevel() { return Logger::Level::Debug; }
+Logger::Level verboseLogLevel() { return Logger::Level::Trace; }
+
 const QString customLogFileName()
 {
     return QFileInfo(QDir::temp(),
@@ -214,6 +217,11 @@ void ControlPanelWidget::removeAllContols()
     m_activeControl = nullptr;
 }
 
+void ControlPanelWidget::setVerbose(bool enabled)
+{
+    m_isVerbose = enabled;
+}
+
 void ControlPanelWidget::initialize()
 {
     using namespace ioservice;
@@ -258,7 +266,8 @@ void ControlPanelWidget::initialize()
     m_ui->logFileNameLineEdit->setText(logFileName);
     if (!logFileName.isEmpty())
     {
-        m_logger.reset(new Logger(::customLogLevel(),
+        m_logger.reset(new Logger((m_isVerbose ? ::verboseLogLevel()
+                                              : ::customLogLevel()),
                                   Logger::Device::File,
                                   logFileName));
         m_ui->logFileNameLineEdit->show();
@@ -266,7 +275,8 @@ void ControlPanelWidget::initialize()
     }
     else
     {
-        m_logger.reset(new Logger(::customLogLevel()));
+        m_logger.reset(new Logger(m_isVerbose ? ::verboseLogLevel()
+                                              : ::customLogLevel()));
         m_ui->logFileNameLineEdit->hide();
         m_ui->logFileNameLabel->hide();
     }
@@ -353,7 +363,7 @@ void ControlPanelWidget::slotOnError()
     if (m_logger != nullptr)
     {
         const QString errorString = m_transport->errorString();
-        m_logger->error(tr("%1:%2 : %3")
+        m_logger->error(QString("%1:%2 : %3")
                         .arg(m_currentAddress)
                         .arg(m_currentPort)
                         .arg(errorString));
@@ -784,19 +794,22 @@ void ControlPanelWidget::slotOnBytesReceive(const QByteArray& bytes)
     const QString str = createReceivedBytesLogMessage(bytes);
     m_logger->trace(str);
 
-    if (m_logger->level() >= Logger::Level::Trace)
+    if (m_logger->level() >= ::verboseLogLevel())
     {
         logMessage(str, protocol::MessageDirection::Incoming);
     }
 }
 
-QString ControlPanelWidget::createReceivedBytesLogMessage(const QByteArray& bytes) const
+QString ControlPanelWidget::createReceivedBytesLogMessage(const QByteArray& bytes,
+                                                          bool isPartial) const
 {
-    return tr("Received bytes (size %1) from %2:%3 : %4")
-           .arg(bytes.size())
+    return tr("Received bytes (%1) from %2:%3 : %4%5")
+           .arg((isPartial ? ::partialString()
+                           : tr("size %1").arg(bytes.size())))
            .arg(m_currentAddress)
            .arg(m_currentPort)
-           .arg(QString::fromLatin1(bytes.toHex()).toUpper());
+           .arg(QString::fromLatin1(bytes.toHex()).toUpper())
+           .arg((isPartial ? "..." : ""));
 }
 
 void ControlPanelWidget::slotOnBytesSend(const QByteArray& bytes)
@@ -804,19 +817,22 @@ void ControlPanelWidget::slotOnBytesSend(const QByteArray& bytes)
     const QString str = createSentBytesLogMessage(bytes);
     m_logger->trace(str);
 
-    if (m_logger->level() >= Logger::Level::Trace)
+    if (m_logger->level() >= ::verboseLogLevel())
     {
         logMessage(str, protocol::MessageDirection::Outcoming);
     }
 }
 
-QString ControlPanelWidget::createSentBytesLogMessage(const QByteArray& bytes) const
+QString ControlPanelWidget::createSentBytesLogMessage(const QByteArray& bytes,
+                                                      bool isPartial) const
 {
-    return tr("Sent bytes (size %1) to %2:%3 : %4")
-           .arg(bytes.size())
+    return tr("Sent bytes (%1) to %2:%3 : %4%5")
+           .arg((isPartial ? ::partialString()
+                           : tr("size %1").arg(bytes.size())))
            .arg(m_currentAddress)
            .arg(m_currentPort)
-           .arg(QString::fromLatin1(bytes.toHex()).toUpper());
+           .arg(QString::fromLatin1(bytes.toHex()).toUpper())
+           .arg((isPartial ? "..." : ""));
 }
 
 void ControlPanelWidget::logMessage(const QString& message, protocol::MessageDirection direction)
@@ -855,21 +871,34 @@ void ControlPanelWidget::slotSendMessage(const QSharedPointer<protocol::Abstract
     {
         m_outCtrl->slotSend(*message);
 
-        const bool isIncomingPing =    message->direction() == MessageDirection::Incoming
-                                    && dynamic_cast<const incoming::Message&>(*message).type() == incoming::MessageType::Ping;
-        const bool isOutcomingPing =    message->direction() == MessageDirection::Outcoming
-                                     && dynamic_cast<const outcoming::Message&>(*message).type() == outcoming::MessageType::Ping;
-        if (!isIncomingPing && !isOutcomingPing)
+        if (m_logger->level() < ::verboseLogLevel())
         {
-            QByteArray ba;
+            const bool isIncomingPing =    message->direction() == MessageDirection::Incoming
+                                        && dynamic_cast<const incoming::Message&>(*message).type() == incoming::MessageType::Ping;
+            const bool isOutcomingPing =    message->direction() == MessageDirection::Outcoming
+                                         && dynamic_cast<const outcoming::Message&>(*message).type() == outcoming::MessageType::Ping;
+            if (!isIncomingPing && !isOutcomingPing)
             {
-                QDataStream out(&ba, QIODevice::WriteOnly);
-                out.setByteOrder(QDataStream::LittleEndian);
-                out << *message;
+                bool isPartial = false;
+                QByteArray ba;
+                {
+                    QDataStream out(&ba, QIODevice::WriteOnly);
+                    out.setByteOrder(QDataStream::LittleEndian);
+                    if (   message->direction() == MessageDirection::Outcoming
+                        && dynamic_cast<const outcoming::Message&>(*message).type() == outcoming::MessageType::ImageData)
+                    {
+                        out << dynamic_cast<const outcoming::ImageDataMessage&>(*message).serializeWithoutData();
+                        isPartial = true;
+                    }
+                    else
+                    {
+                        out << *message;
+                    }
+                }
+                const QString str = createSentBytesLogMessage(ba, isPartial);
+                m_logger->info(str);
+                logMessage(str, MessageDirection::Outcoming);
             }
-            const QString str = createSentBytesLogMessage(ba);
-            m_logger->info(str);
-            logMessage(str, MessageDirection::Outcoming);
         }
     }
 }
@@ -922,7 +951,8 @@ void ControlPanelWidget::processMessage(const protocol::incoming::Message& messa
         break;
     }
 
-    if (message.type() != MessageType::Ping)
+    if (   m_logger->level() < ::verboseLogLevel()
+        && message.type() != MessageType::Ping)
     {
         QByteArray ba;
         {
@@ -1065,15 +1095,23 @@ void ControlPanelWidget::processMessage(const protocol::outcoming::Message& mess
         break;
     }
 
-    if (message.type() != MessageType::Ping)
+    if (   m_logger->level() < ::verboseLogLevel()
+        && message.type() != MessageType::Ping)
     {
         QByteArray ba;
         {
             QDataStream out(&ba, QIODevice::WriteOnly);
             out.setByteOrder(QDataStream::LittleEndian);
-            out << message;
+            if (message.type() != MessageType::ImageData)
+            {
+               out << message;
+            }
+            else
+            {
+                out << dynamic_cast<const ImageDataMessage&>(message).serializeWithoutData();
+            }
         }
-        const QString str = createReceivedBytesLogMessage(ba);
+        const QString str = createReceivedBytesLogMessage(ba, message.type() == MessageType::ImageData);
         m_logger->info(str);
         logMessage(str, protocol::MessageDirection::Incoming);
     }

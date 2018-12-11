@@ -13,12 +13,21 @@ int main(int argc, char* argv[])
     app.installTranslator(&translator);
 
     QCommandLineParser parser;
-    QCommandLineOption debugOption("debug", app.translate("main", "Enable Debug tools"));
+    parser.addHelpOption();
+    QCommandLineOption debugOption("debug",
+                                   app.translate("main", "Enable Debug tools"));
     parser.addOption(debugOption);
+    QCommandLineOption verboseOption({"v", "verbose"},
+                                     app.translate("main", "Enable verbose mode"));
+    parser.addOption(verboseOption);
     parser.process(app);
 
     MainWindow w(parser.isSet(debugOption) ? MainWindow::Mode::Debug
                                            : MainWindow::Mode::Work);
+    if (parser.isSet(verboseOption))
+    {
+        w.enableVerboseMode();
+    }
     w.show();
 
     return app.exec();
