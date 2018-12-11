@@ -31,6 +31,7 @@ public:
 private slots:
     void slotNewControlPanel();
     void slotNewControlPanelDebug();
+    void slotShowAbout();
 
     void slotAddSubWindow(SubWindow* subwindow);
     void slotRaiseSubWindow(SubWindow* subwindow);

@@ -209,11 +209,6 @@
         <translation>Соединение прервано</translation>
     </message>
     <message>
-        <location filename="ui/controlpanelwidget.cpp" line="366"/>
-        <source>%1:%2 : %3</source>
-        <translation></translation>
-    </message>
-    <message>
         <location filename="ui/controlpanelwidget.cpp" line="370"/>
         <source>Error connection: %1</source>
         <translation>Ошибка подключения: %1</translation>
@@ -469,29 +464,35 @@
 <context>
     <name>MainWindow</name>
     <message>
-        <location filename="ui/mainwindow.cpp" line="21"/>
-        <source>FZK-2 Test</source>
-        <translation>ФЗК-2 Тест</translation>
-    </message>
-    <message>
-        <location filename="ui/mainwindow.cpp" line="42"/>
+        <location filename="ui/mainwindow.cpp" line="57"/>
         <source>File</source>
         <translation>Файл</translation>
     </message>
     <message>
-        <location filename="ui/mainwindow.cpp" line="44"/>
+        <location filename="ui/mainwindow.cpp" line="59"/>
         <source>New connection</source>
         <translation>Новое подключение</translation>
     </message>
     <message>
-        <location filename="ui/mainwindow.cpp" line="50"/>
+        <location filename="ui/mainwindow.cpp" line="65"/>
         <source>Debug tools</source>
         <translation>Отладочная панель</translation>
     </message>
     <message>
-        <location filename="ui/mainwindow.cpp" line="55"/>
+        <location filename="ui/mainwindow.cpp" line="70"/>
         <source>Quit</source>
         <translation>Выход</translation>
+    </message>
+    <message>
+        <location filename="ui/mainwindow.cpp" line="74"/>
+        <source>Help</source>
+        <translation>Справка</translation>
+    </message>
+    <message>
+        <location filename="ui/mainwindow.cpp" line="76"/>
+        <source>About application...</source>
+        <oldsource>About application</oldsource>
+        <translation>О приложении...</translation>
     </message>
 </context>
 <context>
@@ -505,12 +506,12 @@
 <context>
     <name>main</name>
     <message>
-        <location filename="main.cpp" line="18"/>
+        <location filename="main.cpp" line="37"/>
         <source>Enable Debug tools</source>
         <translation>Активировать инструменты отладки</translation>
     </message>
     <message>
-        <location filename="main.cpp" line="21"/>
+        <location filename="main.cpp" line="40"/>
         <source>Enable verbose mode</source>
         <translation>Включить режим подробного вывода</translation>
     </message>

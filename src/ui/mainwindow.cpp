@@ -3,6 +3,9 @@
 #include <QAction>
 #include <QApplication>
 #include <QCursor>
+#include <QDialog>
+#include <QFile>
+#include <QLabel>
 #include <QMdiArea>
 #include <QMdiSubWindow>
 #include <QMessageBox>
@@ -10,6 +13,8 @@
 #include <QMenuBar>
 #include <QStatusBar>
 #include <QString>
+#include <QTextEdit>
+#include <QVBoxLayout>
 
 #include "ui/controlpanelwidget.h"
 #include "ui/subwindow.h"
@@ -18,7 +23,7 @@ MainWindow::MainWindow(Mode mode, QWidget* parent) :
     QMainWindow(parent),
     m_central(new QMdiArea(this))
 {
-    setWindowTitle(tr("FZK-2 Test"));
+    setWindowTitle(QApplication::applicationName());
     setCentralWidget(m_central);
 
     initMenu(mode);
@@ -55,6 +60,12 @@ void MainWindow::initMenu(Mode mode)
     action = fileMenu->addAction(tr("Quit"));
     QObject::connect(action, &QAction::triggered,
                      this, &MainWindow::close);
+
+    QMenu* helpMenu = menuBar()->addMenu(tr("Help"));
+
+    action = helpMenu->addAction(tr("About application..."));
+    QObject::connect(action, &QAction::triggered,
+                     this, &MainWindow::slotShowAbout);
 }
 
 void MainWindow::slotNewControlPanel()
@@ -84,6 +95,24 @@ void MainWindow::createNewControlPanel(MainWindow::Mode mode)
 
     control->show();
     control->initialize();
+}
+
+void MainWindow::slotShowAbout()
+{
+    QDialog dlg;
+
+    QLabel* appNameLabel = new QLabel(QApplication::applicationName(), &dlg);
+    QLabel* appVersionLabel = new QLabel(QApplication::applicationVersion(), &dlg);
+    QTextEdit* appAboutTextEdit = new QTextEdit(&dlg);
+    appAboutTextEdit->setReadOnly(true);
+    appAboutTextEdit->setHtml(QString::fromUtf8(QFile(":/app_about.html").readAll()));
+
+    dlg.setLayout(new QHBoxLayout(&dlg));
+    dlg.layout()->addWidget(appNameLabel);
+    dlg.layout()->addWidget(appVersionLabel);
+    dlg.layout()->addWidget(appAboutTextEdit);
+
+    dlg.exec();
 }
 
 void MainWindow::slotAddSubWindow(SubWindow* subwindow)
