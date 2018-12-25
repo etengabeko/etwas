@@ -48,10 +48,14 @@ void ButtonsState::makeTestData()
         QDataStream stream(&result, QIODevice::WriteOnly);
         stream.setByteOrder(QDataStream::LittleEndian);
         stream << quint8(0x02); // type
-        stream.writeRawData(statesBytes.constData(), statesBytes.size());
-
+        for (uint i = 0, sz = statesBytes.size(); i< sz; ++i)
+        {
+            quint8 eachByte = statesBytes[i];
+            stream << eachByte;
+        }
         return result;
     };
+
     auto addBenchmarkFunc = [makeContentFunc](const char* benchmarkTag,
                                               const QSharedPointer<AbstractMessage>& actual,
                                               const QSharedPointer<AbstractMessage>& expected,
@@ -78,7 +82,7 @@ void ButtonsState::makeTestData()
         QVector<ButtonState> tmp(states);
         tmp[i + (byteNum * BitsCount)] = ButtonState::On;
         message.setButtonsStates(std::move(tmp));
-        statesBytes[byteNum] = static_cast<char>(0x80 >> i);
+        statesBytes[byteNum] = static_cast<quint8>(1 << (i % BitsCount));
 
         addBenchmarkFunc(QString("Only one %1").arg(i+1).toStdString().c_str(),
                          QSharedPointer<AbstractMessage>(new ButtonsStateMessage(message)),
@@ -91,7 +95,7 @@ void ButtonsState::makeTestData()
     {
         states[i + (byteNum * BitsCount)] = ButtonState::On;
         message.setButtonsStates(states);
-        statesBytes[byteNum] = statesBytes.at(byteNum) + static_cast<char>(0x80 >> i);
+        statesBytes[byteNum] = statesBytes.at(byteNum) + static_cast<quint8>(1 << (i % BitsCount));
 
         addBenchmarkFunc(QString("From big till little %1").arg(i+1).toStdString().c_str(),
                          QSharedPointer<AbstractMessage>(new ButtonsStateMessage(message)),
@@ -107,7 +111,7 @@ void ButtonsState::makeTestData()
     {
         states[i + (byteNum * BitsCount)] = ButtonState::On;
         message.setButtonsStates(states);
-        statesBytes[byteNum] = statesBytes.at(byteNum) + static_cast<char>(0x80 >> i);
+        statesBytes[byteNum] = statesBytes.at(byteNum) + static_cast<quint8>(1 << (i % BitsCount));
 
         addBenchmarkFunc(QString("From little till big %1").arg(i+1).toStdString().c_str(),
                          QSharedPointer<AbstractMessage>(new ButtonsStateMessage(message)),
@@ -125,7 +129,7 @@ void ButtonsState::makeTestData()
         tmp[i + (byteNum * BitsCount)] = ButtonState::On;
         tmp[(BitsCount - i - 1) + (byteNum * BitsCount)] = ButtonState::On;
         message.setButtonsStates(std::move(tmp));
-        statesBytes[byteNum] = static_cast<char>(0x80 >> i) + static_cast<char>(0x80 >> (BitsCount - i - 1));
+        statesBytes[byteNum] = static_cast<quint8>(1 << (i % BitsCount)) + static_cast<char>(1 << ((BitsCount - i - 1) % BitsCount));
 
         addBenchmarkFunc(QString("Empty Bowl %1 and %2").arg(i+1).arg(BitsCount-i).toStdString().c_str(),
                          QSharedPointer<AbstractMessage>(new ButtonsStateMessage(message)),
@@ -140,7 +144,7 @@ void ButtonsState::makeTestData()
         states[(BitsCount - i - 1) + (byteNum * BitsCount)] = ButtonState::On;
         message.setButtonsStates(states);
         statesBytes[byteNum] =   statesBytes.at(byteNum)
-                               + static_cast<char>(0x80 >> i) + static_cast<char>(0x80 >> (BitsCount - i - 1));
+                               + static_cast<quint8>(1 << (i % BitsCount)) + static_cast<quint8>(1 << ((BitsCount - i - 1) % BitsCount));
 
         addBenchmarkFunc(QString("Full Bowl from %1 till %2").arg(BitsCount-i).arg(i+1).toStdString().c_str(),
                          QSharedPointer<AbstractMessage>(new ButtonsStateMessage(message)),

@@ -57,14 +57,11 @@ void ButtonsStateMessagePrivate::setButtonsStates(QVector<ButtonState>&& states)
 
 quint8 ButtonsStateMessagePrivate::bitByteShift(quint8 bitNumber) const NOEXCEPT
 {
-// FIXME: serialize-test is broken: may handle only one button press/release
-//    enum : quint8
-//    {
-//        MaxBitNumber = 7,
-//        BitsCount = 8
-//    };
-//    return (MaxBitNumber - (bitNumber % BitsCount));
-    return (bitNumber%8);
+    enum : quint8
+    {
+        BitsCount = 8
+    };
+    return (bitNumber % BitsCount);
 }
 
 quint8 ButtonsStateMessagePrivate::maxButtonsStatesCount() NOEXCEPT
