@@ -11,7 +11,7 @@
     <message>
         <location filename="ui/connectionoptions.ui" line="38"/>
         <source>Connection options</source>
-        <translation>Параметры</translation>
+        <translation>Параметры клавиатуры ФЗК-2</translation>
     </message>
     <message>
         <location filename="ui/connectionoptions.ui" line="46"/>
@@ -70,70 +70,65 @@
         <translation>Устройство</translation>
     </message>
     <message>
-        <location filename="ui/controlpanel.ui" line="33"/>
-        <source>Control Panel</source>
-        <translation>Контрольная панель</translation>
-    </message>
-    <message>
-        <location filename="ui/controlpanel.ui" line="41"/>
+        <location filename="ui/controlpanel.ui" line="44"/>
         <source>Displayed columns:</source>
         <translation>Количество столбцов:</translation>
     </message>
     <message>
-        <location filename="ui/controlpanel.ui" line="74"/>
+        <location filename="ui/controlpanel.ui" line="77"/>
         <source>Change Device Address</source>
         <translation>Изменить параметры подключения</translation>
     </message>
     <message>
-        <location filename="ui/controlpanel.ui" line="81"/>
+        <location filename="ui/controlpanel.ui" line="84"/>
         <source>Send Device Identity</source>
         <translation>Сообщение об идентификации</translation>
     </message>
     <message>
-        <location filename="ui/controlpanel.ui" line="157"/>
+        <location filename="ui/controlpanel.ui" line="160"/>
         <source>Break</source>
         <translation>Прервать</translation>
     </message>
     <message>
-        <location filename="ui/controlpanel.ui" line="164"/>
+        <location filename="ui/controlpanel.ui" line="167"/>
         <source>Retry</source>
         <translation>Повтор</translation>
     </message>
     <message>
-        <location filename="ui/controlpanel.ui" line="211"/>
-        <source>Device FZK-2</source>
+        <location filename="ui/controlpanel.ui" line="214"/>
+        <source>Device Common</source>
         <translation>ФЗК-2</translation>
     </message>
     <message>
-        <location filename="ui/controlpanel.ui" line="218"/>
-        <source>Device FZK-2B</source>
+        <location filename="ui/controlpanel.ui" line="221"/>
+        <source>Device Additional</source>
         <translation>ФЗК-2В</translation>
     </message>
     <message>
-        <location filename="ui/controlpanel.ui" line="247"/>
+        <location filename="ui/controlpanel.ui" line="250"/>
         <source>Messages Log</source>
         <translation>Журнал сообщений</translation>
     </message>
     <message>
-        <location filename="ui/controlpanel.ui" line="261"/>
+        <location filename="ui/controlpanel.ui" line="264"/>
         <source>Log is being saved to:</source>
         <translation>Файл для сохранения:</translation>
     </message>
     <message>
-        <location filename="ui/controlpanel.ui" line="298"/>
+        <location filename="ui/controlpanel.ui" line="301"/>
         <source>Incoming</source>
         <translation>Входящие сообщения</translation>
     </message>
     <message>
-        <location filename="ui/controlpanel.ui" line="305"/>
-        <location filename="ui/controlpanel.ui" line="336"/>
+        <location filename="ui/controlpanel.ui" line="308"/>
+        <location filename="ui/controlpanel.ui" line="339"/>
         <source>Clear</source>
         <translation>Очистить</translation>
     </message>
     <message>
-        <location filename="ui/controlpanel.ui" line="329"/>
+        <location filename="ui/controlpanel.ui" line="332"/>
         <source>Outcoming</source>
-        <translation>Исходящие</translation>
+        <translation>Исходящие сообщения</translation>
     </message>
 </context>
 <context>
@@ -530,7 +525,7 @@
     <name>protocol</name>
     <message>
         <location filename="protocol/protocol.cpp" line="97"/>
-        <location filename="protocol/protocol.cpp" line="459"/>
+        <location filename="protocol/protocol.cpp" line="463"/>
         <source>Ping = %1</source>
         <translation></translation>
     </message>
@@ -550,37 +545,37 @@
         <translation></translation>
     </message>
     <message>
-        <location filename="protocol/protocol.cpp" line="461"/>
+        <location filename="protocol/protocol.cpp" line="465"/>
         <source>DeviceAddress = %1</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="protocol/protocol.cpp" line="463"/>
+        <location filename="protocol/protocol.cpp" line="467"/>
         <source>DisplayImages = %1</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="protocol/protocol.cpp" line="465"/>
+        <location filename="protocol/protocol.cpp" line="469"/>
         <source>DisplayOptions = %1</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="protocol/protocol.cpp" line="467"/>
+        <location filename="protocol/protocol.cpp" line="471"/>
         <source>BlinkOptions = %1</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="protocol/protocol.cpp" line="469"/>
+        <location filename="protocol/protocol.cpp" line="473"/>
         <source>BrightOptions = %1</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="protocol/protocol.cpp" line="471"/>
+        <location filename="protocol/protocol.cpp" line="475"/>
         <source>ImagesData = %1</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="protocol/protocol.cpp" line="477"/>
+        <location filename="protocol/protocol.cpp" line="481"/>
         <source>Unknown outcoming type = %1</source>
         <translation></translation>
     </message>

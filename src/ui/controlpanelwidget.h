@@ -9,6 +9,7 @@
 
 #include <ui/subwindow.h>
 
+class QAction;
 class QByteArray;
 class QCloseEvent;
 class QStatusBar;
@@ -189,6 +190,7 @@ private:
     quint64 m_pingCounter = 0;
     QTimer* m_pingTimer = nullptr;
     QStatusBar* m_statusBar = nullptr;
+    QAction* m_deviceAddressAction = nullptr;
 
 };
 

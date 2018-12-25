@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>800</width>
-    <height>600</height>
+    <width>552</width>
+    <height>648</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -28,9 +28,12 @@
      <property name="childrenCollapsible">
       <bool>false</bool>
      </property>
-     <widget class="QGroupBox" name="controlGroupBox">
-      <property name="title">
-       <string>Control Panel</string>
+     <widget class="QWidget" name="controlWidget" native="true">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+        <horstretch>0</horstretch>
+        <verstretch>2</verstretch>
+       </sizepolicy>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout_2">
        <item>
@@ -186,6 +189,9 @@
           <layout class="QVBoxLayout" name="verticalLayout_7">
            <item>
             <widget class="QScrollArea" name="controlsScrollArea">
+             <property name="sizeAdjustPolicy">
+              <enum>QAbstractScrollArea::AdjustToContents</enum>
+             </property>
              <property name="widgetResizable">
               <bool>true</bool>
              </property>
@@ -194,7 +200,7 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>220</width>
+                <width>263</width>
                 <height>32</height>
                </rect>
               </property>
@@ -208,14 +214,14 @@
                   </sizepolicy>
                  </property>
                  <property name="title">
-                  <string>Device FZK-2</string>
+                  <string>Device Common</string>
                  </property>
                 </widget>
                </item>
                <item>
                 <widget class="QGroupBox" name="additionalGroupBox">
                  <property name="title">
-                  <string>Device FZK-2B</string>
+                  <string>Device Additional</string>
                  </property>
                 </widget>
                </item>
@@ -243,6 +249,12 @@
       </layout>
      </widget>
      <widget class="QGroupBox" name="logGroupBox">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
       <property name="title">
        <string>Messages Log</string>
       </property>
@@ -268,7 +280,7 @@
          <item>
           <widget class="QLineEdit" name="logFileNameLineEdit">
            <property name="sizePolicy">
-            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
              <horstretch>0</horstretch>
              <verstretch>0</verstretch>
             </sizepolicy>

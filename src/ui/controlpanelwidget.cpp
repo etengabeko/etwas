@@ -14,6 +14,8 @@
 #include <QGridLayout>
 #include <QHBoxLayout>
 #include <QHostAddress>
+#include <QMdiArea>
+#include <QMdiSubWindow>
 #include <QMenu>
 #include <QMenuBar>
 #include <QMovie>
@@ -137,9 +139,11 @@ ControlPanelWidget::ControlPanelWidget(bool isDebugMode,
 
         QMenu* optionsMenu = menubar->addMenu(tr("Options"));
 
-        QAction* optionsAction = optionsMenu->addAction(tr("Connection options"));
-        QObject::connect(optionsAction, &QAction::triggered,
+        m_deviceAddressAction = optionsMenu->addAction(tr("Connection options"));
+        QObject::connect(m_deviceAddressAction, &QAction::triggered,
                          this, &ControlPanelWidget::slotChangeDeviceAddress);
+        m_deviceAddressAction->setEnabled(false);
+
         QAction* imagesAction = optionsMenu->addAction(tr("Load images"));
         QObject::connect(imagesAction, &QAction::triggered,
                          this, &ControlPanelWidget::slotLoadImages);
@@ -161,6 +165,9 @@ ControlPanelWidget::~ControlPanelWidget()
     emit subwindowClosed(m_optionsWidget);
     emit subwindowClosed(m_imagesWidget);
 
+    m_inCtrl.reset();
+    m_outCtrl.reset();
+
     m_recvThread->quit();
     m_transport = nullptr;
     m_recvThread->wait();
@@ -168,10 +175,10 @@ ControlPanelWidget::~ControlPanelWidget()
     delete m_recvThread;
     m_recvThread = nullptr;
 
-    m_inCtrl.reset();
-    m_outCtrl.reset();
-
     removeAllContols();
+
+    delete m_deviceAddressAction;
+    m_deviceAddressAction = nullptr;
 
     delete m_statusBar;
     m_statusBar = nullptr;
@@ -394,7 +401,7 @@ void ControlPanelWidget::slotOnConnect()
     }
     else
     {
-        m_ui->deviceAddressButton->show();
+        m_deviceAddressAction->setEnabled(true);
     }
 }
 
@@ -509,16 +516,32 @@ void ControlPanelWidget::makeConfiguration(const QVector<settings::DisplaySettin
 
 void ControlPanelWidget::createControls()
 {
+    m_ui->stackedWidget->setCurrentWidget(m_ui->workingPage);
+
     for (auto it = m_controlIds.cbegin(), end = m_controlIds.cend(); it != end; ++it)
     {
         createControl(*it);
     }
 
     slotChangeControlsColumnsCount(m_ui->columnCountSpinBox->value());
+    QApplication::processEvents();
 
-    m_ui->stackedWidget->setCurrentWidget(m_ui->workingPage);
+    QMdiSubWindow* selfSubwindow = qobject_cast<QMdiSubWindow*>(parent());
+    if (selfSubwindow != nullptr)
+    {
+        const QSize sizeHint = m_ui->controlsContentsWidget->sizeHint();
+
+        const int deltaWidth = sizeHint.width() - m_ui->controlsScrollArea->width();
+        selfSubwindow->resize(qMin(selfSubwindow->width() + deltaWidth,
+                                   selfSubwindow->mdiArea()->width()),
+                              selfSubwindow->height());
+
+        const int deltaHeight = sizeHint.height() - m_ui->controlsScrollArea->height();
+        selfSubwindow->resize(selfSubwindow->width(),
+                              qMin(selfSubwindow->height() + deltaHeight,
+                                   selfSubwindow->mdiArea()->height()));
+    }
 }
-
 
 void ControlPanelWidget::createControl(quint8 controlId)
 {
@@ -760,6 +783,9 @@ void ControlPanelWidget::slotOnDisconnect()
 
 void ControlPanelWidget::setNotConnectedState()
 {
+    m_inCtrl.reset();
+    m_outCtrl.reset();
+
     m_recvThread->quit();
     m_transport = nullptr;
     m_recvThread->wait();
@@ -778,7 +804,7 @@ void ControlPanelWidget::setNotConnectedState()
     }
     else
     {
-        m_ui->deviceAddressButton->hide();
+        m_deviceAddressAction->setEnabled(false);
     }
 
     removeAllContols();
