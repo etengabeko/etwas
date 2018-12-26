@@ -548,6 +548,7 @@ void ControlPanelWidget::createControl(quint8 controlId)
     if (!m_controlWidgets.contains(controlId))
     {
         DisplayControlWidget* wgt = new DisplayControlWidget(m_imgStorage.get(),
+                                                             controlId,
                                                              m_isDebugMode);
         m_controlWidgets.insert(controlId, wgt);
         initConnectionsForControl(wgt);

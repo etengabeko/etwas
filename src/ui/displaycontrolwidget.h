@@ -30,6 +30,7 @@ class DisplayControlWidget : public QWidget
 
 public:
     explicit DisplayControlWidget(const storage::ImageStorage* const storage,
+                                  const quint8 id,
                                   bool isDebugMode,
                                   QWidget* parent = nullptr);
     ~DisplayControlWidget();

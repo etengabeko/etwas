@@ -19,6 +19,7 @@ qreal opaqueLevel() { return 1.0; }
 }
 
 DisplayControlWidget::DisplayControlWidget(const storage::ImageStorage* const storage,
+                                           const quint8 id,
                                            bool isDebugMode,
                                            QWidget* parent) :
     QWidget(parent),
@@ -26,33 +27,31 @@ DisplayControlWidget::DisplayControlWidget(const storage::ImageStorage* const st
     m_imgStorage(storage),
     m_isDebugMode(isDebugMode),
     m_firstImageIndex(storage::ImageStorage::kInvalidIndex),
-    m_secondImageIndex(storage::ImageStorage::kInvalidIndex),
-    m_timer(new QTimer(this)),
-    m_displayLabel(new QLabel(this))
+    m_secondImageIndex(storage::ImageStorage::kInvalidIndex)
 {
     Q_ASSERT(m_imgStorage);
 
     m_ui->setupUi(this);
-    m_withoutPixmapLabel = m_ui->displayButton->text();
-
-    if (m_ui->displayButton->layout() == nullptr)
-    {
-        m_ui->displayButton->setLayout(new QHBoxLayout());
-    }
-    m_ui->displayButton->layout()->addWidget(m_displayLabel);
-    m_displayLabel->setAlignment(Qt::AlignCenter);
-
-    m_ui->displayButton->installEventFilter(this);
-
-    QGraphicsOpacityEffect* effect = new QGraphicsOpacityEffect();
-    effect->setOpacity(::transparentLevel());
-    m_displayLabel->setGraphicsEffect(effect);
-
-    QObject::connect(m_timer, &QTimer::timeout,
-                     this, &DisplayControlWidget::slotTimeoutFirst);
+    m_withoutPixmapLabel = QString::number(id);
 
     if (m_isDebugMode)
     {
+        m_timer = new QTimer(this);
+        m_displayLabel = new QLabel(this);
+
+        if (m_ui->displayButton->layout() == nullptr)
+        {
+            m_ui->displayButton->setLayout(new QHBoxLayout());
+        }
+        m_ui->displayButton->layout()->addWidget(m_displayLabel);
+        m_displayLabel->setAlignment(Qt::AlignCenter);
+
+        QGraphicsOpacityEffect* effect = new QGraphicsOpacityEffect();
+        effect->setOpacity(::transparentLevel());
+        m_displayLabel->setGraphicsEffect(effect);
+
+        QObject::connect(m_timer, &QTimer::timeout,
+                         this, &DisplayControlWidget::slotTimeoutFirst);
         QObject::connect(this, &DisplayControlWidget::activated,
                          this, &DisplayControlWidget::highlight);
         QObject::connect(m_ui->displayButton, &QToolButton::pressed,
@@ -62,6 +61,8 @@ DisplayControlWidget::DisplayControlWidget(const storage::ImageStorage* const st
     }
     else
     {
+        m_ui->displayButton->setText(m_withoutPixmapLabel);
+        m_ui->displayButton->installEventFilter(this);
         m_ui->displayButton->setCheckable(true);
     }
 }
@@ -75,7 +76,7 @@ DisplayControlWidget::~DisplayControlWidget()
 bool DisplayControlWidget::eventFilter(QObject* watched, QEvent* event)
 {
     if (   watched == m_ui->displayButton
-        && m_isDebugMode == false)
+        && !m_isDebugMode)
     {
        QEvent::Type eventType = event->type();
         if (   eventType == QEvent::MouseButtonRelease
@@ -147,15 +148,22 @@ void DisplayControlWidget::setCurrentImage(ImageNumber num)
         return;
     }
 
-    if (currentPixmap->isNull())
+    if (m_isDebugMode)
     {
-        m_ui->displayButton->setText(m_withoutPixmapLabel);
+        if (currentPixmap->isNull())
+        {
+            m_ui->displayButton->setText(m_withoutPixmapLabel);
+        }
+        else
+        {
+            m_ui->displayButton->setText(QString::null);
+        }
+
+        if (m_displayLabel != nullptr)
+        {
+            m_displayLabel->setPixmap(*currentPixmap);
+        }
     }
-    else
-    {
-        m_ui->displayButton->setText(QString::null);
-    }
-    m_displayLabel->setPixmap(*currentPixmap);
 }
 
 void DisplayControlWidget::resetFirstImage()
@@ -244,11 +252,16 @@ void DisplayControlWidget::setBrightLevel(int level)
 {
     m_brightLevel = std::min(std::max(level, static_cast<int>(protocol::BrightLevel::Min)),
                              static_cast<int>(protocol::BrightLevel::Max));
-    QGraphicsOpacityEffect* effect = qobject_cast<QGraphicsOpacityEffect*>(m_displayLabel->graphicsEffect());
-    if (effect != nullptr)
+
+    if (   m_isDebugMode
+        && m_displayLabel != nullptr)
     {
-        const qreal opacity = ::transparentLevel() + (::opaqueLevel() - ::transparentLevel()) * m_brightLevel/static_cast<qreal>(protocol::BrightLevel::Max);
-        effect->setOpacity(opacity);
+        QGraphicsOpacityEffect* effect = qobject_cast<QGraphicsOpacityEffect*>(m_displayLabel->graphicsEffect());
+        if (effect != nullptr)
+        {
+            const qreal opacity = ::transparentLevel() + (::opaqueLevel() - ::transparentLevel()) * m_brightLevel/static_cast<qreal>(protocol::BrightLevel::Max);
+            effect->setOpacity(opacity);
+        }
     }
 }
 
@@ -288,16 +301,20 @@ void DisplayControlWidget::setBlinkingEnabled(bool enabled)
 
 void DisplayControlWidget::resetTimer()
 {
-    if (   m_blinkingEnabled
-        && m_timeOnMsec > 0
-        && m_timeOffMsec > 0)
+    if (   m_isDebugMode
+        && m_timer != nullptr)
     {
-        m_timer->start(m_timeOnMsec + m_timeOffMsec);
-        slotTimeoutFirst();
-    }
-    else
-    {
-        m_timer->stop();
+        if (   m_blinkingEnabled
+               && m_timeOnMsec > 0
+               && m_timeOffMsec > 0)
+        {
+            m_timer->start(m_timeOnMsec + m_timeOffMsec);
+            slotTimeoutFirst();
+        }
+        else
+        {
+            m_timer->stop();
+        }
     }
 }
 
