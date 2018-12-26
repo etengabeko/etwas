@@ -556,7 +556,6 @@ void ControlPanelWidget::createControl(quint8 controlId)
         wgt->setBrightLevel(::defaultBrightLevel());
         wgt->setFirstImage(controlId);
         wgt->setFirstImageEnable(true);
-        wgt->setSecondImage(controlId);
         wgt->setSecondImageEnable(false);
         wgt->setTimeOn(::defaultTimeout());
         wgt->setTimeOff(::defaultTimeout());

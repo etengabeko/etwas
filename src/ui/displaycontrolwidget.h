@@ -96,6 +96,8 @@ private:
     int m_timeOnMsec = 0;
     int m_timeOffMsec = 0;
     bool m_blinkingEnabled = false;
+    bool m_firstImageEnabled = false;
+    bool m_secondImageEnabled = false;
 
     int m_firstImageIndex;
     int m_secondImageIndex;

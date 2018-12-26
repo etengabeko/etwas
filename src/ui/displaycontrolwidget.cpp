@@ -100,12 +100,13 @@ bool DisplayControlWidget::eventFilter(QObject* watched, QEvent* event)
 
 bool DisplayControlWidget::isFirstImageEnabled() const
 {
-    return !m_firstImagePixmap.isNull();
+    return m_firstImageEnabled;
 }
 
 void DisplayControlWidget::setFirstImageEnable(bool enabled)
 {
-    if (enabled)
+    m_firstImageEnabled = enabled;
+    if (m_firstImageEnabled)
     {
         reloadImage(ImageNumber::First);
     }
@@ -117,12 +118,13 @@ void DisplayControlWidget::setFirstImageEnable(bool enabled)
 
 bool DisplayControlWidget::isSecondImageEnabled() const
 {
-    return !m_secondImagePixmap.isNull();
+    return m_secondImageEnabled;
 }
 
 void DisplayControlWidget::setSecondImageEnable(bool enabled)
 {
-    if (enabled)
+    m_secondImageEnabled = enabled;
+    if (m_secondImageEnabled)
     {
         reloadImage(ImageNumber::Second);
     }
