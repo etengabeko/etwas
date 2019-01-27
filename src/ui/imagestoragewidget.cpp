@@ -14,6 +14,8 @@
 namespace
 {
 
+const int kMaxImagesCount = 256;
+
 enum Column
 {
     Number = 0,
@@ -34,7 +36,7 @@ ImageStorageWidget::ImageStorageWidget(storage::ImageStorage* storage,
     m_ui->setupUi(this);
 
     m_ui->imagesTableWidget->setSelectionBehavior(QTableWidget::SelectionBehavior::SelectRows);
-    m_ui->imagesTableWidget->setSelectionMode(QTableWidget::SingleSelection);
+    m_ui->imagesTableWidget->setSelectionMode(QTableWidget::ExtendedSelection);
     m_ui->imagesTableWidget->setContextMenuPolicy(Qt::CustomContextMenu);
 
     QObject::connect(m_ui->imagesTableWidget->selectionModel(), &QItemSelectionModel::selectionChanged,
@@ -119,10 +121,18 @@ void ImageStorageWidget::slotAddImages()
                                                                 QApplication::applicationDirPath(),
                                                                 tr("Images (*.bmp);;All files (*)"));
     const int kCount = m_ui->imagesTableWidget->rowCount();
-    int index = kCount > 0 ? m_ui->imagesTableWidget->item(kCount-1, Column::Number)->text().toInt()
+    int index = kCount > 0 ? (m_ui->imagesTableWidget->item(kCount-1, Column::Number)->text().toInt() + 1)
                            : kCount;
     for (const QString& each : fileNames)
     {
+        if (index >= kMaxImagesCount)
+        {
+            QMessageBox::warning(nullptr,
+                                 tr("Error Load images"),
+                                 tr("Count of loaded images (%1) greater than available (%2).")
+                                 .arg(kCount + fileNames.size()).arg(kMaxImagesCount));
+            break;
+        }
         addRow(static_cast<quint8>(index++), each);
     }
 
@@ -133,14 +143,9 @@ void ImageStorageWidget::slotAddImages()
 
 void ImageStorageWidget::syncStorage()
 {
-    const int kMaxImagesCount = 255;
     const int count = m_ui->imagesTableWidget->rowCount();
     if (count > kMaxImagesCount)
     {
-        QMessageBox::warning(nullptr,
-                             tr("Error Load images"),
-                             tr("Count of loaded images (%1) greater than available (%2). Images will be not saved. Please, remove some images.")
-                             .arg(count).arg(kMaxImagesCount));
         return;
     }
 
@@ -149,6 +154,7 @@ void ImageStorageWidget::syncStorage()
         m_storage->addImage(static_cast<quint8>(row),
                             m_ui->imagesTableWidget->item(row, Column::FileName)->text());
     }
+    m_ui->imagesTableWidget->scrollToBottom();
 }
 
 void ImageStorageWidget::slotRemoveImages()

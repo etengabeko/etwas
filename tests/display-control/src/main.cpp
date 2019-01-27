@@ -19,7 +19,7 @@ int main(int argc, char* argv[])
     storage.addImage(Second, ":/off.bmp");
 
     DisplayOptionsWidget* opt = new DisplayOptionsWidget(&storage);
-    DisplayControlWidget* ctrl = new DisplayControlWidget(&storage, true);
+    DisplayControlWidget* ctrl = new DisplayControlWidget(&storage, 255, true);
 
     opt->setFirstImage(First);
     ctrl->setFirstImage(First);
