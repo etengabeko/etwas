@@ -99,7 +99,13 @@ const QString typeToString(MessageType type)
         { MessageType::DeviceIdentity, QCoreApplication::translate("protocol", "DeviceIdentity = %1")
                     .arg(::typeToHex(MessageType::DeviceIdentity)) },
         { MessageType::ButtonsState,   QCoreApplication::translate("protocol", "ButtonsState = %1")
-                    .arg(::typeToHex(MessageType::ButtonsState)) }
+                    .arg(::typeToHex(MessageType::ButtonsState)) },
+        { MessageType::BeginLog,       QCoreApplication::translate("protocol", "BeginLog = %1")
+                    .arg(::typeToHex(MessageType::BeginLog)) },
+        { MessageType::NextLog,        QCoreApplication::translate("protocol", "NextLog = %1")
+                    .arg(::typeToHex(MessageType::NextLog)) },
+        { MessageType::EndLog,         QCoreApplication::translate("protocol", "EndLog = %1")
+                    .arg(::typeToHex(MessageType::EndLog)) }
     };
 
     auto founded = types.find(type);
@@ -149,6 +155,15 @@ std::unique_ptr<Message> Message::deserialize(const QByteArray& content)
             break;
         case MessageType::ButtonsState:
             result.reset(new ButtonsStateMessage());
+            break;
+        case MessageType::BeginLog:
+            result.reset(new BeginLogMessage());
+            break;
+        case MessageType::NextLog:
+            result.reset(new NextLogMessage());
+            break;
+        case MessageType::EndLog:
+            result.reset(new EndLogMessage());
             break;
         case MessageType::Unknown:
         default:
@@ -452,6 +467,216 @@ void ButtonsStateMessage::setButtonsStates(QVector<ButtonState>&& states) NOEXCE
     m_pimpl->setButtonsStates(std::forward<QVector<ButtonState>>(states));
 }
 
+BeginLogMessage::BeginLogMessage() :
+    Message(MessageType::BeginLog),
+    m_pimpl(new details::BeginLogMessagePrivate())
+{
+
+}
+
+BeginLogMessage::~BeginLogMessage() NOEXCEPT
+{
+    m_pimpl.reset();
+}
+
+BeginLogMessage::BeginLogMessage(const BeginLogMessage& other) :
+    Message(other),
+    m_pimpl(new details::BeginLogMessagePrivate(*other.m_pimpl))
+{
+
+}
+
+BeginLogMessage& BeginLogMessage::operator =(const BeginLogMessage& other)
+{
+    *m_pimpl = *other.m_pimpl;
+    return *this;
+}
+
+BeginLogMessage::BeginLogMessage(BeginLogMessage&& other) NOEXCEPT :
+    Message(other),
+    m_pimpl(std::move(other.m_pimpl))
+{
+
+}
+
+BeginLogMessage& BeginLogMessage::operator =(BeginLogMessage&& other) NOEXCEPT
+{
+    m_pimpl.swap(other.m_pimpl);
+    return *this;
+}
+
+const QByteArray BeginLogMessage::serialize() const
+{
+    QByteArray result;
+
+    QDataStream out(&result, QIODevice::WriteOnly);
+    out.setByteOrder(QDataStream::LittleEndian);
+    out << static_cast<quint8>(m_type)
+        << static_cast<quint32>(count());
+    return result;
+}
+
+bool BeginLogMessage::parse(const QByteArray& src)
+{
+    QDataStream in(src);
+    in.setByteOrder(QDataStream::LittleEndian);
+    quint8 tmp = 0;
+    in >> tmp;
+
+    bool ok = (tmp == static_cast<quint8>(type()));
+    if (ok)
+    {
+        quint32 num = 0;
+        in >> num;
+        setCount(num);
+    }
+    return ok;
+}
+
+quint32 BeginLogMessage::count() const NOEXCEPT
+{
+    return m_pimpl->count();
+}
+
+void BeginLogMessage::setCount(quint32 num) NOEXCEPT
+{
+    m_pimpl->setCount(num);
+}
+
+NextLogMessage::NextLogMessage() :
+    Message(MessageType::NextLog),
+    m_pimpl(new details::NextLogMessagePrivate())
+{
+
+}
+
+NextLogMessage::~NextLogMessage() NOEXCEPT
+{
+    m_pimpl.reset();
+}
+
+NextLogMessage::NextLogMessage(const NextLogMessage& other) :
+    Message(other),
+    m_pimpl(new details::NextLogMessagePrivate(*other.m_pimpl))
+{
+
+}
+
+NextLogMessage& NextLogMessage::operator =(const NextLogMessage& other)
+{
+    *m_pimpl = *other.m_pimpl;
+    return *this;
+}
+
+NextLogMessage::NextLogMessage(NextLogMessage&& other) NOEXCEPT :
+    Message(other),
+    m_pimpl(std::move(other.m_pimpl))
+{
+
+}
+
+NextLogMessage& NextLogMessage::operator =(NextLogMessage&& other) NOEXCEPT
+{
+    m_pimpl.swap(other.m_pimpl);
+    return *this;
+}
+
+const QByteArray NextLogMessage::serialize() const
+{
+    QByteArray result;
+
+    QDataStream out(&result, QIODevice::WriteOnly);
+    out.setByteOrder(QDataStream::LittleEndian);
+    out << static_cast<quint8>(m_type);
+    out.writeRawData(data().constData(), data().size());
+    return result;
+}
+
+bool NextLogMessage::parse(const QByteArray& src)
+{
+    QDataStream in(src);
+    in.setByteOrder(QDataStream::LittleEndian);
+    quint8 tmp = 0;
+    in >> tmp;
+
+    bool ok = (tmp == static_cast<quint8>(type()));
+    if (ok)
+    {
+        QByteArray content(src.size() - sizeof(tmp), '\0');
+        in.readRawData(content.data(), content.size());
+        setData(content);
+    }
+    return ok;
+}
+
+const QByteArray& NextLogMessage::data() const NOEXCEPT
+{
+    return m_pimpl->data();
+}
+
+void NextLogMessage::setData(const QByteArray& content)
+{
+    m_pimpl->setData(content);
+}
+
+EndLogMessage::EndLogMessage() :
+    Message(MessageType::EndLog),
+    m_pimpl(new details::EndLogMessagePrivate())
+{
+
+}
+
+EndLogMessage::~EndLogMessage() NOEXCEPT
+{
+    m_pimpl.reset();
+}
+
+EndLogMessage::EndLogMessage(const EndLogMessage& other) :
+    Message(other),
+    m_pimpl(new details::EndLogMessagePrivate(*other.m_pimpl))
+{
+
+}
+
+EndLogMessage& EndLogMessage::operator =(const EndLogMessage& other)
+{
+    *m_pimpl = *other.m_pimpl;
+    return *this;
+}
+
+EndLogMessage::EndLogMessage(EndLogMessage&& other) NOEXCEPT :
+    Message(other),
+    m_pimpl(std::move(other.m_pimpl))
+{
+
+}
+
+EndLogMessage& EndLogMessage::operator =(EndLogMessage&& other) NOEXCEPT
+{
+    m_pimpl.swap(other.m_pimpl);
+    return *this;
+}
+
+const QByteArray EndLogMessage::serialize() const
+{
+    QByteArray result;
+
+    QDataStream out(&result, QIODevice::WriteOnly);
+    out.setByteOrder(QDataStream::LittleEndian);
+    out << static_cast<quint8>(m_type);
+    return result;
+}
+
+bool EndLogMessage::parse(const QByteArray& src)
+{
+    QDataStream in(src);
+    in.setByteOrder(QDataStream::LittleEndian);
+    quint8 tmp = 0;
+    in >> tmp;
+
+    return (tmp == static_cast<quint8>(type()));
+}
+
 } // incoming
 
 namespace outcoming
@@ -473,7 +698,13 @@ const QString typeToString(MessageType type)
         { MessageType::BrightOptions,  QCoreApplication::translate("protocol", "BrightOptions = %1")
                     .arg(::typeToHex(MessageType::BrightOptions)) },
         { MessageType::ImageData,      QCoreApplication::translate("protocol", "ImagesData = %1")
-                    .arg(::typeToHex(MessageType::ImageData)) }
+                    .arg(::typeToHex(MessageType::ImageData)) },
+        { MessageType::SendLog,        QCoreApplication::translate("protocol", "SendLog = %1")
+                    .arg(::typeToHex(MessageType::SendLog)) },
+        { MessageType::ClearLog,       QCoreApplication::translate("protocol", "ClearLog = %1")
+                    .arg(::typeToHex(MessageType::ClearLog)) },
+        { MessageType::CurrentTime,    QCoreApplication::translate("protocol", "CurrentTime = %1")
+                    .arg(::typeToHex(MessageType::CurrentTime)) }
     };
 
     auto founded = types.find(type);
@@ -532,6 +763,15 @@ std::unique_ptr<Message> Message::deserialize(const QByteArray& content)
             break;
         case MessageType::ImageData:
             result.reset(new ImageDataMessage());
+            break;
+        case MessageType::SendLog:
+            result.reset(new SendLogMessage());
+            break;
+        case MessageType::ClearLog:
+            result.reset(new ClearLogMessage());
+            break;
+        case MessageType::CurrentTime:
+            result.reset(new CurrentTimeMessage());
             break;
         case MessageType::Unknown:
         default:
@@ -1253,6 +1493,198 @@ const QByteArray ImageDataMessage::serializeWithoutData() const
     out << static_cast<quint8>(m_type)
         << static_cast<quint8>(imageNumber());
     return result;
+}
+
+SendLogMessage::SendLogMessage() :
+    Message(MessageType::SendLog),
+    m_pimpl(new details::SendLogMessagePrivate())
+{
+
+}
+
+SendLogMessage::~SendLogMessage() NOEXCEPT
+{
+    m_pimpl.reset();
+}
+
+SendLogMessage::SendLogMessage(const SendLogMessage& other) :
+    Message(other),
+    m_pimpl(new details::SendLogMessagePrivate(*other.m_pimpl))
+{
+
+}
+
+SendLogMessage& SendLogMessage::operator =(const SendLogMessage& other)
+{
+    *m_pimpl = *other.m_pimpl;
+    return *this;
+}
+
+SendLogMessage::SendLogMessage(SendLogMessage&& other) NOEXCEPT :
+    Message(other),
+    m_pimpl(std::move(other.m_pimpl))
+{
+
+}
+
+SendLogMessage& SendLogMessage::operator =(SendLogMessage&& other) NOEXCEPT
+{
+    m_pimpl.swap(other.m_pimpl);
+    return *this;
+}
+
+const QByteArray SendLogMessage::serialize() const
+{
+    QByteArray result;
+
+    QDataStream out(&result, QIODevice::WriteOnly);
+    out.setByteOrder(QDataStream::LittleEndian);
+    out << static_cast<quint8>(m_type);
+    return result;
+}
+
+bool SendLogMessage::parse(const QByteArray& src)
+{
+    QDataStream in(src);
+    in.setByteOrder(QDataStream::LittleEndian);
+    quint8 tmp = 0;
+    in >> tmp;
+
+    return (tmp == static_cast<quint8>(type()));
+}
+
+ClearLogMessage::ClearLogMessage() :
+    Message(MessageType::ClearLog),
+    m_pimpl(new details::ClearLogMessagePrivate())
+{
+
+}
+
+ClearLogMessage::~ClearLogMessage() NOEXCEPT
+{
+    m_pimpl.reset();
+}
+
+ClearLogMessage::ClearLogMessage(const ClearLogMessage& other) :
+    Message(other),
+    m_pimpl(new details::ClearLogMessagePrivate(*other.m_pimpl))
+{
+
+}
+
+ClearLogMessage& ClearLogMessage::operator =(const ClearLogMessage& other)
+{
+    *m_pimpl = *other.m_pimpl;
+    return *this;
+}
+
+ClearLogMessage::ClearLogMessage(ClearLogMessage&& other) NOEXCEPT :
+    Message(other),
+    m_pimpl(std::move(other.m_pimpl))
+{
+
+}
+
+ClearLogMessage& ClearLogMessage::operator =(ClearLogMessage&& other) NOEXCEPT
+{
+    m_pimpl.swap(other.m_pimpl);
+    return *this;
+}
+
+const QByteArray ClearLogMessage::serialize() const
+{
+    QByteArray result;
+
+    QDataStream out(&result, QIODevice::WriteOnly);
+    out.setByteOrder(QDataStream::LittleEndian);
+    out << static_cast<quint8>(m_type);
+    return result;
+}
+
+bool ClearLogMessage::parse(const QByteArray& src)
+{
+    QDataStream in(src);
+    in.setByteOrder(QDataStream::LittleEndian);
+    quint8 tmp = 0;
+    in >> tmp;
+
+    return (tmp == static_cast<quint8>(type()));
+}
+
+CurrentTimeMessage::CurrentTimeMessage() :
+    Message(MessageType::CurrentTime),
+    m_pimpl(new details::CurrentTimeMessagePrivate())
+{
+
+}
+
+CurrentTimeMessage::~CurrentTimeMessage() NOEXCEPT
+{
+    m_pimpl.reset();
+}
+
+CurrentTimeMessage::CurrentTimeMessage(const CurrentTimeMessage& other) :
+    Message(other),
+    m_pimpl(new details::CurrentTimeMessagePrivate(*other.m_pimpl))
+{
+
+}
+
+CurrentTimeMessage& CurrentTimeMessage::operator =(const CurrentTimeMessage& other)
+{
+    *m_pimpl = *other.m_pimpl;
+    return *this;
+}
+
+CurrentTimeMessage::CurrentTimeMessage(CurrentTimeMessage&& other) NOEXCEPT :
+    Message(other),
+    m_pimpl(std::move(other.m_pimpl))
+{
+
+}
+
+CurrentTimeMessage& CurrentTimeMessage::operator =(CurrentTimeMessage&& other) NOEXCEPT
+{
+    m_pimpl.swap(other.m_pimpl);
+    return *this;
+}
+
+const QByteArray CurrentTimeMessage::serialize() const
+{
+    QByteArray result;
+
+    QDataStream out(&result, QIODevice::WriteOnly);
+    out.setByteOrder(QDataStream::LittleEndian);
+    out << static_cast<quint8>(m_type)
+        << static_cast<quint32>(currentTime());
+    return result;
+}
+
+bool CurrentTimeMessage::parse(const QByteArray& src)
+{
+    QDataStream in(src);
+    in.setByteOrder(QDataStream::LittleEndian);
+    quint8 tmp = 0;
+    in >> tmp;
+
+    bool ok = (tmp == static_cast<quint8>(type()));
+    if (ok)
+    {
+        quint32 epoch = 0;
+        in >> epoch;
+        setCurrentTime(epoch);
+    }
+    return ok;
+}
+
+quint32 CurrentTimeMessage::currentTime() const NOEXCEPT
+{
+    return m_pimpl->currentTime();
+}
+
+void CurrentTimeMessage::setCurrentTime(quint32 epoch) NOEXCEPT
+{
+    m_pimpl->setCurrentTime(epoch);
 }
 
 } // outcoming

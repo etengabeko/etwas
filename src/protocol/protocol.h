@@ -44,12 +44,18 @@ namespace details
 class PingMessagePrivate;
 class DeviceIdentityMessagePrivate;
 class ButtonsStateMessagePrivate;
+class BeginLogMessagePrivate;
+class NextLogMessagePrivate;
+class EndLogMessagePrivate;
 class DeviceAddressMessagePrivate;
 class DisplayImagesMessagePrivate;
 class DisplayOptionsMessagePrivate;
 class BlinkOptionsMessagePrivate;
 class BrightOptionsMessagePrivate;
 class ImageDataMessagePrivate;
+class SendLogMessagePrivate;
+class ClearLogMessagePrivate;
+class CurrentTimeMessagePrivate;
 
 } // details
 
@@ -129,6 +135,9 @@ enum class MessageType
     Ping           = 0x00, //!< Сообщение о наличии соединения
     DeviceIdentity = 0x01, //!< Идентификация устройства
     ButtonsState   = 0x02, //!< Изменение состояния клавиш
+    BeginLog       = 0x03, //!< Начало передачи лог-файла
+    NextLog        = 0x04, //!< Сообщение лог-файла
+    EndLog         = 0x05, //!< Конец передычи лог-файла
     Unknown        = 0xFF  //!< Тип не определён
 };
 
@@ -314,6 +323,123 @@ private:
 
 };
 
+/**
+ * @class BeginLogMessage
+ * @brief Реализация сообщений о начале передачи лог-файла
+ */
+class BeginLogMessage final : public Message
+{
+public:
+    BeginLogMessage();
+    ~BeginLogMessage() NOEXCEPT override;
+
+    BeginLogMessage(BeginLogMessage&& other) NOEXCEPT;
+    BeginLogMessage& operator =(BeginLogMessage&& other) NOEXCEPT;
+
+    BeginLogMessage(const BeginLogMessage& other);
+    BeginLogMessage& operator =(const BeginLogMessage& other);
+
+    /**
+     * @brief serialize [override]
+     */
+    const QByteArray serialize() const override;
+
+    /**
+     * @brief parse [override]
+     */
+    bool parse(const QByteArray& src) override;
+
+    /**
+     * @brief count - Возвращает количество сообщений лог-файла
+     * @return Количество сообщений лог-файла
+     */
+    quint32 count() const NOEXCEPT;
+
+    /**
+     * @brief setCount - Устанавливает значение количества сообщений лог-файла
+     * @param num - Новое значение количества сообщений лог-файла
+     */
+    void setCount(quint32 num) NOEXCEPT;
+
+private:
+    std::unique_ptr<details::BeginLogMessagePrivate> m_pimpl;
+
+};
+
+/**
+ * @class NextLogMessage
+ * @brief Реализация передачи сообщения лог-файла
+ */
+class NextLogMessage final : public Message
+{
+public:
+    NextLogMessage();
+    ~NextLogMessage() NOEXCEPT override;
+
+    NextLogMessage(NextLogMessage&& other) NOEXCEPT;
+    NextLogMessage& operator =(NextLogMessage&& other) NOEXCEPT;
+
+    NextLogMessage(const NextLogMessage& other);
+    NextLogMessage& operator =(const NextLogMessage& other);
+
+    /**
+     * @brief serialize [override]
+     */
+    const QByteArray serialize() const override;
+
+    /**
+     * @brief parse [override]
+     */
+    bool parse(const QByteArray& src) override;
+
+    /**
+     * @brief data - Возвращает данные сообщения лог-файла
+     * @return Данные сообщения лог-файла
+     */
+    const QByteArray& data() const NOEXCEPT;
+
+    /**
+     * @brief setData - Устанавливает новые данные сообщения лог-файла
+     * @param content - Новое значение данных сообщения лог-файла
+     */
+    void setData(const QByteArray& content);
+
+private:
+    std::unique_ptr<details::NextLogMessagePrivate> m_pimpl;
+
+};
+
+/**
+ * @class EndLogMessage
+ * @brief Реализация сообщений об окончании передачи лог-файла
+ */
+class EndLogMessage final : public Message
+{
+public:
+    EndLogMessage();
+    ~EndLogMessage() NOEXCEPT override;
+
+    EndLogMessage(EndLogMessage&& other) NOEXCEPT;
+    EndLogMessage& operator =(EndLogMessage&& other) NOEXCEPT;
+
+    EndLogMessage(const EndLogMessage& other);
+    EndLogMessage& operator =(const EndLogMessage& other);
+
+    /**
+     * @brief serialize [override]
+     */
+    const QByteArray serialize() const override;
+
+    /**
+     * @brief parse [override]
+     */
+    bool parse(const QByteArray& src) override;
+
+private:
+    std::unique_ptr<details::EndLogMessagePrivate> m_pimpl;
+
+};
+
 } // incoming
 
 /**
@@ -335,6 +461,9 @@ enum class MessageType
     BlinkOptions   = 0x04, //!< Управление параметрами мигания дисплея
     BrightOptions  = 0x05, //!< Управление яркостью дисплея
     ImageData      = 0x06, //!< Загрузка изображений в память устройства
+    SendLog        = 0x07, //!< Передача устройством лог-файла
+    ClearLog       = 0x08, //!< Очистка устройством лог-файла
+    CurrentTime    = 0x09, //!< Установка текущего времени
     Unknown        = 0xFF  //!< Тип не определён
 };
 
@@ -777,6 +906,111 @@ public:
 
 private:
     std::unique_ptr<details::ImageDataMessagePrivate> m_pimpl;
+
+};
+
+/**
+ * @class SendLogMessage
+ * @brief Реализация сообщений Чтение лог-файла
+ */
+class SendLogMessage final : public Message
+{
+public:
+    SendLogMessage();
+    ~SendLogMessage() NOEXCEPT override;
+
+    SendLogMessage(const SendLogMessage& other);
+    SendLogMessage& operator =(const SendLogMessage& other);
+
+    SendLogMessage(SendLogMessage&& other) NOEXCEPT;
+    SendLogMessage& operator =(SendLogMessage&& other) NOEXCEPT;
+
+    /**
+     * @brief serialize [override]
+     */
+    const QByteArray serialize() const override;
+
+    /**
+     * @brief parse [override]
+     */
+    bool parse(const QByteArray& src) override;
+
+private:
+    std::unique_ptr<details::SendLogMessagePrivate> m_pimpl;
+
+};
+
+/**
+ * @class ClearLogMessage
+ * @brief Реализация сообщений Очистка лог-файла
+ */
+class ClearLogMessage final : public Message
+{
+public:
+    ClearLogMessage();
+    ~ClearLogMessage() NOEXCEPT override;
+
+    ClearLogMessage(const ClearLogMessage& other);
+    ClearLogMessage& operator =(const ClearLogMessage& other);
+
+    ClearLogMessage(ClearLogMessage&& other) NOEXCEPT;
+    ClearLogMessage& operator =(ClearLogMessage&& other) NOEXCEPT;
+
+    /**
+     * @brief serialize [override]
+     */
+    const QByteArray serialize() const override;
+
+    /**
+     * @brief parse [override]
+     */
+    bool parse(const QByteArray& src) override;
+
+private:
+    std::unique_ptr<details::ClearLogMessagePrivate> m_pimpl;
+
+};
+
+/**
+ * @class CurrentTimeMessage
+ * @brief Реализация сообщений Установка текущего времени
+ */
+class CurrentTimeMessage final : public Message
+{
+public:
+    CurrentTimeMessage();
+    ~CurrentTimeMessage() NOEXCEPT override;
+
+    CurrentTimeMessage(const CurrentTimeMessage& other);
+    CurrentTimeMessage& operator =(const CurrentTimeMessage& other);
+
+    CurrentTimeMessage(CurrentTimeMessage&& other) NOEXCEPT;
+    CurrentTimeMessage& operator =(CurrentTimeMessage&& other) NOEXCEPT;
+
+    /**
+     * @brief serialize [override]
+     */
+    const QByteArray serialize() const override;
+
+    /**
+     * @brief parse [override]
+     */
+    bool parse(const QByteArray& src) override;
+
+    /**
+     * @brief currentTime - Возвращает установленное значение текущего времени
+     * @return Значение текущего времени в секундах с начала эпохи (00:00:00 01-01-1970)
+     */
+    quint32 currentTime() const NOEXCEPT;
+
+    /**
+     * @brief setCurrentTime - Устанавливает значение текущего времени
+     * @param epoch - Новое значение текущего времени в секундах с начала эпохи (00:00:00 01-01-1970)
+     */
+    void setCurrentTime(quint32 epoch) NOEXCEPT;
+
+private:
+    std::unique_ptr<details::CurrentTimeMessagePrivate> m_pimpl;
 
 };
 

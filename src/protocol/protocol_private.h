@@ -56,6 +56,35 @@ private:
 
 };
 
+class BeginLogMessagePrivate
+{
+public:
+    quint32 count() const NOEXCEPT;
+    void setCount(quint32 num) NOEXCEPT;
+
+private:
+    quint32 m_count = 0;
+};
+
+class NextLogMessagePrivate
+{
+public:
+    const QByteArray& data() const NOEXCEPT;
+    void setData(const QByteArray& content);
+
+private:
+    QByteArray m_data;
+
+};
+
+class EndLogMessagePrivate
+{
+public:
+
+private:
+
+};
+
 class DeviceAddressMessagePrivate
 {
 public:
@@ -163,6 +192,33 @@ private:
     quint8 m_imageNum = 0;
 
     QVector<QRgb> m_imageColors;
+
+};
+
+class SendLogMessagePrivate
+{
+public:
+
+private:
+
+};
+
+class ClearLogMessagePrivate
+{
+public:
+
+private:
+
+};
+
+class CurrentTimeMessagePrivate
+{
+public:
+    quint32 currentTime() const NOEXCEPT;
+    void setCurrentTime(quint32 epoch) NOEXCEPT;
+
+private:
+    quint32 m_currentTime = 0;
 
 };
 

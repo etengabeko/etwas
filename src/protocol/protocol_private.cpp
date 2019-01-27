@@ -74,6 +74,26 @@ void ButtonsStateMessagePrivate::setMaxButtonsStatesCount(quint8 count) NOEXCEPT
     m_maxButtonsCount = count;
 }
 
+quint32 BeginLogMessagePrivate::count() const NOEXCEPT
+{
+    return m_count;
+}
+
+void BeginLogMessagePrivate::setCount(quint32 num) NOEXCEPT
+{
+    m_count = num;
+}
+
+const QByteArray& NextLogMessagePrivate::data() const NOEXCEPT
+{
+    return m_data;
+}
+
+void NextLogMessagePrivate::setData(const QByteArray& content)
+{
+    m_data = content;
+}
+
 const QString DeviceAddressMessagePrivate::address() const
 {
     return m_address;
@@ -248,6 +268,16 @@ QRgb ImageDataMessagePrivate::rgbFrom16bit(const QPair<quint8, quint8>& bits) co
     quint8 blue  = bits.first & ::maskFive();
 
     return qRgb(red, green, blue);
+}
+
+quint32 CurrentTimeMessagePrivate::currentTime() const NOEXCEPT
+{
+    return m_currentTime;
+}
+
+void CurrentTimeMessagePrivate::setCurrentTime(quint32 epoch) NOEXCEPT
+{
+    m_currentTime = epoch;
 }
 
 } // details

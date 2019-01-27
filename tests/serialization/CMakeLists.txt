@@ -13,28 +13,34 @@ set(ROOT_PROJECT_HEADERS
 set(HEADERS
     ${ROOT_PROJECT_HEADERS}
     src/basictest.h
+    src/beginlog.h
     src/blinkoptions.h
     src/brightoptions.h
     src/buttonsstate.h
+    src/currenttime.h
     src/deviceaddress.h
     src/deviceidentity.h
     src/displayimages.h
     src/displayoptions.h
     src/imagedata.h
+    src/nextlog.h
 )
 
 set(SOURCES
     ${ROOT_PROJECT_SRC_DIR}/protocol/protocol.cpp
     ${ROOT_PROJECT_SRC_DIR}/protocol/protocol_private.cpp
     src/basictest.cpp
+    src/beginlog.cpp
     src/blinkoptions.cpp
     src/brightoptions.cpp
     src/buttonsstate.cpp
+    src/currenttime.cpp
     src/deviceaddress.cpp
     src/deviceidentity.cpp
     src/displayimages.cpp
     src/displayoptions.cpp
     src/imagedata.cpp
+    src/nextlog.cpp
     src/main.cpp
 )
 
