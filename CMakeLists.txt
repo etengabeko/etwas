@@ -47,6 +47,8 @@ set(SOURCES
     # ui
     src/ui/connectionoptionsdialog.cpp
     src/ui/controlpanelwidget.cpp
+    src/ui/currenttimedialog.cpp
+    src/ui/devicelogwidget.cpp
     src/ui/displaycontrolwidget.cpp
     src/ui/displayoptionswidget.cpp
     src/ui/imagestoragewidget.cpp
@@ -79,6 +81,8 @@ set(HEADERS
     # ui
     src/ui/connectionoptionsdialog.h
     src/ui/controlpanelwidget.h
+    src/ui/currenttimedialog.h
+    src/ui/devicelogwidget.h
     src/ui/displaycontrolwidget.h
     src/ui/displayoptionswidget.h
     src/ui/imagestoragewidget.h
@@ -89,6 +93,8 @@ set(HEADERS
 qt5_wrap_ui(FORMS
     src/ui/connectionoptions.ui
     src/ui/controlpanel.ui
+    src/ui/currenttime.ui
+    src/ui/devicelog.ui
     src/ui/displaycontrol.ui
     src/ui/displayoptions.ui
     src/ui/imagestorage.ui

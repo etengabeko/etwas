@@ -67,6 +67,8 @@ HEADERS = \
     # ui
     $$PWD/src/ui/connectionoptionsdialog.h \
     $$PWD/src/ui/controlpanelwidget.h \
+    $$PWD/src/ui/currenttimedialog.h \
+    $$PWD/src/ui/devicelogwidget.h \
     $$PWD/src/ui/displaycontrolwidget.h \
     $$PWD/src/ui/displayoptionswidget.h \
     $$PWD/src/ui/imagestoragewidget.h \
@@ -95,6 +97,8 @@ SOURCES = \
     # ui
     $$PWD/src/ui/connectionoptionsdialog.cpp \
     $$PWD/src/ui/controlpanelwidget.cpp \
+    $$PWD/src/ui/currenttimedialog.cpp \
+    $$PWD/src/ui/devicelogwidget.cpp \
     $$PWD/src/ui/displaycontrolwidget.cpp \
     $$PWD/src/ui/displayoptionswidget.cpp \
     $$PWD/src/ui/imagestoragewidget.cpp \
@@ -106,6 +110,8 @@ SOURCES = \
 FORMS = \
     $$PWD/src/ui/connectionoptions.ui \
     $$PWD/src/ui/controlpanel.ui \
+    $$PWD/src/ui/devicelog.ui \
+    $$PWD/src/ui/currenttime.ui \
     $$PWD/src/ui/displaycontrol.ui \
     $$PWD/src/ui/displayoptions.ui \
     $$PWD/src/ui/imagestorage.ui

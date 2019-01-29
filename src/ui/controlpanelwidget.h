@@ -12,6 +12,7 @@
 class QAction;
 class QByteArray;
 class QCloseEvent;
+class QMenu;
 class QStatusBar;
 class QThread;
 class QTimer;
@@ -45,6 +46,7 @@ class ImageStorage;
 } // storage
 
 class Logger;
+class DeviceLogWidget;
 class DisplayControlWidget;
 class DisplayOptionsWidget;
 class ImageStorageWidget;
@@ -90,10 +92,14 @@ private slots:
     void slotApplySelectedImage(quint8 imageIndex);
     void slotOptionsClose();
     void slotImagesClose();
+    void slotDeviceLogClose();
 
     void slotSendPing();
     void slotSendDeviceIdentity();
     void slotSendImagesData();
+    void slotSendClearDeviceLog();
+    void slotSendCurrentTime();
+    void slotReceiveDeviceLog();
     void slotChangeDeviceAddress();
     void slotChangeButtonsState(bool enabled);
 
@@ -145,6 +151,7 @@ private:
     void createDisplayImagesMessage();
     void createBlinkOptionsMessage();
     void createBrightOptionsMessage();
+    void createDeviceLogMessage();
     quint8 findActiveControlId(bool* ok) const;
 
     void stopTransport();
@@ -174,9 +181,10 @@ private:
     QVector<quint8> m_controlIds;
     QHash<int, DisplayControlWidget*> m_controlWidgets;
 
-    DisplayOptionsWidget* m_optionsWidget = nullptr;
-    DisplayControlWidget* m_activeControl = nullptr;
-    ImageStorageWidget*   m_imagesWidget  = nullptr;
+    DisplayOptionsWidget* m_optionsWidget   = nullptr;
+    DisplayControlWidget* m_activeControl   = nullptr;
+    ImageStorageWidget*   m_imagesWidget    = nullptr;
+    DeviceLogWidget*      m_deviceLogWidget = nullptr;
 
     enum class SelectedImage
     {
@@ -190,7 +198,10 @@ private:
     quint64 m_pingCounter = 0;
     QTimer* m_pingTimer = nullptr;
     QStatusBar* m_statusBar = nullptr;
+
     QAction* m_deviceAddressAction = nullptr;
+    QAction* m_currentTimeAction = nullptr;
+    QMenu* m_deviceLogMenu = nullptr;
 
 };
 

@@ -36,6 +36,8 @@
 #include "settings/settings.h"
 #include "storage/imagestorage.h"
 #include "ui/connectionoptionsdialog.h"
+#include "ui/currenttimedialog.h"
+#include "ui/devicelogwidget.h"
 #include "ui/displaycontrolwidget.h"
 #include "ui/displayoptionswidget.h"
 #include "ui/imagestoragewidget.h"
@@ -50,6 +52,12 @@ quint16 defaultTimeout() { return 1000; }
 
 int defaultPingTimeoutMsecs() { return 1000; }
 
+const QString& defaultDeviceMessage()
+{
+    static const QString msg("Device log message: \"Hello world #%1\"");
+    return msg;
+}
+
 int firmwareVersion() { return 0x02; }
 const QSize& buttonImageSize()
 {
@@ -59,6 +67,7 @@ const QSize& buttonImageSize()
 
 quint8 commonControlsCount() { return 16; }
 quint8 debugControlsCount()  { return 19; }
+quint32 deviceLogMessagesCount() { return 10; }
 
 QString titleString() { return QApplication::translate("ControlPanelWidget", "Device"); }
 QString partialString() { return QApplication::translate("ControlPanelWidget", "partial"); }
@@ -144,6 +153,20 @@ ControlPanelWidget::ControlPanelWidget(bool isDebugMode,
                          this, &ControlPanelWidget::slotChangeDeviceAddress);
         m_deviceAddressAction->setEnabled(false);
 
+        m_currentTimeAction = optionsMenu->addAction(tr("Current time options"));
+        QObject::connect(m_currentTimeAction, &QAction::triggered,
+                         this, &ControlPanelWidget::slotSendCurrentTime);
+        m_currentTimeAction->setEnabled(false);
+
+        m_deviceLogMenu = optionsMenu->addMenu(tr("Device logging options"));
+        QAction* receiveLogAction = m_deviceLogMenu->addAction(tr("Receive device log"));
+        QObject::connect(receiveLogAction, &QAction::triggered,
+                         this, &ControlPanelWidget::slotReceiveDeviceLog);
+        QAction* clearLogAction = m_deviceLogMenu->addAction(tr("Clear device log"));
+        QObject::connect(clearLogAction, &QAction::triggered,
+                         this, &ControlPanelWidget::slotSendClearDeviceLog);
+        m_deviceLogMenu->setEnabled(false);
+
         QAction* imagesAction = optionsMenu->addAction(tr("Load images"));
         QObject::connect(imagesAction, &QAction::triggered,
                          this, &ControlPanelWidget::slotLoadImages);
@@ -164,6 +187,7 @@ ControlPanelWidget::~ControlPanelWidget()
 
     emit subwindowClosed(m_optionsWidget);
     emit subwindowClosed(m_imagesWidget);
+    emit subwindowClosed(m_deviceLogWidget);
 
     m_inCtrl.reset();
     m_outCtrl.reset();
@@ -176,6 +200,12 @@ ControlPanelWidget::~ControlPanelWidget()
     m_recvThread = nullptr;
 
     removeAllContols();
+
+    delete m_deviceLogMenu;
+    m_deviceLogMenu = nullptr;
+
+    delete m_currentTimeAction;
+    m_currentTimeAction = nullptr;
 
     delete m_deviceAddressAction;
     m_deviceAddressAction = nullptr;
@@ -402,6 +432,8 @@ void ControlPanelWidget::slotOnConnect()
     else
     {
         m_deviceAddressAction->setEnabled(true);
+        m_currentTimeAction->setEnabled(true);
+        m_deviceLogMenu->setEnabled(true);
     }
 }
 
@@ -691,6 +723,12 @@ void ControlPanelWidget::slotImagesClose()
     m_imagesWidget = nullptr;
 }
 
+void ControlPanelWidget::slotDeviceLogClose()
+{
+    emit subwindowClosed(m_deviceLogWidget);
+    m_deviceLogWidget = nullptr;
+}
+
 void ControlPanelWidget::slotChangeButtonsState(bool enabled)
 {
     Q_UNUSED(enabled);
@@ -762,6 +800,49 @@ void ControlPanelWidget::slotSendImagesData()
     }
 
     QApplication::restoreOverrideCursor();
+}
+
+void ControlPanelWidget::slotSendClearDeviceLog()
+{
+    using protocol::outcoming::ClearLogMessage;
+
+    slotSendMessage(QSharedPointer<protocol::AbstractMessage>(new ClearLogMessage()));
+}
+
+void ControlPanelWidget::slotSendCurrentTime()
+{
+    using protocol::outcoming::CurrentTimeMessage;
+
+    CurrentTimeDialog dlg;
+    dlg.setCurrentTimestamp(QDateTime::currentSecsSinceEpoch());
+    if (dlg.exec() == QDialog::Accepted)
+    {
+        CurrentTimeMessage* ctmsg = new CurrentTimeMessage();
+        ctmsg->setCurrentTime(dlg.currentTimestamp());
+        slotSendMessage(QSharedPointer<protocol::AbstractMessage>(ctmsg));
+    }
+}
+
+void ControlPanelWidget::slotReceiveDeviceLog()
+{
+    using protocol::outcoming::SendLogMessage;
+
+    if (m_deviceLogWidget == nullptr)
+    {
+        m_deviceLogWidget = new DeviceLogWidget();
+        emit subwindowCreated(m_deviceLogWidget);
+
+        QObject::connect(m_deviceLogWidget, &DeviceLogWidget::closed,
+                         this, &ControlPanelWidget::slotDeviceLogClose);
+
+        m_deviceLogWidget->show();
+    }
+    else
+    {
+        emit subwindowRaised(m_deviceLogWidget);
+    }
+
+    slotSendMessage(QSharedPointer<protocol::AbstractMessage>(new SendLogMessage()));
 }
 
 void ControlPanelWidget::slotOnDisconnect()
@@ -979,6 +1060,24 @@ void ControlPanelWidget::processMessage(const protocol::incoming::Message& messa
     case MessageType::ButtonsState:
         applyButtonsStates(dynamic_cast<const ButtonsStateMessage&>(message).buttonsStates());
         break;
+    case MessageType::BeginLog:
+        if (m_deviceLogWidget != nullptr)
+        {
+            m_deviceLogWidget->slotBeginReceiving(dynamic_cast<const BeginLogMessage&>(message).count());
+        }
+        break;
+    case MessageType::NextLog:
+        if (m_deviceLogWidget != nullptr)
+        {
+            m_deviceLogWidget->slotReceiveMessage(dynamic_cast<const NextLogMessage&>(message).data());
+        }
+        break;
+    case MessageType::EndLog:
+        if (m_deviceLogWidget != nullptr)
+        {
+            m_deviceLogWidget->slotEndReceiving();
+        }
+        break;
     default:
         Q_ASSERT_X(false, "ControlPanelWidget::processMessage", "Unexpected incoming MessageType");
         break;
@@ -1121,6 +1220,22 @@ void ControlPanelWidget::processMessage(const protocol::outcoming::Message& mess
                 qWarning().noquote() << tr("Can not save image: %1").arg(errorString);
                 tmp->deleteLater();
             }
+        }
+        break;
+    case MessageType::SendLog:
+        createDeviceLogMessage();
+        break;
+    case MessageType::ClearLog:
+        {
+            const ClearLogMessage& clmsg = dynamic_cast<const ClearLogMessage&>(message);
+            Q_UNUSED(clmsg);
+            qInfo().noquote() << tr("Receive request to clear device log");
+        }
+        break;
+    case MessageType::CurrentTime:
+        {
+            const CurrentTimeMessage& ctmsg = dynamic_cast<const CurrentTimeMessage&>(message);
+            qInfo().noquote() << tr("Receive request to set current time to: %1 (%2)").arg(ctmsg.currentTime()).arg(QDateTime::fromSecsSinceEpoch(ctmsg.currentTime()).toString(Qt::ISODate));
         }
         break;
     default:
@@ -1412,6 +1527,40 @@ void ControlPanelWidget::createBrightOptionsMessage()
 
         slotSendMessage(QSharedPointer<protocol::AbstractMessage>(message));
     }
+}
+
+void ControlPanelWidget::createDeviceLogMessage()
+{
+    QApplication::setOverrideCursor(QCursor(Qt::WaitCursor));
+
+    using protocol::AbstractMessage;
+    using protocol::incoming::BeginLogMessage;
+    using protocol::incoming::NextLogMessage;
+    using protocol::incoming::EndLogMessage;
+
+    QList<QSharedPointer<AbstractMessage>> logMessages;
+    logMessages.reserve(::deviceLogMessagesCount() + 2);
+
+    BeginLogMessage* bmsg = new BeginLogMessage();
+    bmsg->setCount(::deviceLogMessagesCount());
+    logMessages.append(QSharedPointer<AbstractMessage>(bmsg));
+
+    for (quint32 i = 0, sz = ::deviceLogMessagesCount(); i < sz; ++i)
+    {
+        NextLogMessage* nmsg = new NextLogMessage();
+        nmsg->setData(::defaultDeviceMessage().arg(i).toUtf8());
+        logMessages.append(QSharedPointer<AbstractMessage>(nmsg));
+    }
+
+    EndLogMessage* emsg = new EndLogMessage();
+    logMessages.append(QSharedPointer<AbstractMessage>(emsg));
+
+    for (const QSharedPointer<AbstractMessage>& each : logMessages)
+    {
+        slotSendMessage(each);
+    }
+
+    QApplication::restoreOverrideCursor();
 }
 
 void ControlPanelWidget::slotChangeControlsColumnsCount(int count)
