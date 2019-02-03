@@ -3,6 +3,8 @@
 #include <QByteArray>
 #include <QTcpSocket>
 
+#include "asyncqueue.h"
+
 namespace ioservice
 {
 namespace details
@@ -96,13 +98,29 @@ void TransportPrivate::send(const QByteArray& data)
     }
 
     m_socket->write(data);
-    m_socket->waitForBytesWritten();
+    m_socket->waitForBytesWritten(-1);
     emit sent(data);
 }
 
 void TransportPrivate::send(QByteArray&& data)
 {
     send(const_cast<const QByteArray&>(data));
+}
+
+void TransportPrivate::setDataQueue(AsyncQueue<QByteArray>* queue) NOEXCEPT
+{
+    m_dataQueue = queue;
+}
+
+void TransportPrivate::sendQueuedData()
+{
+    if (m_dataQueue != nullptr)
+    {
+        while (!m_dataQueue->isEmpty())
+        {
+            send(m_dataQueue->dequeue());
+        }
+    }
 }
 
 } // details

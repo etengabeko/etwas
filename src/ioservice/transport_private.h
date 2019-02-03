@@ -9,6 +9,9 @@ class QTcpSocket;
 
 namespace ioservice
 {
+template <typename T>
+class AsyncQueue;
+
 namespace details
 {
 class TransportPrivate : public QObject
@@ -26,6 +29,9 @@ public:
 
     void send(const QByteArray& data);
     void send(QByteArray&& data);
+
+    void setDataQueue(AsyncQueue<QByteArray>* queue) NOEXCEPT;
+    void sendQueuedData();
 
     const QHostAddress& address() const NOEXCEPT;
     quint16 port() const NOEXCEPT;
@@ -48,6 +54,8 @@ private:
 
     QHostAddress m_address;
     quint16 m_port = 0;
+
+    AsyncQueue<QByteArray>* m_dataQueue = nullptr;
 
 };
 

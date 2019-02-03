@@ -5,6 +5,8 @@
 #include <QHostAddress>
 #include <QString>
 
+#include "asyncqueue.h"
+
 namespace ioservice
 {
 
@@ -47,6 +49,11 @@ const QString Transport::errorString() const
     return m_pimpl->errorString();
 }
 
+void Transport::setDataQueue(AsyncQueue<QByteArray>* queue) NOEXCEPT
+{
+    m_pimpl->setDataQueue(queue);
+}
+
 void Transport::start()
 {
     m_pimpl->start();
@@ -65,6 +72,11 @@ void Transport::send(const QByteArray& data)
 void Transport::send(QByteArray&& data)
 {
     m_pimpl->send(std::forward<QByteArray>(data));
+}
+
+void Transport::sendQueuedData()
+{
+    m_pimpl->sendQueuedData();
 }
 
 } // ioservice

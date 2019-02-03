@@ -9,6 +9,9 @@ class QString;
 
 namespace ioservice
 {
+template <typename T>
+class AsyncQueue;
+
 namespace details
 {
 class TransportPrivate;
@@ -29,6 +32,8 @@ public:
 
     const QString errorString() const;
 
+    void setDataQueue(AsyncQueue<QByteArray>* queue) NOEXCEPT;
+
 signals:
     void connected();
     void disconnected();
@@ -43,6 +48,8 @@ public slots:
 
     void send(const QByteArray& data);
     void send(QByteArray&& data);
+
+    void sendQueuedData();
 
 private:
     details::TransportPrivate* m_pimpl;

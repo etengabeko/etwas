@@ -3,6 +3,8 @@
 
 #include <QObject>
 
+#include "asyncqueue.h"
+
 namespace protocol
 {
 class AbstractMessage;
@@ -27,9 +29,11 @@ public:
 
 signals:
     void sent(const QByteArray& data);
+    void hasDataToSend();
 
 private:
     Transport* m_transport = nullptr;
+    AsyncQueue<QByteArray> m_dataQueue;
 
 };
 

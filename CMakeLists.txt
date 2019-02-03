@@ -70,6 +70,7 @@ set(HEADERS
     src/settings/settings.h
     src/settings/settings_private.h
     # ioservice
+    src/ioservice/asyncqueue.h
     src/ioservice/transport.h
     src/ioservice/transport_private.h
     src/ioservice/inputcontroller.h

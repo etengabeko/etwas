@@ -56,6 +56,7 @@ HEADERS = \
     $$PWD/src/settings/settings.h \
     $$PWD/src/settings/settings_private.h \
     # ioservice
+    $$PWD/src/ioservice/asyncqueue.h \
     $$PWD/src/ioservice/transport.h \
     $$PWD/src/ioservice/transport_private.h \
     $$PWD/src/ioservice/inputcontroller.h \

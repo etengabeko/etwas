@@ -18,8 +18,9 @@ OutputControllerPrivate::OutputControllerPrivate(Transport* transport,
 {
     Q_CHECK_PTR(transport);
 
-    QObject::connect(this, &OutputControllerPrivate::sent,
-                     m_transport, static_cast<void(Transport::*)(const QByteArray&)>(&Transport::send));
+    m_transport->setDataQueue(&m_dataQueue);
+    QObject::connect(this, &OutputControllerPrivate::hasDataToSend,
+                     m_transport, &Transport::sendQueuedData);
 }
 
 OutputControllerPrivate::~OutputControllerPrivate() NOEXCEPT
@@ -35,8 +36,9 @@ void OutputControllerPrivate::send(const protocol::AbstractMessage& message)
         stream.setByteOrder(QDataStream::LittleEndian);
         stream << message;
     }
+    m_dataQueue.enqueue(ba);
 
-    emit sent(ba);
+    emit hasDataToSend();
 }
 
 } // details
